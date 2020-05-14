@@ -1,6 +1,7 @@
 ;;; origami.el --- Flexible text folding  -*- lexical-binding: t -*-
 
 ;; Author: Greg Sexton <gregsexton@gmail.com>
+;; Maintainer: Shen, Jen-Chieh <jcs090218@gmail.com>
 ;; Version: 1.0
 ;; Keywords: folding
 ;; URL: https://github.com/gregsexton/origami.el
