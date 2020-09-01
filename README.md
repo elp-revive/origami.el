@@ -242,6 +242,10 @@ This will add fold-marker support to that file.
 
 4. You can invoke `origami-auto-apply` to reset folding to its initial state, according to tagged lines. Both tags, `*autofold*` and `*autofold:*`, are customizable.
 
+
+This functionality has been imported from the (now obsoleted) ![origami-predef](https://melpa.org/#/origami-predef) package.
+
+
 # Autofolding some lines when opening a file, based on patterns
 
 The function `origami-auto-apply-patterns` folds the lines containing arbitrary patterns. This allows to define your custom foldings for each major mode. 
@@ -258,8 +262,6 @@ The function `origami-auto-apply-patterns` folds the lines containing arbitrary 
         (interactive)
         (origami-auto-apply-patterns '("create .*table" "create .*view" "begin")))
       (add-hook 'sql-mode-hook #'origami-auto-sql))
-
-
 
 
 # How is this different from [yafolding](https://github.com/zenozeng/yafolding.el)?
