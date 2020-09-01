@@ -871,9 +871,9 @@ and `origami-auto--hide-element-next-line'"
   "Apply initial folding when finding (opening) a file buffer"
   :global t
   
-  (remove-hook 'find-file-hook #'origami-apply t)
+  (remove-hook 'find-file-hook #'origami-auto-apply t)
   (when origami-auto-global-mode
-    (add-hook 'find-file-hook #'origami-apply t)))
+    (add-hook 'find-file-hook #'origami-auto-apply t)))
 
 
 
