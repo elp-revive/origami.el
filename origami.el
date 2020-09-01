@@ -1,7 +1,8 @@
 ;;; origami.el --- Flexible text folding  -*- lexical-binding: t -*-
 
 ;; Author: Greg Sexton <gregsexton@gmail.com>
-;; Version: 1.0
+;; Maintainer: Shen, Jen-Chieh <jcs090218@gmail.com>
+;; Version: 1.1
 ;; Keywords: folding
 ;; URL: https://github.com/gregsexton/origami.el
 ;; Package-Requires: ((s "1.9.0") (dash "2.5.0") (emacs "24") (cl-lib "0.5"))
@@ -532,6 +533,7 @@ otherwise fetch cached tree."
 
 ;;; commands
 
+;;;###autoload
 (defun origami-open-node (buffer point)
   "Open the fold node at POINT in BUFFER. The fold node opened
 will be the deepest nested at POINT."
@@ -543,6 +545,7 @@ will be the deepest nested at POINT."
                                            (origami-fold-assoc path (lambda (node)
                                                                       (origami-fold-open-set node t))))))))
 
+;;;###autoload
 (defun origami-open-node-recursively (buffer point)
   "Open the fold node and all of its children at POINT in BUFFER.
 The fold node opened will be the deepest nested at POINT."
@@ -558,6 +561,7 @@ The fold node opened will be the deepest nested at POINT."
                                                               (origami-fold-open-set node t))
                                                             node))))))))
 
+;;;###autoload
 (defun origami-show-node (buffer point)
   "Like `origami-open-node' but also opens parent fold nodes
 recursively so as to ensure the position where POINT is is
@@ -572,6 +576,7 @@ visible."
                                               (origami-fold-open-set node t))
                                             path))))))
 
+;;;###autoload
 (defun origami-close-node (buffer point)
   "Close the fold node at POINT in BUFFER. The fold node closed
 will be the deepest nested at POINT."
@@ -584,6 +589,7 @@ will be the deepest nested at POINT."
                                             path (lambda (node)
                                                    (origami-fold-open-set node nil))))))))
 
+;;;###autoload
 (defun origami-close-node-recursively (buffer point)
   "Close the fold node and all of its children at POINT in BUFFER.
 The fold node closed will be the deepest nested at POINT."
@@ -599,6 +605,7 @@ The fold node closed will be the deepest nested at POINT."
                                                               (origami-fold-open-set node nil))
                                                             node))))))))
 
+;;;###autoload
 (defun origami-toggle-node (buffer point)
   "Toggle the fold node at POINT in BUFFER open or closed. The
 fold node opened or closed will be the deepest nested at POINT."
@@ -613,6 +620,7 @@ fold node opened or closed will be the deepest nested at POINT."
                                                     node (not (origami-fold-open?
                                                                (-last-item path)))))))))))
 
+;;;###autoload
 (defun origami-forward-toggle-node (buffer point)
   "Like `origami-toggle-node' but search forward in BUFFER for a
 fold node. If a fold node is found after POINT and before the
@@ -629,6 +637,7 @@ as `origami-toggle-node'."
                                                     node (not (origami-fold-open?
                                                                (-last-item path)))))))))))
 
+;;;###autoload
 (defun origami-recursively-toggle-node (buffer point)
   "Cycle a fold node between recursively closed, open and
 recursively open depending on its current state. The fold node
@@ -651,6 +660,7 @@ familiar. It's easiest to grasp this just by giving it a go."
                 (t (origami-open-node-recursively buffer (origami-fold-beg node))))
         (origami-forward-toggle-node buffer point)))))
 
+;;;###autoload
 (defun origami-open-all-nodes (buffer)
   "Recursively open every fold node in BUFFER."
   (interactive (list (current-buffer)))
@@ -673,6 +683,7 @@ familiar. It's easiest to grasp this just by giving it a go."
                                             (origami-fold-open-set node nil))
                                           tree)))))
 
+;;;###autoload
 (defun origami-toggle-all-nodes (buffer)
   "Toggle all fold nodes in the buffer recursively open or
 recursively closed."
@@ -683,6 +694,7 @@ recursively closed."
         (origami-close-all-nodes buffer)
       (origami-open-all-nodes buffer))))
 
+;;;###autoload
 (defun origami-show-only-node (buffer point)
   "Close all fold nodes in BUFFER except for those necessary to
 make POINT visible. Very useful for quickly collapsing everything
@@ -691,6 +703,7 @@ in the buffer other than what you are looking at."
   (origami-close-all-nodes buffer)
   (origami-show-node buffer point))
 
+;;;###autoload
 (defun origami-previous-fold (buffer point)
   "Move point to the beginning of the fold before POINT. If POINT
 is in a fold, move to the beginning of the fold that POINT is
@@ -705,6 +718,7 @@ in."
                         (if (< state point) state pos))))
         goto-char)))
 
+;;;###autoload
 (defun origami-next-fold (buffer point)
   "Move point to the end of the fold after POINT. If POINT is in
 a fold, move to the end of the fold that POINT is in."
@@ -717,6 +731,7 @@ a fold, move to the end of the fold that POINT is in."
         (->> (-last (lambda (pos) (> pos point))))
         goto-char)))
 
+;;;###autoload
 (defun origami-forward-fold (buffer point)
   "Move point to the beginning of the first fold in the BUFFER
 after POINT."
@@ -729,6 +744,7 @@ after POINT."
         (->> (-last (lambda (pos) (> pos point))))
         goto-char)))
 
+;;;###autoload
 (defun origami-forward-fold-same-level (buffer point)
   "Move point to the beginning of the next fold in the buffer
 that is a sibling of the fold the point is currently in."
@@ -742,6 +758,7 @@ that is a sibling of the fold the point is currently in."
                         origami-fold-beg))
         (goto-char c)))))
 
+;;;###autoload
 (defun origami-backward-fold-same-level (buffer point)
   "Move point to the beginning of the previous fold in the buffer
 that is a sibling of the fold the point is currently in."
@@ -755,6 +772,7 @@ that is a sibling of the fold the point is currently in."
                         origami-fold-beg))
         (goto-char c)))))
 
+;;;###autoload
 (defun origami-undo (buffer)
   "Undo the last folding operation applied to BUFFER. Undo
 history is linear. If you undo some fold operations and then
@@ -766,6 +784,7 @@ operations undone."
     (let ((old-tree (origami-get-cached-tree buffer)))
       (origami-apply-new-tree buffer current-tree old-tree))))
 
+;;;###autoload
 (defun origami-redo (buffer)
   "Redo the last folding operation applied to BUFFER. You can
 only redo undone operations while a new folding operation hasn't
@@ -776,6 +795,7 @@ been performed to BUFFER."
     (let ((new-tree (origami-get-cached-tree buffer)))
       (origami-apply-new-tree buffer current-tree new-tree))))
 
+;;;###autoload
 (defun origami-reset (buffer)
   "Remove all folds from BUFFER and reset all origami state
 associated with this buffer. Useful during development or if you
