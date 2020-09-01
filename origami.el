@@ -672,6 +672,7 @@ familiar. It's easiest to grasp this just by giving it a go."
                                             (origami-fold-open-set node t))
                                           tree)))))
 
+;;;###autoload
 (defun origami-close-all-nodes (buffer)
   "Recursively close every fold node in BUFFER."
   (interactive (list (current-buffer)))
