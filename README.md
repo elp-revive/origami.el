@@ -213,6 +213,57 @@ references a key in `origami-parser-alist`. Something like:
 
 This will add fold-marker support to that file.
 
+# Autofolding tagged lines when opening a file
+
+1. Enable the mode `origami-auto-global-mode`. This will add a `find-file-hook` that will fold every tagged line.
+2. Tag the lines you need to be initialy folded with `*autofold*`. 
+
+
+        public void boringMethod(){ // *autofold*
+           foo();
+           bar();
+        }
+
+
+3. Sometimes, the tag can not be placed in the same line you need to be folded. In these cases, `*autofold:*` will fold the next line.
+
+
+        # A very long shell variable with newlines
+         # *autofold:*
+        LOREM="
+          Pellentesque dapibus suscipit ligula.  
+          Donec posuere augue in quam.  
+          Etiam vel tortor sodales tellus ultricies commodo. 
+          Suspendisse potenti.
+          Aenean in sem ac leo mollis blandit. 
+          ...
+        "
+
+
+4. You can invoke `origami-auto-apply` to reset folding to its initial state, according to tagged lines. Both tags, `*autofold*` and `*autofold:*`, are customizable.
+
+
+This functionality has been imported from the (now obsoleted) [origami-predef](https://melpa.org/#/origami-predef) package.
+
+
+# Autofolding some lines when opening a file, based on patterns
+
+The function `origami-auto-apply-patterns` folds the lines containing arbitrary patterns. This allows to define your custom foldings for each major mode. 
+
+
+      (defun origami-auto-java()
+        "Close some predefined patterns, useful in java."
+        (interactive)
+        (origami-auto-apply-patterns '("private .*{" "protected .*{")))
+      (add-hook 'java-mode-hook #'origami-auto-java)
+
+      (defun origami-auto-sql()
+        "Close some predefined patterns, useful in SQL."
+        (interactive)
+        (origami-auto-apply-patterns '("create .*table" "create .*view" "begin")))
+      (add-hook 'sql-mode-hook #'origami-auto-sql))
+
+
 # How is this different from [yafolding](https://github.com/zenozeng/yafolding.el)?
 
 I wasn't aware of yafolding before writing this. It looks like origami

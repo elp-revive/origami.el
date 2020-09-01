@@ -69,6 +69,16 @@
   '((t :inherit 'font-lock-comment-face))
   "Face used to display the fold replacement text.")
 
+
+(defcustom origami-auto-strings-fold-this '("\\*autofold\\*")  ; *autofold*
+  "When found, `origami-close-node' will be invoked on the same line."
+  :type '(repeat string))
+
+;;; *autofold:*
+(defcustom origami-auto-strings-fold-next '("\\*autofold:\\*")
+  "When found, `origami-close-node' will be invoked on the next line."
+  :type '(repeat string))
+
 ;;; overlay manipulation
 
 (defun origami-header-overlay-range (fold-overlay)
@@ -808,6 +818,64 @@ uncover any bugs."
 
 (defun origami-find-occurrence-show-node ()
   (call-interactively 'origami-show-node))
+
+
+
+
+;;; See origami-hide-overlay
+(defun origami--point-in-folded-overlay ()
+  "Check if point is on an already folded overlay."
+  (let* ((overlays (overlays-at (point)))
+         (predicate (lambda (overlay) (overlay-get overlay 'invisible)))
+         (folded-overlay (cl-find-if predicate overlays)))
+    folded-overlay))
+
+(defun origami-auto--match-and-apply (pattern-or-patterns function)
+  "Search buffer and apply the FUNCTION on each line.
+PATTERN-OR-PATTERNS is a string or a list of strings to search"
+  (let ((patterns (if (listp pattern-or-patterns) pattern-or-patterns (list pattern-or-patterns) )))
+    (save-excursion
+      (dolist (pattern patterns)
+        (goto-char (point-min))
+        (while (re-search-forward pattern nil t 1)
+          (unless (origami--point-in-folded-overlay)
+            (funcall function)))))))
+
+
+(defun origami-auto--hide-element-next-line ()
+  "Apply origami-hide-element to the next line of current point."
+  (forward-line)
+  (origami-auto--hide-element-this-line))
+
+(defun origami-auto--hide-element-this-line ()
+  "Apply origami-hide-element to the line of current point."
+  (move-end-of-line nil)
+  (origami-close-node (current-buffer) (point)))
+
+(defun origami-auto-apply()
+  "Apply folding based on origami-auto-strings-fold-* variables."
+  (interactive)
+  (origami-auto-apply-patterns origami-auto-strings-fold-this origami-auto-strings-fold-next))
+
+
+(defun origami-auto-apply-patterns (this-line &optional next-line)
+  "Apply folding to patterns in THIS-LINE and NEXT-LINE.
+The folding is performed by `origami-auto--hide-element-this-line'
+and `origami-auto--hide-element-next-line'"
+  (origami-auto--match-and-apply this-line #'origami-auto--hide-element-this-line)
+  (origami-auto--match-and-apply next-line #'origami-auto--hide-element-next-line))
+
+
+;;;###autoload
+(define-minor-mode origami-auto-global-mode
+  "Apply initial folding when finding (opening) a file buffer"
+  :global t
+  
+  (remove-hook 'find-file-hook #'origami-auto-apply t)
+  (when origami-auto-global-mode
+    (add-hook 'find-file-hook #'origami-auto-apply t)))
+
+
 
 ;;;###autoload
 (define-minor-mode origami-mode
