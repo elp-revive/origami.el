@@ -820,8 +820,6 @@ uncover any bugs."
   (call-interactively 'origami-show-node))
 
 
-
-
 ;;; See origami-hide-overlay
 (defun origami--point-in-folded-overlay ()
   "Check if point is on an already folded overlay."
@@ -841,7 +839,6 @@ PATTERN-OR-PATTERNS is a string or a list of strings to search"
           (unless (origami--point-in-folded-overlay)
             (funcall function)))))))
 
-
 (defun origami-auto--hide-element-next-line ()
   "Apply origami-hide-element to the next line of current point."
   (forward-line)
@@ -857,7 +854,6 @@ PATTERN-OR-PATTERNS is a string or a list of strings to search"
   (interactive)
   (origami-auto-apply-patterns origami-auto-strings-fold-this origami-auto-strings-fold-next))
 
-
 (defun origami-auto-apply-patterns (this-line &optional next-line)
   "Apply folding to patterns in THIS-LINE and NEXT-LINE.
 The folding is performed by `origami-auto--hide-element-this-line'
@@ -865,16 +861,13 @@ and `origami-auto--hide-element-next-line'"
   (origami-auto--match-and-apply this-line #'origami-auto--hide-element-this-line)
   (origami-auto--match-and-apply next-line #'origami-auto--hide-element-next-line))
 
-
 ;;;###autoload
 (define-minor-mode origami-auto-global-mode
   "Apply initial folding when finding (opening) a file buffer"
   :global t
-  
   (remove-hook 'find-file-hook #'origami-auto-apply t)
   (when origami-auto-global-mode
     (add-hook 'find-file-hook #'origami-auto-apply t)))
-
 
 
 ;;;###autoload
