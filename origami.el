@@ -887,16 +887,30 @@ and `origami-auto--hide-element-next-line'"
   (when origami-auto-global-mode
     (add-hook 'find-file-hook #'origami-auto-apply t)))
 
+;;
+;; (@* "Entry" )
+;;
+
+(defun origami--enable ()
+  "Enable `origami' mode."
+  (add-hook 'occur-mode-find-occurrence-hook 'origami-find-occurrence-show-node nil t)
+  (setq next-error-move-function (lambda (ignored pos)
+                                   (goto-char pos)
+                                   (call-interactively 'origami-show-node)))
+  (add-hook 'clone-indirect-buffer-hook (lambda () (origami-reset (current-buffer)))))
+
+(defun origami--disable ()
+  "Disable `origami' mode."
+  (remove-hook 'occur-mode-find-occurrence-hook 'origami-find-occurrence-show-node t)
+  (setq next-error-move-function nil))
 
 ;;;###autoload
 (define-minor-mode origami-mode
   "Minor mode to selectively hide/show text in the current buffer.
-With a prefix argument ARG, enable the mode if ARG is positive,
-and disable it otherwise.  If called from Lisp, enable the mode
-if ARG is omitted or nil.
+With a prefix argument ARG, enable the mode if ARG is positive, and disable
+it otherwise.  If called from Lisp, enable the mode if ARG is omitted or nil.
 
-Lastly, the normal hook `origami-mode-hook' is run using
-`run-hooks'.
+Lastly, the normal hook `origami-mode-hook' is run using `run-hooks'.
 
 Key bindings:
 \\{origami-mode-map}"
@@ -904,18 +918,7 @@ Key bindings:
   :lighter nil
   :keymap origami-mode-map
   :init-value nil
-  (if origami-mode
-      (progn
-        (add-hook 'occur-mode-find-occurrence-hook
-                  'origami-find-occurrence-show-node nil t)
-        (setq next-error-move-function (lambda (ignored pos)
-                                         (goto-char pos)
-                                         (call-interactively 'origami-show-node)))
-        (add-hook 'clone-indirect-buffer-hook
-                  (lambda () (origami-reset (current-buffer)))))
-    (remove-hook 'occur-mode-find-occurrence-hook
-                 'origami-find-occurrence-show-node t)
-    (setq next-error-move-function nil))
+  (if origami-mode (origami--enable) (origami--disable))
   (origami-reset (current-buffer)))
 
 ;;;###autoload
