@@ -190,6 +190,10 @@ header overlay should cover. Result is a cons cell of (begin . end)."
 ;;; fold structure
 
 (defun origami-fold-node (beg end offset open &optional children data)
+  "Fold the node.
+Argument BEG is the beginning folding point.
+Argument END is the end folding point.
+"
   (let ((sorted-children (-sort (lambda (a b)
                                   (or (< (origami-fold-beg a) (origami-fold-beg b))
                                       (and (= (origami-fold-beg a) (origami-fold-beg b))
@@ -302,7 +306,7 @@ F applied to the leaf."
   (cdr
    (-reduce-r-from (lambda (node acc)
                      (destructuring-bind (old-node . new-node) acc
-                                         (cons node (origami-fold-replace-child node old-node new-node))))
+                       (cons node (origami-fold-replace-child node old-node new-node))))
                    (let ((leaf (-last-item path))) (cons leaf (funcall f leaf)))
                    (butlast path))))
 
@@ -487,20 +491,19 @@ with the current state and the current node at each iteration."
     (setq origami-history (funcall f origami-history))))
 
 (defun origami-rebuild-tree? (buffer)
-  "Determines if the tree needs to be rebuilt for BUFFER since it
-was last built."
+  "Determines if the tree needs to be rebuilt for BUFFER since it was last built."
   (not (= (buffer-local-value 'origami-tree-tick buffer)
           (buffer-modified-tick buffer))))
 
 (defun origami-build-tree (buffer parser)
+  "Build the tree for BUFFER."
   (when parser
     (with-current-buffer buffer
       (let ((contents (buffer-string)))
-        (-> parser
-            (funcall contents)
-            origami-fold-root-node)))))
+        (-> parser (funcall contents) origami-fold-root-node)))))
 
 (defun origami-get-parser (buffer)
+  "Get the possible parser for BUFFER."
   (let* ((cached-tree (origami-get-cached-tree buffer))
          (create (lambda (beg end offset children)
                    (let ((previous-fold (-last-item (origami-fold-find-path-with-range cached-tree beg end))))
@@ -520,8 +523,7 @@ was last built."
       (funcall parser-gen create))))
 
 (defun origami-get-fold-tree (buffer)
-  "Facade. Build the tree if it hasn't already been built
-otherwise fetch cached tree."
+  "Build the tree if it hasn't already been built otherwise fetch cached tree."
   (when origami-mode
     (if (origami-rebuild-tree? buffer)
         (origami-build-tree buffer (origami-get-parser buffer))
