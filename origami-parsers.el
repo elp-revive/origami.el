@@ -37,9 +37,9 @@
 (require 'dash)
 
 (defun origami-get-positions (content regex)
-  "Returns a list of positions where REGEX matches in CONTENT. A
-position is a cons cell of the character and the numerical
-position in the CONTENT."
+  "Returns a list of positions where REGEX matches in CONTENT.
+A position is a cons cell of the character and the numerical position
+in the CONTENT."
   (with-temp-buffer
     (insert content)
     (goto-char (point-min))
