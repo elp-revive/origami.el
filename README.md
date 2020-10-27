@@ -1,7 +1,7 @@
 [![Build Status](https://travis-ci.com/jcs-elpa/origami.el.svg?branch=master)](https://travis-ci.com/jcs-elpa/origami.el)
 [![MELPA](https://melpa.org/packages/origami-badge.svg)](https://melpa.org/#/origami)
 [![MELPA Stable](https://stable.melpa.org/packages/origami-badge.svg)](https://stable.melpa.org/#/origami)
-[![Release Tag](https://img.shields.io/github/tag/jcs-elpa/parse-it.svg?label=release)](https://github.com/jcs-elpa/parse-it/releases/latest)
+[![Release Tag](https://img.shields.io/github/tag/jcs-elpa/origami.svg?label=release)](https://github.com/jcs-elpa/origami/releases/latest)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 # What is Origami?
