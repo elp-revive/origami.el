@@ -1,3 +1,6 @@
+[![Build Status](https://travis-ci.com/jcs-elpa/origami.el.svg?branch=master)](https://travis-ci.com/jcs-elpa/origami.el)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 # What is Origami?
 
 A text folding minor mode for Emacs.
@@ -216,7 +219,7 @@ This will add fold-marker support to that file.
 # Autofolding tagged lines when opening a file
 
 1. Enable the mode `origami-auto-global-mode`. This will add a `find-file-hook` that will fold every tagged line.
-2. Tag the lines you need to be initialy folded with `*autofold*`. 
+2. Tag the lines you need to be initialy folded with `*autofold*`.
 
 
         public void boringMethod(){ // *autofold*
@@ -231,11 +234,11 @@ This will add fold-marker support to that file.
         # A very long shell variable with newlines
          # *autofold:*
         LOREM="
-          Pellentesque dapibus suscipit ligula.  
-          Donec posuere augue in quam.  
-          Etiam vel tortor sodales tellus ultricies commodo. 
+          Pellentesque dapibus suscipit ligula.
+          Donec posuere augue in quam.
+          Etiam vel tortor sodales tellus ultricies commodo.
           Suspendisse potenti.
-          Aenean in sem ac leo mollis blandit. 
+          Aenean in sem ac leo mollis blandit.
           ...
         "
 
@@ -248,7 +251,7 @@ This functionality has been imported from the (now obsoleted) [origami-predef](h
 
 # Autofolding some lines when opening a file, based on patterns
 
-The function `origami-auto-apply-patterns` folds the lines containing arbitrary patterns. This allows to define your custom foldings for each major mode. 
+The function `origami-auto-apply-patterns` folds the lines containing arbitrary patterns. This allows to define your custom foldings for each major mode.
 
 
       (defun origami-auto-java()
