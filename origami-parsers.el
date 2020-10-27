@@ -2,7 +2,7 @@
 
 ;; Author: Greg Sexton <gregsexton@gmail.com>
 ;; Maintainer: Shen, Jen-Chieh <jcs090218@gmail.com>
-;; Version: 1.1
+;; Version: 1.2
 ;; Keywords: parsers
 ;; URL: https://github.com/jcs-elpa/origami.el
 
