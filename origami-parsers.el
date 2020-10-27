@@ -146,8 +146,8 @@ position in the CONTENT."
                        (cons positions (reverse acc)))))
     (cdr (build positions))))
 
-;;; TODO: tag these nodes? have ability to manipulate nodes that are
-;;; tagged? in a scoped fashion?
+;; TODO: tag these nodes? have ability to manipulate nodes that are tagged?
+;; in a scoped fashion?
 (defun origami-javadoc-parser (create)
   (lambda (content)
     (let ((positions (->> (origami-get-positions content "/\\*\\*\\|\\*/")
@@ -200,7 +200,7 @@ position in the CONTENT."
         (goto-char beg)
         (let (acc)
           ;; iterate all same level children.
-          (while (and (beginning-of-defun -1) (<= (point) end)) ;; have children between beg and end?
+          (while (and (beginning-of-defun -1) (<= (point) end))  ; have children between beg and end?
             (let* ((new-beg (point))
                    (new-offset (progn (search-forward-regexp ":" nil t) (- (point) new-beg)))
                    (new-end (progn (end-of-defun) (point))))
@@ -223,8 +223,8 @@ position in the CONTENT."
           (search-forward-regexp regex nil t)
           (setq offset (- (point) beg))
           (end-of-defun)
-          (backward-char)      ;move point to one after the last paren
-          (setq end (1- (point))) ;don't include the last paren in the fold
+          (backward-char)  ; move point to one after the last paren
+          (setq end (1- (point)))  ; don't include the last paren in the fold
           (when (> offset 0)
             (setq acc (cons (funcall create beg end offset nil) acc)))
           (beginning-of-defun -1))
