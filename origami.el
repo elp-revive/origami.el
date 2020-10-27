@@ -218,28 +218,39 @@ header overlay should cover. Result is a cons cell of (begin . end)."
           (vector beg end offset open sorted-children data))))))
 
 (defun origami-fold-root-node (&optional children)
-  "Create a root container node."
+  "Create a root container node.
+
+Optional argument CHILDREN can be add to the created node."
   (origami-fold-node 1 most-positive-fixnum 0 t children 'root))
 
-(defun origami-fold-is-root-node? (node) (eq (origami-fold-data node) 'root))
+(defun origami-fold-is-root-node? (node)
+  "Return non-nil when NODE is root of the node."
+  (eq (origami-fold-data node) 'root))
 
 (defun origami-fold-beg (node)
+  "Return beginning point from NODE."
   (when node
     (if (origami-fold-is-root-node? node)
         (aref node 0)
       (- (overlay-start (origami-fold-data node)) (origami-fold-offset node)))))
 
 (defun origami-fold-end (node)
+  "Return end point from NODE."
   (when node
     (if (origami-fold-is-root-node? node)
         (aref node 1)
       (overlay-end (origami-fold-data node)))))
 
-(defun origami-fold-offset (node) (when node (aref node 2)))
+(defun origami-fold-offset (node)
+  "Return offset of the NODE."
+  (when node (aref node 2)))
 
-(defun origami-fold-open? (node) (when node (aref node 3)))
+(defun origami-fold-open? (node)
+  "Return non-nil when NODE is open."
+  (when node (aref node 3)))
 
 (defun origami-fold-open-set (node value)
+  "Set NODE with VALUE."
   (when node
     (if (origami-fold-is-root-node? node)
         node
@@ -250,9 +261,12 @@ header overlay should cover. Result is a cons cell of (begin . end)."
                          (origami-fold-children node)
                          (origami-fold-data node)))))
 
-(defun origami-fold-children (node) (when node (aref node 4)))
+(defun origami-fold-children (node)
+  "Return children from NODE."
+  (when node (aref node 4)))
 
 (defun origami-fold-children-set (node children)
+  "Set CHILDREN to NODE."
   (when node
     (origami-fold-node (origami-fold-beg node)
                        (origami-fold-end node)
@@ -261,7 +275,9 @@ header overlay should cover. Result is a cons cell of (begin . end)."
                        children
                        (origami-fold-data node))))
 
-(defun origami-fold-data (node) (when node (aref node 5)))
+(defun origami-fold-data (node)
+  "Return data from NODE."
+  (when node (aref node 5)))
 
 ;;; fold structure utils
 
