@@ -35,11 +35,15 @@ more comfortable.
 
 Drop this package somewhere on your load-path or
 
-    (add-to-list 'load-path (expand-file-name "/path/to/origami.el/"))
+```el
+(add-to-list 'load-path (expand-file-name "/path/to/origami.el/"))
+```
 
 Then
 
-    (require 'origami)
+```el
+(require 'origami)
+```
 
 In a buffer run `M-x origami-mode`, and start experimenting with any
 of the supplied origami interactive functions. I recommend binding
