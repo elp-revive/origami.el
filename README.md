@@ -63,8 +63,9 @@ The following commands are supplied to move between and manipulate
 folds. Those in bold are particularly useful. Many primitives are
 provided so that you may compose your own custom functions.
 
-| origami-open-node | Open a fold node. |
+| Commands | Description |
 |:---|:---|
+| origami-open-node | Open a fold node. |
 | origami-open-node-recursively | Open a fold node and all of its children. |
 | origami-show-node | Like origami-open-node but also opens parent fold nodes recursively so as to ensure the position where point is is visible. |
 | origami-close-node | Close a fold node. |
