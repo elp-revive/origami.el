@@ -63,107 +63,27 @@ The following commands are supplied to move between and manipulate
 folds. Those in bold are particularly useful. Many primitives are
 provided so that you may compose your own custom functions.
 
-<table>
-  <tr>
-    <td>origami-open-node</td>
-    <td>Open a fold node.</td>
-  </tr>
-
-  <tr>
-    <td>origami-open-node-recursively</td>
-    <td>Open a fold node and all of its children.</td>
-  </tr>
-
-  <tr>
-    <td>origami-show-node</td>
-    <td>Like origami-open-node but also opens parent fold nodes recursively so as to ensure the position where point is is visible.</td>
-  </tr>
-
-  <tr>
-    <td>origami-close-node</td>
-    <td>Close a fold node.</td>
-  </tr>
-
-  <tr>
-    <td>origami-close-node-recursively</td>
-    <td>Close a fold node and all of its children.</td>
-  </tr>
-
-  <tr>
-    <td>origami-toggle-node</td>
-    <td>Toggle open or closed a fold node.</td>
-  </tr>
-
-  <tr>
-    <td>origami-forward-toggle-node</td>
-    <td>Search forward on this line for a node and toggle it open or closed. This makes toggling nodes much more convenient.</td>
-  </tr>
-
-  <tr>
-    <td><strong>origami-recursively-toggle-node</strong></td>
-    <td>Acts like org-mode header collapsing. Cycle a fold between open, recursively open, closed.</td>
-  </tr>
-
-  <tr>
-    <td>origami-open-all-nodes</td>
-    <td>Open every fold in the buffer.</td>
-  </tr>
-
-  <tr>
-    <td>origami-close-all-nodes</td>
-    <td>Close every fold in the buffer.</td>
-  </tr>
-
-  <tr>
-    <td>origami-toggle-all-nodes</td>
-    <td>Toggle open/closed every fold node in the buffer.</td>
-  </tr>
-
-  <tr>
-    <td><strong>origami-show-only-node</strong></td>
-    <td>Close everything but the folds necessary to see the point. Very useful for concentrating on an area of code.</td>
-  </tr>
-
-  <tr>
-    <td>origami-previous-fold</td>
-    <td>Move to the previous fold.</td>
-  </tr>
-
-  <tr>
-    <td>origami-next-fold</td>
-    <td>Move to the end of the next fold.</td>
-  </tr>
-
-  <tr>
-    <td>origami-forward-fold</td>
-    <td>Move to the start of the next fold.</td>
-  </tr>
-
-  <tr>
-    <td>origami-forward-fold-same-level</td>
-    <td>Move to the start of the next fold that is a sibling of the current fold.</td>
-  </tr>
-
-  <tr>
-    <td>origami-backward-fold-same-level</td>
-    <td>Move to the start of the previous fold that is a sibling of the current fold.</td>
-  </tr>
-
-  <tr>
-    <td><strong>origami-undo</strong></td>
-    <td>Undo the last folding operation.</td>
-  </tr>
-
-  <tr>
-    <td><strong>origami-redo</strong></td>
-    <td>Redo the last undone folding operation.</td>
-  </tr>
-
-  <tr>
-    <td>origami-reset</td>
-    <td>Remove all folds from the buffer and reset all origami state. Useful if origami messes up!</td>
-  </tr>
-</table>
+| origami-open-node | Open a fold node. |
+|:---|:---|
+| origami-open-node-recursively | Open a fold node and all of its children. |
+| origami-show-node | Like origami-open-node but also opens parent fold nodes recursively so as to ensure the position where point is is visible. |
+| origami-close-node | Close a fold node. |
+| origami-close-node-recursively | Close a fold node and all of its children. |
+| origami-toggle-node | Toggle open or closed a fold node. |
+| origami-forward-toggle-node | Search forward on this line for a node and toggle it open or closed. This makes toggling nodes much more convenient. |
+| **origami-recursively-toggle-node** | Acts like org-mode header collapsing. Cycle a fold between open, recursively open, closed. |
+| origami-open-all-nodes | Open every fold in the buffer. |
+| origami-close-all-nodes | Close every fold in the buffer. |
+| origami-toggle-all-nodes | Toggle open/closed every fold node in the buffer. |
+| **origami-show-only-node** | Close everything but the folds necessary to see the point. Very useful for concentrating on an area of code. |
+| origami-previous-fold | Move to the previous fold. |
+| origami-next-fold | Move to the end of the next fold. |
+| origami-forward-fold | Move to the start of the next fold. |
+| origami-forward-fold-same-level | Move to the start of the next fold that is a sibling of the current fold. |
+| origami-backward-fold-same-level | Move to the start of the previous fold that is a sibling of the current fold. |
+| **origami-undo** | Undo the last folding operation. |
+| origami-redo | Redo the last undone folding operation. |
+| origami-reset | Remove all folds from the buffer and reset all origami state. Useful if origami messes up! |
 
 # Does it support my favourite major-mode?
 
