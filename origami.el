@@ -4,12 +4,13 @@
 ;; Maintainer: Shen, Jen-Chieh <jcs090218@gmail.com>
 ;; Version: 1.1
 ;; Keywords: folding
-;; URL: https://github.com/gregsexton/origami.el
+;; URL: https://github.com/jcs-elpa/origami.el
 ;; Package-Requires: ((s "1.9.0") (dash "2.5.0") (emacs "24") (cl-lib "0.5"))
 
 ;; The MIT License (MIT)
 
 ;; Copyright (c) 2014 Greg Sexton
+;; Copyright (c) 2019-2020 Jen-Chieh Shen
 
 ;; Permission is hereby granted, free of charge, to any person obtaining a copy
 ;; of this software and associated documentation files (the "Software"), to deal
