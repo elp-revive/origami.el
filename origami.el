@@ -191,9 +191,8 @@ header overlay should cover. Result is a cons cell of (begin . end)."
 
 (defun origami-fold-node (beg end offset open &optional children data)
   "Fold the node.
-Argument BEG is the beginning folding point.
-Argument END is the end folding point.
-"
+Argument BEG is the beginning folding point described by the node.
+Argument END is the end folding point described by the node."
   (let ((sorted-children (-sort (lambda (a b)
                                   (or (< (origami-fold-beg a) (origami-fold-beg b))
                                       (and (= (origami-fold-beg a) (origami-fold-beg b))
@@ -201,9 +200,8 @@ Argument END is the end folding point.
                                 (remove nil children))))
     ;; ensure invariant: no children overlap
     (when (-some? (lambda (pair)
-                    (let ((a (car pair))
-                          (b (cadr pair)))
-                      (when b ;for the odd numbered case - there may be a single item
+                    (let ((a (car pair)) (b (cadr pair)))
+                      (when b  ;for the odd numbered case - there may be a single item
                         ;; the < function doesn't support varargs
                         (or (>= (origami-fold-beg a) (origami-fold-end a))
                             (>= (origami-fold-end a) (origami-fold-beg b))
