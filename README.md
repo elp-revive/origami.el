@@ -19,7 +19,7 @@ convenient.
 
 # What does it look like?
 
-![origami](http://www.gregsexton.org/images/origami-screen.png)
+![origami](./etc/origami-screen.png)
 
 # How do I install it?
 
