@@ -168,6 +168,7 @@ To some degree, yes. Currently out of the box support is provided for:
 * C
 * C++
 * Clojure
+* Dart
 * Go
 * Java
 * Javascript
