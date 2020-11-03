@@ -2,7 +2,7 @@
 
 ;; Author: Greg Sexton <gregsexton@gmail.com>
 ;; Maintainer: Shen, Jen-Chieh <jcs090218@gmail.com>
-;; Version: 2.0
+;; Version: 2.1
 ;; Keywords: parsers
 ;; URL: https://github.com/jcs-elpa/origami.el
 
@@ -148,26 +148,34 @@ in the CONTENT."
                 (cons positions (reverse acc)))))
     (cdr (build positions))))
 
+(defvar origami-doc-faces
+  '(font-lock-doc-face
+    font-lock-comment-face
+    font-lock-comment-delimiter-face)
+  "List of face that apply for docstring.")
+
 ;; TODO: tag these nodes? have ability to manipulate nodes that are tagged?
 ;; in a scoped fashion?
 (defun origami-javadoc-parser (create)
   (lambda (content)
-    (let ((positions (->> (origami-get-positions content "/\\*\\*\\|\\*/")
-                          (-filter (lambda (position)
-                                     (eq (get-text-property 0 'face (car position))
-                                         'font-lock-doc-face))))))
+    (let ((positions
+           (->> (origami-get-positions content "/\\*\\*\\|\\*/")
+                (-filter (lambda (position)
+                           (memq (get-text-property 0 'face (car position))
+                                 origami-doc-faces))))))
       (origami-build-pair-tree create "/**" "*/" positions))))
 
 (defun origami-c-style-parser (create)
   (lambda (content)
-    (let ((positions (->> (origami-get-positions content "[{}]")
-                          (remove-if (lambda (position)
-                                       (let ((face (get-text-property 0 'face (car position))))
-                                         (-any? (lambda (f)
-                                                  (memq f '(font-lock-doc-face
-                                                            font-lock-comment-face
-                                                            font-lock-string-face)))
-                                                (if (listp face) face (list face)))))))))
+    (let ((positions
+           (->> (origami-get-positions content "[{}]")
+                (cl-remove-if (lambda (position)
+                                (let ((face (get-text-property 0 'face (car position))))
+                                  (-any? (lambda (f)
+                                           (memq f '(font-lock-doc-face
+                                                     font-lock-comment-face
+                                                     font-lock-string-face)))
+                                         (if (listp face) face (list face)))))))))
       (origami-build-pair-tree create "{" "}" positions))))
 
 (defun origami-c-macro-parser (create)
@@ -284,7 +292,7 @@ in the CONTENT."
           (origami-build-pair-tree create start-marker end-marker positions))))))
 
 (defcustom origami-parser-alist
-  `((actionscript-mode     . origami-c-style-parser)
+  `((actionscript-mode     . origami-java-parser)
     (c-mode                . origami-c-parser)
     (c++-mode              . origami-c-style-parser)
     (clojure-mode          . origami-clj-parser)
@@ -305,8 +313,9 @@ in the CONTENT."
     (perl-mode             . origami-c-style-parser)
     (php-mode              . origami-c-style-parser)
     (python-mode           . origami-parser-imenu-flat)
-    (rust-mode             . origami-parser-imenu-flat)
+    (rjsx-mode             . origami-c-style-parser)
     (rst-mode              . origami-parser-imenu-flat)
+    (rust-mode             . origami-parser-imenu-flat)
     (triple-braces         . ,(origami-markers-parser "{{{" "}}}"))
     (typescript-mode       . origami-c-style-parser))
   "alist mapping major-mode to parser function."

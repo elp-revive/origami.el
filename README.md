@@ -101,6 +101,7 @@ To some degree, yes. Currently out of the box support is provided for:
 * Go
 * Java
 * Javascript
+* JSX
 * Kotlin
 * Lisp
 * Objective-C

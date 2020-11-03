@@ -2,7 +2,7 @@
 
 ;; Author: Greg Sexton <gregsexton@gmail.com>
 ;; Maintainer: Shen, Jen-Chieh <jcs090218@gmail.com>
-;; Version: 2.0
+;; Version: 2.1
 ;; Keywords: folding
 ;; URL: https://github.com/jcs-elpa/origami.el
 ;; Package-Requires: ((s "1.9.0") (dash "2.5.0") (emacs "24") (cl-lib "0.5"))
