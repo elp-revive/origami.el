@@ -87,25 +87,31 @@
 
 ;;; overlay manipulation
 
+(defun origami--header-overlay-begin (fold-overlay)
+  "Return beginning point from FOLD-OVERLAY."
+  (save-excursion
+    (goto-char (overlay-start fold-overlay))
+    (line-beginning-position)))
+
+(defun origami--header-overlay-end (fold-overlay)
+  "Return end point from FOLD-OVERLAY."
+  ;; Find the end of the folded region -- include the following
+  ;; newline if possible. The header will span the entire fold.
+  (save-excursion
+    (save-match-data
+      (goto-char (overlay-end fold-overlay))
+      (when (looking-at ".")
+        (forward-char 1)
+        (when (looking-at "\n")
+          (forward-char 1)))
+      (point))))
+
 (defun origami-header-overlay-range (fold-overlay)
   "Given a FOLD-OVERLAY, return the range that the corresponding \
 header overlay should cover.  Result is a cons cell of (begin . end)."
   (with-current-buffer (overlay-buffer fold-overlay)
-    (let ((fold-begin
-           (save-excursion
-             (goto-char (overlay-start fold-overlay))
-             (line-beginning-position)))
-          (fold-end
-           ;; Find the end of the folded region -- include the following
-           ;; newline if possible. The header will span the entire fold.
-           (save-excursion
-             (save-match-data
-               (goto-char (overlay-end fold-overlay))
-               (when (looking-at ".")
-                 (forward-char 1)
-                 (when (looking-at "\n")
-                   (forward-char 1)))
-               (point)))))
+    (let ((fold-begin (origami--header-overlay-begin fold-overlay))
+          (fold-end (origami--header-overlay-end fold-overlay)))
       (cons fold-begin fold-end))))
 
 (defun origami-header-overlay-reset-position (header-overlay)
@@ -130,7 +136,7 @@ header overlay should cover.  Result is a cons cell of (begin . end)."
       ;; changed.
       (let* ((range (origami-header-overlay-range ov))
              (header-ov (make-overlay (car range) (cdr range) buffer
-                                      nil))) ;; no front advance
+                                      nil)))  ; no front advance
         (overlay-put header-ov 'creator 'origami)
         (overlay-put header-ov 'fold-overlay ov)
         (overlay-put header-ov 'modification-hooks '(origami-header-modify-hook))
@@ -159,12 +165,12 @@ header overlay should cover.  Result is a cons cell of (begin . end)."
     (origami-show-overlay ov)))
 
 (defun origami-activate-header (ov)
-  ;; Reposition the header overlay. Since it extends before the folded area, it
-  ;; may no longer cover the appropriate locations.
-  (origami-header-overlay-reset-position ov)
-  (overlay-put ov 'origami-header-active t)
-  (overlay-put ov 'face 'origami-fold-header-face)
-  (overlay-put ov 'before-string
+    ;; Reposition the header overlay. Since it extends before the folded area, it
+    ;; may no longer cover the appropriate locations.
+    (origami-header-overlay-reset-position ov)
+    (overlay-put ov 'origami-header-active t)
+    (overlay-put ov 'face 'origami-fold-header-face)
+    (overlay-put ov 'before-string
                (propertize
                 "…"
                 'display
@@ -307,8 +313,8 @@ Optional argument CHILDREN can be add to the created node."
                              (cons new (remove old (origami-fold-children node)))))
 
 (defun origami-fold-assoc (path f)
-  "Rewrite the tree, replacing the node referenced by PATH with
-F applied to the leaf."
+  "Rewrite the tree, replacing the node referenced by PATH with F applied to \
+ the leaf."
   (cdr
    (-reduce-r-from (lambda (node acc)
                      (destructuring-bind (old-node . new-node) acc
