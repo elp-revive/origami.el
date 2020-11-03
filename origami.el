@@ -176,7 +176,8 @@ header overlay should cover. Result is a cons cell of (begin . end)."
   (overlay-put ov 'before-string nil)
   (overlay-put ov 'after-string nil))
 
-(defun origami-isearch-show (ov)
+(defun origami-isearch-show (_ov)
+  "Show overlay."
   (origami-show-node (current-buffer) (point)))
 
 (defun origami-hide-overlay-from-fold-tree-fn (node)
