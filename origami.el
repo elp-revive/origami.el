@@ -88,8 +88,8 @@
 ;;; overlay manipulation
 
 (defun origami-header-overlay-range (fold-overlay)
-  "Given a `fold-overlay', return the range that the corresponding
-header overlay should cover. Result is a cons cell of (begin . end)."
+  "Given a FOLD-OVERLAY, return the range that the corresponding \
+header overlay should cover.  Result is a cons cell of (begin . end)."
   (with-current-buffer (overlay-buffer fold-overlay)
     (let ((fold-begin
            (save-excursion
