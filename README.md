@@ -95,7 +95,6 @@ To some degree, yes. Currently out of the box support is provided for:
 * C/C++
 * C#
 * Clojure
-* CSS
 * Dart
 * Emacs Lisp
 * Go

@@ -251,7 +251,6 @@ in the CONTENT."
     (c++-mode              . origami-c-style-parser)
     (clojure-mode          . origami-clj-parser)
     (csharp-mode           . origami-c-style-parser)
-    (css-mode              . origami-c-style-parser)
     (dart-mode             . origami-c-style-parser)
     (emacs-lisp-mode       . origami-elisp-parser)
     (go-mode               . origami-c-style-parser)
