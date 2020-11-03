@@ -255,7 +255,7 @@ in the CONTENT."
           (origami-build-pair-tree create start-marker end-marker positions))))))
 
 (defcustom origami-parser-alist
-  `((actionscript-mode     . origami-c-style-parser)
+  `((actionscript-mode     . origami-java-parser)
     (c-mode                . origami-c-parser)
     (c++-mode              . origami-c-style-parser)
     (clojure-mode          . origami-clj-parser)
