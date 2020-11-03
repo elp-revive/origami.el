@@ -73,12 +73,14 @@
 
 (defcustom origami-auto-strings-fold-this '("\\*autofold\\*")  ; *autofold*
   "When found, `origami-close-node' will be invoked on the same line."
-  :type '(repeat string))
+  :type '(repeat string)
+  :group 'origami)
 
 ;;; *autofold:*
 (defcustom origami-auto-strings-fold-next '("\\*autofold:\\*")
   "When found, `origami-close-node' will be invoked on the next line."
-  :type '(repeat string))
+  :type '(repeat string)
+  :group 'origami)
 
 ;;; overlay manipulation
 
