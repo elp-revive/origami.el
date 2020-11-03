@@ -103,6 +103,7 @@ To some degree, yes. Currently out of the box support is provided for:
 * PHP
 * Perl
 * Python
+* Rust
 * elisp
 
 Anything not in this list will be folded using indentation. This works
