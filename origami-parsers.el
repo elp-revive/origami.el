@@ -255,6 +255,7 @@ in the CONTENT."
     (emacs-lisp-mode       . origami-elisp-parser)
     (go-mode               . origami-c-style-parser)
     (java-mode             . origami-java-parser)
+    (javascript-mode       . origami-c-style-parser)
     (js-mode               . origami-c-style-parser)
     (js2-mode              . origami-c-style-parser)
     (js3-mode              . origami-c-style-parser)
