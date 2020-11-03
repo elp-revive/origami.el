@@ -94,6 +94,7 @@ To some degree, yes. Currently out of the box support is provided for:
 
 * C
 * C++
+* Objective-C
 * C#
 * Clojure
 * Dart

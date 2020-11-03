@@ -250,6 +250,7 @@ in the CONTENT."
   `((java-mode             . origami-java-parser)
     (c-mode                . origami-c-parser)
     (c++-mode              . origami-c-style-parser)
+    (objc-mode             . origami-c-style-parser)
     (csharp-mode           . origami-c-style-parser)
     (perl-mode             . origami-c-style-parser)
     (cperl-mode            . origami-c-style-parser)
