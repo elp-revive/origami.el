@@ -5,8 +5,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 # What is Origami?
-
-A text folding minor mode for Emacs.
+> A text folding minor mode for Emacs.
 
 With this minor mode enabled, you can collapse and expand regions of
 text.
