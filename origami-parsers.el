@@ -2,7 +2,7 @@
 
 ;; Author: Greg Sexton <gregsexton@gmail.com>
 ;; Maintainer: Shen, Jen-Chieh <jcs090218@gmail.com>
-;; Version: 1.2
+;; Version: 2.0
 ;; Keywords: parsers
 ;; URL: https://github.com/jcs-elpa/origami.el
 
@@ -284,27 +284,31 @@ in the CONTENT."
           (origami-build-pair-tree create start-marker end-marker positions))))))
 
 (defcustom origami-parser-alist
-  `((c-mode                . origami-c-parser)
+  `((actionscript-mode     . origami-c-style-parser)
+    (c-mode                . origami-c-parser)
     (c++-mode              . origami-c-style-parser)
-    (objc-mode             . origami-c-style-parser)
-    (csharp-mode           . origami-c-style-parser)
-    (perl-mode             . origami-c-style-parser)
+    (clojure-mode          . origami-clj-parser)
     (cperl-mode            . origami-c-style-parser)
+    (csharp-mode           . origami-c-style-parser)
+    (dart-mode             . origami-c-style-parser)
+    (emacs-lisp-mode       . origami-elisp-parser)
+    (go-mode               . origami-c-style-parser)
     (java-mode             . origami-java-parser)
+    (javascript-mode       . origami-c-style-parser)
     (js-mode               . origami-c-style-parser)
     (js2-mode              . origami-c-style-parser)
     (js3-mode              . origami-c-style-parser)
-    (go-mode               . origami-c-style-parser)
+    (kotlin-mode           . origami-c-style-parser)
+    (lisp-mode             . origami-elisp-parser)
+    (lisp-interaction-mode . origami-elisp-parser)
+    (objc-mode             . origami-c-style-parser)
+    (perl-mode             . origami-c-style-parser)
     (php-mode              . origami-c-style-parser)
-    (dart-mode             . origami-c-style-parser)
     (python-mode           . origami-parser-imenu-flat)
     (rust-mode             . origami-parser-imenu-flat)
     (rst-mode              . origami-parser-imenu-flat)
-    (emacs-lisp-mode       . origami-elisp-parser)
-    (lisp-mode             . origami-elisp-parser)
-    (lisp-interaction-mode . origami-elisp-parser)
-    (clojure-mode          . origami-clj-parser)
-    (triple-braces         . ,(origami-markers-parser "{{{" "}}}")))
+    (triple-braces         . ,(origami-markers-parser "{{{" "}}}"))
+    (typescript-mode       . origami-c-style-parser))
   "alist mapping major-mode to parser function."
   :type 'hook
   :group 'origami)

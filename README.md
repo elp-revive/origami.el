@@ -92,6 +92,7 @@ provided so that you may compose your own custom functions.
 
 To some degree, yes. Currently out of the box support is provided for:
 
+* ActionScript
 * C/C++
 * C#
 * Clojure
@@ -100,12 +101,14 @@ To some degree, yes. Currently out of the box support is provided for:
 * Go
 * Java
 * Javascript
+* Kotlin
 * Lisp
 * Objective-C
 * PHP
 * Perl
 * Python
 * Rust
+* TypeScript
 
 Anything not in this list will be folded using indentation. This works
 surprisingly well for most major-modes and is great for folding text.
