@@ -265,7 +265,8 @@ in the CONTENT."
     (python-mode           . origami-python-parser)
     (lisp-mode             . origami-elisp-parser)
     (lisp-interaction-mode . origami-elisp-parser)
-    (triple-braces         . ,(origami-markers-parser "{{{" "}}}")))
+    (triple-braces         . ,(origami-markers-parser "{{{" "}}}"))
+    (typescript-mode       . origami-c-style-parser))
   "alist mapping major-mode to parser function."
   :type 'hook
   :group 'origami)
