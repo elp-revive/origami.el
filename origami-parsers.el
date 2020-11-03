@@ -260,6 +260,7 @@ in the CONTENT."
     (js-mode               . origami-c-style-parser)
     (js2-mode              . origami-c-style-parser)
     (js3-mode              . origami-c-style-parser)
+    (kotlin-mode           . origami-c-style-parser)
     (objc-mode             . origami-c-style-parser)
     (perl-mode             . origami-c-style-parser)
     (cperl-mode            . origami-c-style-parser)
