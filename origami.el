@@ -854,8 +854,8 @@ uncover any bugs."
 
 ;;; See origami-hide-overlay
 (defun origami--point-in-folded-overlay ()
-    "Check if point is on an already folded overlay."
-    (let* ((overlays (overlays-at (point)))
+  "Check if point is on an already folded overlay."
+  (let* ((overlays (overlays-at (point)))
          (predicate (lambda (overlay) (overlay-get overlay 'invisible)))
          (folded-overlay (cl-find-if predicate overlays)))
     folded-overlay))
@@ -877,28 +877,28 @@ PATTERN-OR-PATTERNS is a string or a list of strings to search"
   (origami-auto--hide-element-this-line))
 
 (defun origami-auto--hide-element-this-line ()
-    "Apply origami-hide-element to the line of current point."
-    (move-end-of-line nil)
-    (origami-close-node (current-buffer) (point)))
+  "Apply origami-hide-element to the line of current point."
+  (move-end-of-line nil)
+  (origami-close-node (current-buffer) (point)))
 
 (defun origami-auto-apply()
-    "Apply folding based on origami-auto-strings-fold-* variables."
-    (interactive)
-    (origami-auto-apply-patterns origami-auto-strings-fold-this origami-auto-strings-fold-next))
+  "Apply folding based on origami-auto-strings-fold-* variables."
+  (interactive)
+  (origami-auto-apply-patterns origami-auto-strings-fold-this origami-auto-strings-fold-next))
 
 (defun origami-auto-apply-patterns (this-line &optional next-line)
-    "Apply folding to patterns in THIS-LINE and NEXT-LINE.
+  "Apply folding to patterns in THIS-LINE and NEXT-LINE.
 The folding is performed by `origami-auto--hide-element-this-line'
 and `origami-auto--hide-element-next-line'"
-    (origami-auto--match-and-apply this-line #'origami-auto--hide-element-this-line)
-    (origami-auto--match-and-apply next-line #'origami-auto--hide-element-next-line))
+  (origami-auto--match-and-apply this-line #'origami-auto--hide-element-this-line)
+  (origami-auto--match-and-apply next-line #'origami-auto--hide-element-next-line))
 
 ;;;###autoload
 (define-minor-mode origami-auto-global-mode
-    "Apply initial folding when finding (opening) a file buffer"
-    :global t
-    (remove-hook 'find-file-hook #'origami-auto-apply t)
-    (when origami-auto-global-mode
+  "Apply initial folding when finding (opening) a file buffer"
+  :global t
+  (remove-hook 'find-file-hook #'origami-auto-apply t)
+  (when origami-auto-global-mode
     (add-hook 'find-file-hook #'origami-auto-apply t)))
 
 ;;
@@ -906,17 +906,17 @@ and `origami-auto--hide-element-next-line'"
 ;;
 
 (defun origami--enable ()
-    "Enable `origami' mode."
-    (add-hook 'occur-mode-find-occurrence-hook 'origami-find-occurrence-show-node nil t)
-    (setq next-error-move-function (lambda (ignored pos)
-                                     (goto-char pos)
-                                     (call-interactively 'origami-show-node)))
-    (add-hook 'clone-indirect-buffer-hook (lambda () (origami-reset (current-buffer)))))
+  "Enable `origami' mode."
+  (add-hook 'occur-mode-find-occurrence-hook 'origami-find-occurrence-show-node nil t)
+  (setq next-error-move-function (lambda (ignored pos)
+                                   (goto-char pos)
+                                   (call-interactively 'origami-show-node)))
+  (add-hook 'clone-indirect-buffer-hook (lambda () (origami-reset (current-buffer)))))
 
 (defun origami--disable ()
-    "Disable `origami' mode."
-    (remove-hook 'occur-mode-find-occurrence-hook 'origami-find-occurrence-show-node t)
-    (setq next-error-move-function nil))
+  "Disable `origami' mode."
+  (remove-hook 'occur-mode-find-occurrence-hook 'origami-find-occurrence-show-node t)
+  (setq next-error-move-function nil))
 
 ;;;###autoload
 (define-minor-mode origami-mode
