@@ -99,14 +99,14 @@ in the CONTENT."
                              ;; parent encompasses them
                              (-reduce-r-from (lambda (nodes acc)
                                                (destructuring-bind (children-end . children) (build-nodes (cdr nodes))
-                                                                   (let ((this-end (max children-end (end (car nodes)))))
-                                                                     (cons (max this-end (car acc))
-                                                                           (cons (funcall create
-                                                                                          (beg (car nodes))
-                                                                                          this-end
-                                                                                          (offset (car nodes))
-                                                                                          children)
-                                                                                 (cdr acc))))))
+                                                 (let ((this-end (max children-end (end (car nodes)))))
+                                                   (cons (max this-end (car acc))
+                                                         (cons (funcall create
+                                                                        (beg (car nodes))
+                                                                        this-end
+                                                                        (offset (car nodes))
+                                                                        children)
+                                                               (cdr acc))))))
                                              '(0 . nil)
                                              tree))))
     (lambda (content)
