@@ -51,64 +51,65 @@ in the CONTENT."
       (reverse acc))))
 
 (defun origami-indent-parser (create)
-  (cl-labels ((lines (string) (origami-get-positions string ".*?\r?\n"))
-              (annotate-levels (lines)
-                               (-map (lambda (line)
-                                       ;; TODO: support tabs
-                                       (let ((indent (length (car (s-match "^ *" (car line)))))
-                                             (beg (cdr line))
-                                             (end (+ (cdr line) (length (car line)) -1)))
-                                         (if (s-blank? (s-trim (car line)))
-                                             'newline ;sentinel representing line break
-                                           (vector indent beg end (- end beg)))))
-                                     lines))
-              (indent (line) (if (eq line 'newline) -1 (aref line 0)))
-              (beg (line) (aref line 1))
-              (end (line) (aref line 2))
-              (offset (line) (aref line 3))
-              (collapse-same-level (lines)
-                                   (->>
-                                    (cdr lines)
-                                    (-reduce-from (lambda (acc line)
-                                                    (cond ((and (eq line 'newline) (eq (car acc) 'newline)) acc)
-                                                          ((= (indent line) (indent (car acc)))
-                                                           (cons (vector (indent (car acc))
-                                                                         (beg (car acc))
-                                                                         (end line)
-                                                                         (offset (car acc)))
-                                                                 (cdr acc)))
-                                                          (t (cons line acc))))
-                                                  (list (car lines)))
-                                    (remove 'newline)
-                                    reverse))
-              (create-tree (levels)
-                           (if (null levels)
-                               levels
-                             (let ((curr-indent (indent (car levels))))
-                               (->> levels
-                                    (-partition-by (lambda (l) (= (indent l) curr-indent)))
-                                    (-partition-all 2)
-                                    (-mapcat (lambda (x)
+  (cl-labels
+      ((lines (string) (origami-get-positions string ".*?\r?\n"))
+       (annotate-levels (lines)
+                        (-map (lambda (line)
+                                ;; TODO: support tabs
+                                (let ((indent (length (car (s-match "^ *" (car line)))))
+                                      (beg (cdr line))
+                                      (end (+ (cdr line) (length (car line)) -1)))
+                                  (if (s-blank? (s-trim (car line)))
+                                      'newline ;sentinel representing line break
+                                    (vector indent beg end (- end beg)))))
+                              lines))
+       (indent (line) (if (eq line 'newline) -1 (aref line 0)))
+       (beg (line) (aref line 1))
+       (end (line) (aref line 2))
+       (offset (line) (aref line 3))
+       (collapse-same-level (lines)
+                            (->>
+                             (cdr lines)
+                             (-reduce-from (lambda (acc line)
+                                             (cond ((and (eq line 'newline) (eq (car acc) 'newline)) acc)
+                                                   ((= (indent line) (indent (car acc)))
+                                                    (cons (vector (indent (car acc))
+                                                                  (beg (car acc))
+                                                                  (end line)
+                                                                  (offset (car acc)))
+                                                          (cdr acc)))
+                                                   (t (cons line acc))))
+                                           (list (car lines)))
+                             (remove 'newline)
+                             reverse))
+       (create-tree (levels)
+                    (if (null levels)
+                        levels
+                      (let ((curr-indent (indent (car levels))))
+                        (->> levels
+                             (-partition-by (lambda (l) (= (indent l) curr-indent)))
+                             (-partition-all 2)
+                             (-mapcat (lambda (x)
                                         ;takes care of multiple identical levels, introduced when there are newlines
-                                               (-concat
-                                                (-map 'list (butlast (car x)))
-                                                (list (cons (-last-item (car x)) (create-tree (cadr x)))))))))))
-              (build-nodes (tree)
-                           (if (null tree) (cons 0 nil)
-                             ;; complexity here is due to having to find the end of the children so that the
-                             ;; parent encompasses them
-                             (-reduce-r-from (lambda (nodes acc)
-                                               (destructuring-bind (children-end . children) (build-nodes (cdr nodes))
-                                                 (let ((this-end (max children-end (end (car nodes)))))
-                                                   (cons (max this-end (car acc))
-                                                         (cons (funcall create
-                                                                        (beg (car nodes))
-                                                                        this-end
-                                                                        (offset (car nodes))
-                                                                        children)
-                                                               (cdr acc))))))
-                                             '(0 . nil)
-                                             tree))))
+                                        (-concat
+                                         (-map 'list (butlast (car x)))
+                                         (list (cons (-last-item (car x)) (create-tree (cadr x)))))))))))
+       (build-nodes (tree)
+                    (if (null tree) (cons 0 nil)
+                      ;; complexity here is due to having to find the end of the children so that the
+                      ;; parent encompasses them
+                      (-reduce-r-from (lambda (nodes acc)
+                                        (destructuring-bind (children-end . children) (build-nodes (cdr nodes))
+                                          (let ((this-end (max children-end (end (car nodes)))))
+                                            (cons (max this-end (car acc))
+                                                  (cons (funcall create
+                                                                 (beg (car nodes))
+                                                                 this-end
+                                                                 (offset (car nodes))
+                                                                 children)
+                                                        (cdr acc))))))
+                                      '(0 . nil)
+                                      tree))))
     (lambda (content)
       (-> content
           lines
@@ -119,31 +120,32 @@ in the CONTENT."
           cdr))))
 
 (defun origami-build-pair-tree (create open close positions)
-  (cl-labels ((build (positions)
-                     ;; this is so horrible, but fast
-                     (let (acc beg (should-continue t))
-                       (while (and should-continue positions)
-                         (cond ((equal (caar positions) open)
-                                (if beg ;go down a level
-                                    (let* ((res (build positions))
-                                           (new-pos (car res))
-                                           (children (cdr res)))
-                                      (setq positions (cdr new-pos))
-                                      (setq acc (cons (funcall create beg (cdar new-pos) (length open) children)
-                                                      acc))
-                                      (setq beg nil))
-                                  ;; begin a new pair
-                                  (setq beg (cdar positions))
-                                  (setq positions (cdr positions))))
-                               ((equal (caar positions) close)
-                                (if beg
-                                    (progn ;close with no children
-                                      (setq acc (cons (funcall create beg (cdar positions) (length close) nil)
-                                                      acc))
-                                      (setq positions (cdr positions))
-                                      (setq beg nil))
-                                  (setq should-continue nil)))))
-                       (cons positions (reverse acc)))))
+  (cl-labels
+      ((build (positions)
+              ;; this is so horrible, but fast
+              (let (acc beg (should-continue t))
+                (while (and should-continue positions)
+                  (cond ((equal (caar positions) open)
+                         (if beg ;go down a level
+                             (let* ((res (build positions))
+                                    (new-pos (car res))
+                                    (children (cdr res)))
+                               (setq positions (cdr new-pos))
+                               (setq acc (cons (funcall create beg (cdar new-pos) (length open) children)
+                                               acc))
+                               (setq beg nil))
+                           ;; begin a new pair
+                           (setq beg (cdar positions))
+                           (setq positions (cdr positions))))
+                        ((equal (caar positions) close)
+                         (if beg
+                             (progn ;close with no children
+                               (setq acc (cons (funcall create beg (cdar positions) (length close) nil)
+                                               acc))
+                               (setq positions (cdr positions))
+                               (setq beg nil))
+                           (setq should-continue nil)))))
+                (cons positions (reverse acc)))))
     (cdr (build positions))))
 
 ;; TODO: tag these nodes? have ability to manipulate nodes that are tagged?
