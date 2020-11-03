@@ -92,19 +92,19 @@ provided so that you may compose your own custom functions.
 
 To some degree, yes. Currently out of the box support is provided for:
 
-* C
-* C++
-* Objective-C
+* C/C++
 * C#
 * Clojure
 * Dart
+* Emacs Lisp
 * Go
 * Java
 * Javascript
+* Lisp
+* Objective-C
 * PHP
 * Perl
 * Python
-* elisp
 
 Anything not in this list will be folded using indentation. This works
 surprisingly well for most major-modes and is great for folding text.
