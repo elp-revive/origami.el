@@ -113,7 +113,8 @@ header overlay should cover. Result is a cons cell of (begin . end)."
     (let ((range (origami-header-overlay-range fold-ov)))
       (move-overlay header-overlay (car range) (cdr range)))))
 
-(defun origami-header-modify-hook (header-overlay after-p b e &optional l)
+(defun origami-header-modify-hook (header-overlay after-p _b _e &optional _l)
+  "For overlay parameter `modification-hooks'."
   (when after-p (origami-header-overlay-reset-position header-overlay)))
 
 (defun origami-create-overlay (beg end offset buffer)
