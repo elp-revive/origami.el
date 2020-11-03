@@ -114,7 +114,7 @@ header overlay should cover. Result is a cons cell of (begin . end)."
       (move-overlay header-overlay (car range) (cdr range)))))
 
 (defun origami-header-modify-hook (header-overlay after-p b e &optional l)
-  (if after-p (origami-header-overlay-reset-position header-overlay)))
+  (when after-p (origami-header-overlay-reset-position header-overlay)))
 
 (defun origami-create-overlay (beg end offset buffer)
   (when (> (- end beg) 0)
