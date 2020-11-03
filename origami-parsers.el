@@ -268,6 +268,7 @@ in the CONTENT."
     (perl-mode             . origami-c-style-parser)
     (php-mode              . origami-c-style-parser)
     (python-mode           . origami-python-parser)
+    (rjsx-mode             . origami-c-style-parser)
     (triple-braces         . ,(origami-markers-parser "{{{" "}}}"))
     (typescript-mode       . origami-c-style-parser))
   "alist mapping major-mode to parser function."
