@@ -95,8 +95,8 @@
 
 (defun origami--header-overlay-end (fold-overlay)
   "Return end point from FOLD-OVERLAY."
-  ;; Find the end of the folded region -- include the following
-  ;; newline if possible. The header will span the entire fold.
+  ;; Find the end of the folded region -- include the following newline if
+  ;; possible. The header will span the entire fold.
   (save-excursion
     (save-match-data
       (goto-char (overlay-end fold-overlay))
