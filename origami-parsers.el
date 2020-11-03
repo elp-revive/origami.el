@@ -247,13 +247,13 @@ in the CONTENT."
           (origami-build-pair-tree create start-marker end-marker positions))))))
 
 (defcustom origami-parser-alist
-  `((java-mode             . origami-java-parser)
-    (c-mode                . origami-c-parser)
+  `((c-mode                . origami-c-parser)
     (c++-mode              . origami-c-style-parser)
     (objc-mode             . origami-c-style-parser)
     (csharp-mode           . origami-c-style-parser)
     (perl-mode             . origami-c-style-parser)
     (cperl-mode            . origami-c-style-parser)
+    (java-mode             . origami-java-parser)
     (js-mode               . origami-c-style-parser)
     (js2-mode              . origami-c-style-parser)
     (js3-mode              . origami-c-style-parser)
@@ -262,6 +262,7 @@ in the CONTENT."
     (dart-mode             . origami-c-style-parser)
     (python-mode           . origami-python-parser)
     (emacs-lisp-mode       . origami-elisp-parser)
+    (lisp-mode             . origami-elisp-parser)
     (lisp-interaction-mode . origami-elisp-parser)
     (clojure-mode          . origami-clj-parser)
     (triple-braces         . ,(origami-markers-parser "{{{" "}}}")))
