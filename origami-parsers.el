@@ -157,6 +157,7 @@ in the CONTENT."
 ;; TODO: tag these nodes? have ability to manipulate nodes that are tagged?
 ;; in a scoped fashion?
 (defun origami-javadoc-parser (create)
+  "Parser for Javadoc."
   (lambda (content)
     (let ((positions
            (->> (origami-get-positions content "/\\*\\*\\|\\*/")
@@ -166,6 +167,7 @@ in the CONTENT."
       (origami-build-pair-tree create "/**" "*/" positions))))
 
 (defun origami-c-style-parser (create)
+  "Parser for C style programming language."
   (lambda (content)
     (let ((positions
            (->> (origami-get-positions content "[{}]")
@@ -179,11 +181,13 @@ in the CONTENT."
       (origami-build-pair-tree create "{" "}" positions))))
 
 (defun origami-c-macro-parser (create)
+  "Parser for C style macro."
   (lambda (content)
     (let ((positions (origami-get-positions content "#if\\|#endif")))
       (origami-build-pair-tree create "#if" "#endif" positions))))
 
 (defun origami-c-parser (create)
+  "Parser for C."
   (let ((c-style (origami-c-style-parser create))
         (macros (origami-c-macro-parser create)))
     (lambda (content)
@@ -193,6 +197,7 @@ in the CONTENT."
         (origami-fold-root-node (funcall macros content)))))))
 
 (defun origami-java-parser (create)
+  "Parser for Java."
   (let ((c-style (origami-c-style-parser create))
         (javadoc (origami-javadoc-parser create)))
     (lambda (content)
@@ -201,6 +206,7 @@ in the CONTENT."
                                    (origami-fold-root-node (funcall javadoc content)))))))
 
 (defun origami-python-parser (create)
+  "Parser for Python."
   (lambda (content)
     (with-temp-buffer
       (insert content)
@@ -222,6 +228,7 @@ in the CONTENT."
       (python-subparser (point-min) (point-max)))))
 
 (defun origami-lisp-parser (create regex)
+  "Parser for Lisp."
   (lambda (content)
     (with-temp-buffer
       (insert content)
@@ -241,9 +248,11 @@ in the CONTENT."
         (reverse acc)))))
 
 (defun origami-elisp-parser (create)
+  "Parser for Emacs Lisp."
   (origami-lisp-parser create "(def\\w*\\s-*\\(\\s_\\|\\w\\|[:?!]\\)*\\([ \\t]*(.*?)\\)?"))
 
 (defun origami-clj-parser (create)
+  "Parser for Clojure."
   (origami-lisp-parser create "(def\\(\\w\\|-\\)*\\s-*\\(\\s_\\|\\w\\|[?!]\\)*\\([ \\t]*\\[.*?\\]\\)?"))
 
 (defun origami-markers-parser (start-marker end-marker)
