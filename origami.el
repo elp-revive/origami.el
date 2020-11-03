@@ -60,15 +60,18 @@
 (defface origami-fold-header-face
   `((t (:box (:line-width 1 :color ,(face-attribute 'highlight :background))
              :background ,(face-attribute 'highlight :background))))
-  "Face used to display fold headers.")
+  "Face used to display fold headers."
+  :group 'origami)
 
 (defface origami-fold-fringe-face
   '((t ()))
-  "Face used to display fringe contents.")
+  "Face used to display fringe contents."
+  :group 'origami)
 
 (defface origami-fold-replacement-face
   '((t :inherit 'font-lock-comment-face))
-  "Face used to display the fold replacement text.")
+  "Face used to display the fold replacement text."
+  :group 'origami)
 
 
 (defcustom origami-auto-strings-fold-this '("\\*autofold\\*")  ; *autofold*
