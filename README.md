@@ -201,14 +201,16 @@ The function `origami-auto-apply-patterns` folds the lines containing arbitrary 
 (add-hook 'sql-mode-hook #'origami-auto-sql)
 ```
 
-# How is this different from [yafolding](https://github.com/zenozeng/yafolding.el)?
+## Comparison and Generic Solution
+
+### How is this different from [yafolding](https://github.com/zenozeng/yafolding.el)?
 
 I wasn't aware of yafolding before writing this. It looks like origami
 provides a richer set of functions for manipulating folds. It is also
 smarter about folding for the supported modes - yafolding uses
 indentation as a folding heuristic.
 
-# How is this different from [hideshow](https://www.emacswiki.org/HideShow)?
+### How is this different from [hideshow](https://www.emacswiki.org/HideShow)?
 
 Again, origami provides a much richer set of functions for
 manipulating folds. I looked at extending hideshow but gave up when I
@@ -220,12 +222,12 @@ Origami maintains a data structure representing the folds and provides
 a rich library of functions for manipulating it. This makes adding new
 folding operations easy.
 
-# How is this different from [folding.el](https://www.emacswiki.org/emacs/folding.el)?
+### How is this different from [folding.el](https://www.emacswiki.org/emacs/folding.el)?
 
 Folding.el uses markers in the buffer to annotate folds. Origami also
 supports this and more.
 
-# How is this different from folding implemented by a specific mode?
+### How is this different from folding implemented by a specific mode?
 
 It's general purpose and concentrates only on providing a great
 folding solution. You need only write a parser for origami to get all
