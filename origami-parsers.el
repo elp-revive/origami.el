@@ -148,26 +148,34 @@ in the CONTENT."
                 (cons positions (reverse acc)))))
     (cdr (build positions))))
 
+(defvar origami-doc-faces
+  '(font-lock-doc-face
+    font-lock-comment-face
+    font-lock-comment-delimiter-face)
+  "List of face that apply for docstring.")
+
 ;; TODO: tag these nodes? have ability to manipulate nodes that are tagged?
 ;; in a scoped fashion?
 (defun origami-javadoc-parser (create)
   (lambda (content)
-    (let ((positions (->> (origami-get-positions content "/\\*\\*\\|\\*/")
-                          (-filter (lambda (position)
-                                     (eq (get-text-property 0 'face (car position))
-                                         'font-lock-doc-face))))))
+    (let ((positions
+           (->> (origami-get-positions content "/\\*\\*\\|\\*/")
+                (-filter (lambda (position)
+                           (memq (get-text-property 0 'face (car position))
+                                 origami-doc-faces))))))
       (origami-build-pair-tree create "/**" "*/" positions))))
 
 (defun origami-c-style-parser (create)
   (lambda (content)
-    (let ((positions (->> (origami-get-positions content "[{}]")
-                          (remove-if (lambda (position)
-                                       (let ((face (get-text-property 0 'face (car position))))
-                                         (-any? (lambda (f)
-                                                  (memq f '(font-lock-doc-face
-                                                            font-lock-comment-face
-                                                            font-lock-string-face)))
-                                                (if (listp face) face (list face)))))))))
+    (let ((positions
+           (->> (origami-get-positions content "[{}]")
+                (cl-remove-if (lambda (position)
+                                (let ((face (get-text-property 0 'face (car position))))
+                                  (-any? (lambda (f)
+                                           (memq f '(font-lock-doc-face
+                                                     font-lock-comment-face
+                                                     font-lock-string-face)))
+                                         (if (listp face) face (list face)))))))))
       (origami-build-pair-tree create "{" "}" positions))))
 
 (defun origami-c-macro-parser (create)
