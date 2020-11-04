@@ -173,18 +173,8 @@ form by (syntax . point)."
   "Return non-nil if face at OBJ is within `origami-doc-faces' list."
   (origami-util-is-face obj origami-doc-faces))
 
-;; TODO: tag these nodes? have ability to manipulate nodes that are tagged?
-;; in a scoped fashion?
-(defun origami-javadoc-parser (create)
-  "Parser for Javadoc."
-  (lambda (content)
-    (let ((positions
-           (->> (origami-get-positions content "/\\*\\*\\|\\*/")
-                (-filter (lambda (position) (origami-doc-faces-p (car position)))))))
-      (origami-build-pair-tree create "/**" "*/" positions))))
-
 (defun origami-csharp-vsdoc-parser (create)
-  "Parser for VS C# documentation."
+  "Parser for VS C# document string."
   (lambda (content)
     (let* ((positions
             (->> (origami-get-positions content "///")
@@ -233,6 +223,28 @@ form by (syntax . point)."
           (push (funcall create beg end offset nil) ovs)
           (cl-incf index 2)))
       (reverse ovs))))
+
+;; TODO: tag these nodes? have ability to manipulate nodes that are tagged?
+;; in a scoped fashion?
+(defun origami-javadoc-parser (create)
+  "Parser for Javadoc."
+  (lambda (content)
+    (let ((positions
+           (->> (origami-get-positions content "/\\*\\*\\|\\*/")
+                (-filter (lambda (position) (origami-doc-faces-p (car position)))))))
+      (origami-build-pair-tree create "/**" "*/" positions))))
+
+(defun origami-lua-doc-parser (create)
+  "Parser for Lua document string."
+  (lambda (content)
+    ;; TODO: Support this.
+    (user-error "[INFO] There is no parser for Lua document string yet")))
+
+(defun origami-python-doc-parser (create)
+  "Parser for Python document string."
+  (lambda (content)
+    ;; TODO: Support this.
+    (user-error "[INFO] There is no parser for Python document string yet")))
 
 (defun origami-c-style-parser (create)
   "Parser for C style programming language."
@@ -331,6 +343,11 @@ See function `origami-python-parser' description for argument CREATE."
   "Parser for Emacs Lisp."
   (origami-lisp-parser create "(def\\w*\\s-*\\(\\s_\\|\\w\\|[:?!]\\)*\\([ \\t]*(.*?)\\)?"))
 
+(defun origami-lua-parser (create)
+  "Parser for Lua."
+  ;; TODO: Implement Lua parser.
+  (user-error "[INFO] There is no parser for Lua yet"))
+
 (defun origami-clj-parser (create)
   "Parser for Clojure."
   (origami-lisp-parser create "(def\\(\\w\\|-\\)*\\s-*\\(\\s_\\|\\w\\|[?!]\\)*\\([ \\t]*\\[.*?\\]\\)?"))
@@ -361,6 +378,7 @@ See function `origami-python-parser' description for argument CREATE."
     (kotlin-mode           . origami-c-style-parser)
     (lisp-mode             . origami-elisp-parser)
     (lisp-interaction-mode . origami-elisp-parser)
+    (lua-mode              . origami-lua-parser)
     (objc-mode             . origami-c-style-parser)
     (perl-mode             . origami-c-style-parser)
     (php-mode              . origami-c-style-parser)
@@ -414,6 +432,16 @@ This happens only when summary length is larger than `origami-max-summary-length
       (setq summary (string-trim (nth 0 lines)))
       (if (string-empty-p summary) nil summary))))
 
+(defun origami-lua-doc-summary (doc-str)
+  "Extract Lua document string from DOC-STR."
+  ;; TODO: Implement this..
+  (user-error "[INFO] There is no Lua document string parser yet"))
+
+(defun origami-python-doc-summary (doc-str)
+  "Extract Python document string from DOC-STR."
+  ;; TODO: Implement this..
+  (user-error "[INFO] There is no Python document string parser yet"))
+
 (defun origami-get-summary-parser ()
   "Return the summary parser from `origami-parser-summary-alist'."
   (assoc (buffer-local-value 'major-mode (current-buffer)) origami-parser-summary-alist))
@@ -446,7 +474,8 @@ This happens only when summary length is larger than `origami-max-summary-length
 (defcustom origami-parser-summary-alist
   `((csharp-mode . origami-csharp-vsdoc-summary)
     (java-mode   . origami-javadoc-summary)
-    (python-mode . origami-pydoc-summary))
+    (lua-mode    . origami-lua-doc-summary)
+    (python-mode . origami-python-doc-summary))
   "Alist mapping major-mode to doc parser function."
   :type 'hook
   :group 'origami)
