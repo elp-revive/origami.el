@@ -205,27 +205,38 @@ in the CONTENT."
        (origami-fold-shallow-merge (origami-fold-root-node (funcall c-style content))
                                    (origami-fold-root-node (funcall javadoc content)))))))
 
+(defun origami-csharp-parser (create)
+  "Parser for C#."
+  (let ((c-style (origami-c-style-parser create))
+        (javadoc (origami-javadoc-parser create)))
+    (lambda (content)
+      (origami-fold-children
+       (origami-fold-shallow-merge (origami-fold-root-node (funcall c-style content))
+                                   (origami-fold-root-node (funcall javadoc content)))))))
+
+(defun origami-python-subparser (create beg end)
+  "Find all fold block between BEG and END.
+See function `origami-python-parser' description for argument CREATE."
+  (goto-char beg)
+  (let (acc)
+    ;; iterate all same level children.
+    (while (and (beginning-of-defun -1) (<= (point) end))  ; have children between beg and end?
+      (let* ((new-beg (point))
+             (new-offset (progn (search-forward-regexp ":" nil t) (- (point) new-beg)))
+             (new-end (progn (end-of-defun) (point))))
+        (setq acc (cons (funcall create new-beg new-end new-offset
+                                 (origami-python-subparser create new-beg new-end))
+                        acc))
+        (goto-char new-end)))
+    acc))
+
 (defun origami-python-parser (create)
   "Parser for Python."
   (lambda (content)
     (with-temp-buffer
       (insert content)
       (python-mode)
-      (defun python-subparser (beg end)
-        "find all fold block between beg and end."
-        (goto-char beg)
-        (let (acc)
-          ;; iterate all same level children.
-          (while (and (beginning-of-defun -1) (<= (point) end))  ; have children between beg and end?
-            (let* ((new-beg (point))
-                   (new-offset (progn (search-forward-regexp ":" nil t) (- (point) new-beg)))
-                   (new-end (progn (end-of-defun) (point))))
-              (setq acc (cons (funcall create new-beg new-end new-offset
-                                       (python-subparser new-beg new-end))
-                              acc))
-              (goto-char new-end)))
-          acc))
-      (python-subparser (point-min) (point-max)))))
+      (origami-python-subparser create (point-min) (point-max)))))
 
 (defun origami-lisp-parser (create regex)
   "Parser for Lisp."
