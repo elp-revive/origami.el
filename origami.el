@@ -475,8 +475,11 @@ with the current state and the current node at each iteration."
 
 ;;; interactive utils
 
-(defvar-local origami-history nil)
-(defvar-local origami-tree-tick nil)
+(defvar-local origami-history nil
+  "Not documented.")
+
+(defvar-local origami-tree-tick nil
+  "Not documented.")
 
 (defun origami-setup-local-vars (buffer)
   (with-current-buffer buffer
