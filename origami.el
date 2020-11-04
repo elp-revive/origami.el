@@ -475,6 +475,9 @@ with the current state and the current node at each iteration."
 
 ;;; interactive utils
 
+(defvar-local origami-history nil)
+(defvar-local origami-tree-tick nil)
+
 (defun origami-setup-local-vars (buffer)
   (with-current-buffer buffer
     (set (make-local-variable 'origami-history)
@@ -540,7 +543,7 @@ with the current state and the current node at each iteration."
         (origami-build-tree buffer (origami-get-parser buffer))
       (origami-get-cached-tree buffer))))
 
-(defun origami-apply-new-tree (buffer old-tree new-tree)
+(defun origami-apply-new-tree (_buffer old-tree new-tree)
   (when new-tree
     (origami-fold-diff old-tree new-tree
                        'origami-hide-overlay-from-fold-tree-fn
