@@ -280,7 +280,7 @@ See function `origami-python-parser' description for argument CREATE."
     (c++-mode              . origami-c-style-parser)
     (clojure-mode          . origami-clj-parser)
     (cperl-mode            . origami-c-style-parser)
-    (csharp-mode           . origami-c-style-parser)
+    (csharp-mode           . origami-csharp-parser)
     (dart-mode             . origami-c-style-parser)
     (emacs-lisp-mode       . origami-elisp-parser)
     (go-mode               . origami-c-style-parser)
