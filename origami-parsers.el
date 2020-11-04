@@ -349,6 +349,11 @@ This happens only when summary length is larger than `origami-max-summary-length
   :type 'string
   :group 'origami)
 
+(defcustom origami-summary-prefix " <S> "
+  "Prefix string added before summary overlay."
+  :type 'string
+  :group 'origami)
+
 (defun origami-csharp-vsdoc-summary (doc-str)
   "Extract C# vsdoc summary from DOC-STR."
   (when (origami-doc-faces-p doc-str)
@@ -376,13 +381,20 @@ This happens only when summary length is larger than `origami-max-summary-length
       (setq summary (concat summary origami-summary-exceeded-string))))
   summary)
 
+(defun origami-summary-prefix-add (summary)
+  "Return the SUMMARY that has added the summary prefix."
+  (if origami-summary-prefix (concat origami-summary-prefix summary) summary))
+
 (defun origami-get-summary (doc-str)
   "Extract summary from DOC-STR in order to display ontop of the overlay."
   (let ((parser (cdr (origami-get-summary-parser))) summary)
     (when parser
       (setq summary (funcall parser doc-str))
       (when (integerp origami-max-summary-length)
-        (setq summary (origami--keep-summary-length summary))))
+        (setq summary (origami--keep-summary-length summary)))
+      (when summary
+        (setq summary (origami-summary-prefix-add summary)
+              summary (propertize summary 'face 'origami-fold-replacement-face))))
     summary))
 
 (defcustom origami-parser-summary-alist
