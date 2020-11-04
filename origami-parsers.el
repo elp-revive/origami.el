@@ -220,12 +220,12 @@ in the CONTENT."
           (push last-position valid-positions)))
       (setq valid-positions (reverse valid-positions))
       (let ((index 0) (len (length valid-positions))
-            beg end offset pos-beg pos-end)
+            beg end (offset 3) pos-beg pos-end)
         (while (< index len)
           (setq pos-beg (nth index valid-positions)
                 pos-end (nth (1+ index) valid-positions)
                 beg (cdr pos-beg) end (cdr pos-end))
-          (push (funcall create beg end 3 nil) ovs)
+          (push (funcall create beg end offset nil) ovs)
           (cl-incf index 2)))
       (reverse ovs))))
 
@@ -396,8 +396,10 @@ This happens only when summary length is larger than `origami-max-summary-length
 (defun origami-csharp-vsdoc-summary (doc-str)
   "Extract C# vsdoc summary from DOC-STR."
   (when (origami-doc-faces-p doc-str)
-    ;; TODO: Extract C# vsdoc summary
-    "Test summary!!"))
+    (setq doc-str (s-replace "///" "" doc-str))
+    (let ((lines (split-string doc-str "\n")) summary)
+      (setq summary (string-trim (nth 1 lines)))
+      (if (string-empty-p summary) nil summary))))
 
 (defun origami-javadoc-summary (doc-str)
   "Extract javadoc summary from DOC-STR."
