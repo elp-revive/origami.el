@@ -147,8 +147,8 @@ header overlay should cover.  Result is a cons cell of (begin . end)."
   (overlay-put ov 'invisible 'origami)
   (overlay-put ov 'display origami-fold-replacement)
   (overlay-put ov 'face 'origami-fold-replacement-face)
-  (if origami-show-fold-header
-      (origami-activate-header (overlay-get ov 'header-ov))))
+  (when origami-show-fold-header
+    (origami-activate-header (overlay-get ov 'header-ov))))
 
 (defun origami-show-overlay (ov)
   (overlay-put ov 'invisible nil)
