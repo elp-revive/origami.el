@@ -104,6 +104,7 @@ To some degree, yes. Currently out of the box support is provided for:
 * JSX
 * Kotlin
 * Lisp
+* Lua (WIP)
 * Objective-C
 * PHP
 * Perl
