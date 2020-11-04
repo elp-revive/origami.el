@@ -175,17 +175,20 @@ in the CONTENT."
   (lambda (content)
     (let ((positions
            (->> (origami-get-positions content "/\\*\\*\\|\\*/")
-                (-filter (lambda (position)
-                           (origami-doc-faces-p (car position)))))))
+                (-filter (lambda (position) (origami-doc-faces-p (car position)))))))
       (origami-build-pair-tree create "/**" "*/" positions))))
 
 (defun origami-csharp-vsdoc-parser (create)
   "Parser for VS C# documentation."
   (lambda (content)
     (let ((positions
-           (->> (origami-get-positions content "///[ ]*<summary>")
-                (-filter (lambda (position) (origami-doc-faces-p (car position)))))))
-      (origami-build-pair-tree create "///<summary>" "Test summary" positions))))
+           (->> (origami-get-positions content "///")
+                (-filter (lambda (position)
+                           (message "%s" position)
+                           (origami-doc-faces-p (car position)))))))
+      ;; TODO: Impls pair.
+      (funcall create beg end offset nil)
+      )))
 
 (defun origami-c-style-parser (create)
   "Parser for C style programming language."
@@ -229,14 +232,12 @@ in the CONTENT."
   "Parser for C#."
   (let ((c-style (origami-c-style-parser create))
         (javadoc (origami-javadoc-parser create))
-        ;;(vsdoc (origami-csharp-vsdoc-parser create))
-        )
+        (vsdoc (origami-csharp-vsdoc-parser create)))
     (lambda (content)
       (origami-fold-children
        (origami-fold-shallow-merge (origami-fold-root-node (funcall c-style content))
                                    (origami-fold-root-node (funcall javadoc content))
-                                   ;;(origami-fold-root-node (funcall vsdoc content))
-                                   )))))
+                                   (origami-fold-root-node (funcall vsdoc content)))))))
 
 (defun origami-python-subparser (create beg end)
   "Find all fold block between BEG and END.
