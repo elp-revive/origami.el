@@ -124,6 +124,10 @@ header overlay should cover.  Result is a cons cell of (begin . end)."
   (when after-p (origami-header-overlay-reset-position header-overlay)))
 
 (defun origami-create-overlay (beg end offset buffer)
+  "Create fold overlay.
+Argument BEG and END means position of the overlay.
+Argument OFFSET is the delta number added to position BEG.
+Argument BUFFER is the buffer we are concerning."
   (when (> (- end beg) 0)
     (let ((ov (make-overlay (+ beg offset) end buffer)))
       (overlay-put ov 'creator 'origami)
@@ -144,6 +148,7 @@ header overlay should cover.  Result is a cons cell of (begin . end)."
       ov)))
 
 (defun origami-hide-overlay (ov)
+  "Show overlay (OV) and do the folding."
   (overlay-put ov 'invisible 'origami)
   (overlay-put ov 'display origami-fold-replacement)
   (overlay-put ov 'face 'origami-fold-replacement-face)
@@ -151,6 +156,7 @@ header overlay should cover.  Result is a cons cell of (begin . end)."
     (origami-activate-header (overlay-get ov 'header-ov))))
 
 (defun origami-show-overlay (ov)
+  "Hide overlay (OV) and cancel folding."
   (overlay-put ov 'invisible nil)
   (overlay-put ov 'display nil)
   (overlay-put ov 'face nil)
@@ -533,21 +539,23 @@ with the current state and the current node at each iteration."
 (defun origami-get-parser (buffer)
   "Get the possible parser for BUFFER."
   (let* ((cached-tree (origami-get-cached-tree buffer))
-         (create (lambda (beg end offset children)
-                   (let ((previous-fold (-last-item (origami-fold-find-path-with-range cached-tree beg end))))
-                     (origami-fold-node beg end offset
-                                        (if previous-fold (origami-fold-open? previous-fold) t)
-                                        children
-                                        (or (-> (origami-fold-find-path-with-range
-                                                 (origami-get-cached-tree buffer) beg end)
-                                                -last-item
-                                                origami-fold-data)
-                                            (origami-create-overlay beg end offset buffer)))))))
-    (-when-let (parser-gen (or (cdr (assoc (if (local-variable-p 'origami-fold-style)
-                                               (buffer-local-value 'origami-fold-style buffer)
-                                             (buffer-local-value 'major-mode buffer))
-                                           origami-parser-alist))
-                               'origami-indent-parser))
+         (create
+          (lambda (beg end offset children)
+            (let ((previous-fold (-last-item (origami-fold-find-path-with-range cached-tree beg end))))
+              (origami-fold-node beg end offset
+                                 (if previous-fold (origami-fold-open? previous-fold) t)
+                                 children
+                                 (or (-> (origami-fold-find-path-with-range
+                                          (origami-get-cached-tree buffer) beg end)
+                                         -last-item
+                                         origami-fold-data)
+                                     (origami-create-overlay beg end offset buffer)))))))
+    (-when-let
+        (parser-gen (or (cdr (assoc (if (local-variable-p 'origami-fold-style)
+                                        (buffer-local-value 'origami-fold-style buffer)
+                                      (buffer-local-value 'major-mode buffer))
+                                    origami-parser-alist))
+                        'origami-indent-parser))
       (funcall parser-gen create))))
 
 (defun origami-get-fold-tree (buffer)
