@@ -43,7 +43,10 @@
 (defun origami-util-is-face (obj lst-face)
   "Return non-nil if OBJ's face is define inside list LST-FACE."
   (unless (listp lst-face) (setq lst-face (list lst-face)))
-  (memq (origami-util-get-face obj) lst-face))
+  (let ((faces (origami-util-get-face obj)))
+    (cond ((listp faces)
+           (cl-some (lambda (face) (memq face lst-face)) faces))
+          (t (memq faces lst-face)))))
 
 (provide 'origami-util)
 ;;; origami-util.el ends here
