@@ -201,9 +201,8 @@ in the CONTENT."
         (macros (origami-c-macro-parser create)))
     (lambda (content)
       (origami-fold-children
-       (origami-fold-shallow-merge
-        (origami-fold-root-node (funcall c-style content))
-        (origami-fold-root-node (funcall macros content)))))))
+       (origami-fold-shallow-merge (origami-fold-root-node (funcall c-style content))
+                                   (origami-fold-root-node (funcall macros content)))))))
 
 (defun origami-java-parser (create)
   "Parser for Java."
@@ -218,6 +217,7 @@ in the CONTENT."
   "Parser for C#."
   (let ((c-style (origami-c-style-parser create))
         (javadoc (origami-javadoc-parser create)))
+    ;; TODO: Implement VS style docstring
     (lambda (content)
       (origami-fold-children
        (origami-fold-shallow-merge (origami-fold-root-node (funcall c-style content))
