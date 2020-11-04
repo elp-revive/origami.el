@@ -35,6 +35,7 @@
 
 (require 'cl-lib)
 (require 'dash)
+(require 's)
 
 ;;
 ;; (@* "Utility" )
@@ -335,10 +336,16 @@ See function `origami-python-parser' description for argument CREATE."
   :type 'boolean
   :group 'origami)
 
-(defcustom origami-max-summary-length 15
+(defcustom origami-max-summary-length 60
   "Maximum length for summary to display."
   :type '(choice (const :tag "nil" nil)
                  (integer :tag "positive integer number"))
+  :group 'origami)
+
+(defcustom origami-summary-exceeded-string "..."
+  "String that added after display summary.
+This happens only when summary length is larger than `origami-max-summary-length'."
+  :type 'string
   :group 'origami)
 
 (defun origami-csharp-vsdoc-summary (doc-str)
@@ -349,7 +356,10 @@ See function `origami-python-parser' description for argument CREATE."
 (defun origami-javadoc-summary (doc-str)
   "Extract javadoc summary from DOC-STR."
   (when (origami-doc-faces-p doc-str)
-    "Test summary!!Test summary!!Test summary!!Test summary!!"))
+    (setq doc-str (s-replace "*" "" doc-str))
+    (let ((lines (split-string doc-str "\n" t)) summary)
+      (setq summary (string-trim (nth 0 lines)))
+      (if (string-empty-p summary) nil summary))))
 
 (defun origami-get-summary-parser ()
   "Return the summary parser from `origami-parser-summary-alist'."
@@ -357,9 +367,11 @@ See function `origami-python-parser' description for argument CREATE."
 
 (defun origami--keep-summary-length (summary)
   "Keep the SUMMARY length to `origami-max-summary-length'."
-  (let ((len-sum (length summary)))
+  (let ((len-sum (length summary))
+        (len-exc (length origami-summary-exceeded-string)))
     (when (< origami-max-summary-length len-sum)
-      (setq summary (substring summary 0 origami-max-summary-length))))
+      (setq summary (substring summary 0 (- origami-max-summary-length len-exc)))
+      (setq summary (concat summary origami-summary-exceeded-string))))
   summary)
 
 (defun origami-get-summary (doc-str)
@@ -373,7 +385,8 @@ See function `origami-python-parser' description for argument CREATE."
 
 (defcustom origami-parser-summary-alist
   `((csharp-mode . origami-csharp-vsdoc-summary)
-    (java-mode   . origami-javadoc-summary))
+    (java-mode   . origami-javadoc-summary)
+    (python-mode . origami-pydoc-summary))
   "Alist mapping major-mode to doc parser function."
   :type 'hook
   :group 'origami)
