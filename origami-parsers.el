@@ -126,7 +126,7 @@ in the CONTENT."
               (let (acc beg (should-continue t))
                 (while (and should-continue positions)
                   (cond ((equal (caar positions) open)
-                         (if beg ;go down a level
+                         (if beg  ; go down a level
                              (let* ((res (build positions))
                                     (new-pos (car res))
                                     (children (cdr res)))
@@ -139,7 +139,7 @@ in the CONTENT."
                            (setq positions (cdr positions))))
                         ((equal (caar positions) close)
                          (if beg
-                             (progn ;close with no children
+                             (progn  ; close with no children
                                (setq acc (cons (funcall create beg (cdar positions) (length close) nil)
                                                acc))
                                (setq positions (cdr positions))
