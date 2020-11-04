@@ -419,15 +419,26 @@ with the current state and the current node at each iteration."
   (origami-fold-postorder-reduce node (lambda (acc node)
                                         (and acc (origami-fold-open? node))) t))
 
-(defun origami-fold-shallow-merge (tree1 tree2)
+(defun origami-fold-shallow-merge-2 (tree1 tree2)
   "Shallow merge the children of TREE2 in to TREE1."
-  (-reduce-from (lambda (tree node)
-                  (origami-fold-assoc (origami-fold-find-path-containing-range tree
-                                                                               (origami-fold-beg node)
-                                                                               (origami-fold-end node))
-                                      (lambda (leaf)
-                                        (origami-fold-add-child leaf node))))
-                tree1 (origami-fold-children tree2)))
+  (-reduce-from
+   (lambda (tree node)
+     (origami-fold-assoc (origami-fold-find-path-containing-range
+                          tree
+                          (origami-fold-beg node) (origami-fold-end node))
+                         (lambda (leaf)
+                           (origami-fold-add-child leaf node))))
+   tree1 (origami-fold-children tree2)))
+
+(defun origami-fold-shallow-merge (&rest trees)
+  "Shallow merge all TREES's children to one tree."
+  (let ((final-tree (nth 0 trees)) current-tree
+        (index 1) (len (length trees)))
+    (while (< index len)
+      (setq current-tree (nth index trees))
+      (setq final-tree (origami-fold-shallow-merge-2 final-tree current-tree))
+      (cl-incf index))
+    final-tree))
 
 (defun origami-fold-parent (path)
   (-last-item (-butlast path)))
