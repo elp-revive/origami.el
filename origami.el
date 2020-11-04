@@ -349,18 +349,18 @@ Optional argument CHILDREN can be add to the created node."
   (funcall f node))
 
 (defun origami-fold-map (f tree)
-  "Map F over the tree. Replacing each node with the result of (f
-node). The children cannot be manipulated using f as the map will
-replace them. This cannot change the structure of the tree, just
-the state of each node."
+  "Map F over the tree.
+Replacing each node with the result of (fnode).  The children cannot be
+manipulated using f as the map will replace them.  This cannot change the
+ structure of the tree, just the state of each node."
   (origami-fold-children-set
    (funcall f tree)
    (-map (lambda (node) (origami-fold-map f node))
          (origami-fold-children tree))))
 
 (defun origami-fold-path-map (f path)
-  "Map F over the nodes in path. As with `origami-fold-map',
-children cannot be manipulated."
+  "Map F over the nodes in path. As with `origami-fold-map', children cannot \
+be manipulated."
   (cond ((null path) nil)
         ((cdr path) (funcall f (origami-fold-replace-child (car path)
                                                            (cadr path)
