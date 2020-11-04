@@ -181,14 +181,53 @@ in the CONTENT."
 (defun origami-csharp-vsdoc-parser (create)
   "Parser for VS C# documentation."
   (lambda (content)
-    (let ((positions
-           (->> (origami-get-positions content "///")
-                (-filter (lambda (position)
-                           (message "%s" position)
-                           (origami-doc-faces-p (car position)))))))
-      ;; TODO: Impls pair.
-      (funcall create beg end offset nil)
-      )))
+    (let* ((positions
+            (->> (origami-get-positions content "///")
+                 (-filter (lambda (position) (origami-doc-faces-p (car position))))))
+           valid-positions ovs)
+      (let ((index 0) (len (length positions))
+            last-position position
+            line pos last-line start-p
+            on-next-line-p)
+        (while (< index len)
+          (setq position (nth index positions)
+                pos (cdr position)
+                line (line-number-at-pos pos t)
+                on-next-line-p (when last-line (= 1 (- line last-line))))
+          (if (= index 0)
+              (setq last-position position
+                    last-line line)
+            (if start-p
+                ;; Collect ending point; then wrap up.
+                (unless on-next-line-p
+                  (setcdr last-position (save-excursion
+                                          (goto-char (cdr last-position))
+                                          (line-end-position)))
+                  (push last-position valid-positions)
+                  (setq start-p nil))
+              ;; Collect starting point.
+              (when on-next-line-p
+                (push last-position valid-positions)
+                (setq start-p t)))
+            (setq last-position position
+                  last-line line))
+          (cl-incf index))
+        ;; NOTE: Add the last from list `positions' in order to pair up!
+        (when start-p
+          (setcdr last-position (save-excursion
+                                  (goto-char (cdr last-position))
+                                  (line-end-position)))
+          (push last-position valid-positions)))
+      (setq valid-positions (reverse valid-positions))
+      (let ((index 0) (len (length valid-positions))
+            beg end offset pos-beg pos-end)
+        (while (< index len)
+          (setq pos-beg (nth index valid-positions)
+                pos-end (nth (1+ index) valid-positions)
+                beg (cdr pos-beg) end (cdr pos-end))
+          (push (funcall create beg end 3 nil) ovs)
+          (cl-incf index 2)))
+      (reverse ovs))))
 
 (defun origami-c-style-parser (create)
   "Parser for C style programming language."
