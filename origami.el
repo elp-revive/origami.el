@@ -152,7 +152,8 @@ Argument BUFFER is the buffer we are concerning."
 (defun origami-hide-overlay (ov)
   "Show overlay (OV) and do the folding."
   (overlay-put ov 'invisible 'origami)
-  (overlay-put ov 'display (or (origami-get-summary (origami-util-ov-string ov))
+  (overlay-put ov 'display (or (and origami-show-summary
+                                    (origami-get-summary (origami-util-ov-string ov)))
                                origami-fold-replacement))
   (overlay-put ov 'face 'origami-fold-replacement-face)
   (when origami-show-fold-header

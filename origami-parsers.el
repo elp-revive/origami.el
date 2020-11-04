@@ -330,6 +330,11 @@ See function `origami-python-parser' description for argument CREATE."
 ;; (@* "Summary" )
 ;;
 
+(defcustom origami-show-summary t
+  "Flag to show summary if available."
+  :type 'boolean
+  :group 'origami)
+
 (defcustom origami-max-summary-length 15
   "Maximum length for summary to display."
   :type '(choice (const :tag "nil" nil)
