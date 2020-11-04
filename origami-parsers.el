@@ -42,7 +42,7 @@
 ;;
 
 (defun origami-get-positions (content regex)
-  "Returns a list of positions where REGEX matches in CONTENT.
+  "Return a list of positions where REGEX matche in CONTENT.
 A position is a cons cell of the character and the numerical position
 in the CONTENT."
   (with-temp-buffer
@@ -56,6 +56,7 @@ in the CONTENT."
       (reverse acc))))
 
 (defun origami-indent-parser (create)
+  "Not documented, CREATE."
   (cl-labels
       ((lines (string) (origami-get-positions string ".*?\r?\n"))
        (annotate-levels (lines)
@@ -126,6 +127,10 @@ in the CONTENT."
           cdr))))
 
 (defun origami-build-pair-tree (create open close positions)
+  "Build the pair tree from CREATE.
+Argument OPEN is the open symbol in type of string.  Argument CLOSE is
+the close symbol in type of string.  POSITIONS is a list of cons cell
+form by (syntax . point)."
   (cl-labels
       ((build (positions)
               ;; this is so horrible, but fast
