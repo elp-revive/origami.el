@@ -330,24 +330,41 @@ See function `origami-python-parser' description for argument CREATE."
 ;; (@* "Summary" )
 ;;
 
+(defcustom origami-max-summary-length 15
+  "Maximum length for summary to display."
+  :type '(choice (const :tag "nil" nil)
+                 (integer :tag "positive integer number"))
+  :group 'origami)
+
 (defun origami-csharp-vsdoc-summary (doc-str)
-  "Parse C# document string."
+  "Extract C# vsdoc summary from DOC-STR."
   (when (origami-doc-faces-p doc-str)
     "Test summary!!"))
 
 (defun origami-javadoc-summary (doc-str)
-  ""
+  "Extract javadoc summary from DOC-STR."
   (when (origami-doc-faces-p doc-str)
-    "Test summary!!"))
+    "Test summary!!Test summary!!Test summary!!Test summary!!"))
 
 (defun origami-get-summary-parser ()
   "Return the summary parser from `origami-parser-summary-alist'."
   (assoc (buffer-local-value 'major-mode (current-buffer)) origami-parser-summary-alist))
 
+(defun origami--keep-summary-length (summary)
+  "Keep the SUMMARY length to `origami-max-summary-length'."
+  (let ((len-sum (length summary)))
+    (when (< origami-max-summary-length len-sum)
+      (setq summary (substring summary 0 origami-max-summary-length))))
+  summary)
+
 (defun origami-get-summary (doc-str)
   "Extract summary from DOC-STR in order to display ontop of the overlay."
-  (-when-let (parser (cdr (origami-get-summary-parser)))
-    (funcall parser doc-str)))
+  (let ((parser (cdr (origami-get-summary-parser))) summary)
+    (when parser
+      (setq summary (funcall parser doc-str))
+      (when (integerp origami-max-summary-length)
+        (setq summary (origami--keep-summary-length summary))))
+    summary))
 
 (defcustom origami-parser-summary-alist
   `((csharp-mode . origami-csharp-vsdoc-summary)
