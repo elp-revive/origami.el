@@ -36,6 +36,10 @@
 (require 'cl-lib)
 (require 'dash)
 
+;;
+;; (@* "Utility" )
+;;
+
 (defun origami-get-positions (content regex)
   "Returns a list of positions where REGEX matches in CONTENT.
 A position is a cons cell of the character and the numerical position
@@ -98,18 +102,19 @@ in the CONTENT."
                     (if (null tree) (cons 0 nil)
                       ;; complexity here is due to having to find the end of the children so that the
                       ;; parent encompasses them
-                      (-reduce-r-from (lambda (nodes acc)
-                                        (cl-destructuring-bind (children-end . children) (build-nodes (cdr nodes))
-                                          (let ((this-end (max children-end (end (car nodes)))))
-                                            (cons (max this-end (car acc))
-                                                  (cons (funcall create
-                                                                 (beg (car nodes))
-                                                                 this-end
-                                                                 (offset (car nodes))
-                                                                 children)
-                                                        (cdr acc))))))
-                                      '(0 . nil)
-                                      tree))))
+                      (-reduce-r-from
+                       (lambda (nodes acc)
+                         (cl-destructuring-bind (children-end . children) (build-nodes (cdr nodes))
+                           (let ((this-end (max children-end (end (car nodes)))))
+                             (cons (max this-end (car acc))
+                                   (cons (funcall create
+                                                  (beg (car nodes))
+                                                  this-end
+                                                  (offset (car nodes))
+                                                  children)
+                                         (cdr acc))))))
+                       '(0 . nil)
+                       tree))))
     (lambda (content)
       (-> content
           lines
@@ -147,6 +152,10 @@ in the CONTENT."
                            (setq should-continue nil)))))
                 (cons positions (reverse acc)))))
     (cdr (build positions))))
+
+;;
+;; (@* "Parsers" )
+;;
 
 (defvar origami-doc-faces
   '(font-lock-doc-face
