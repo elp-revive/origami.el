@@ -163,6 +163,10 @@ in the CONTENT."
     font-lock-comment-delimiter-face)
   "List of face that apply for docstring.")
 
+(defun origami-doc-faces-p (obj)
+  "Return non-nil if face at OBJ is within `origami-doc-faces' list."
+  (origami-util-is-face obj origami-doc-faces))
+
 ;; TODO: tag these nodes? have ability to manipulate nodes that are tagged?
 ;; in a scoped fashion?
 (defun origami-javadoc-parser (create)
@@ -171,9 +175,16 @@ in the CONTENT."
     (let ((positions
            (->> (origami-get-positions content "/\\*\\*\\|\\*/")
                 (-filter (lambda (position)
-                           (memq (get-text-property 0 'face (car position))
-                                 origami-doc-faces))))))
+                           (origami-doc-faces-p (car position)))))))
       (origami-build-pair-tree create "/**" "*/" positions))))
+
+(defun origami-csharp-vsdoc-parser (create)
+  "Parser for VS C# documentation."
+  (lambda (content)
+    (let ((positions
+           (->> (origami-get-positions content "///[ ]*<summary>")
+                (-filter (lambda (position) (origami-doc-faces-p (car position)))))))
+      (origami-build-pair-tree create "///<summary>" "Test summary" positions))))
 
 (defun origami-c-style-parser (create)
   "Parser for C style programming language."
@@ -216,12 +227,15 @@ in the CONTENT."
 (defun origami-csharp-parser (create)
   "Parser for C#."
   (let ((c-style (origami-c-style-parser create))
-        (javadoc (origami-javadoc-parser create)))
-    ;; TODO: Implement VS style docstring
+        (javadoc (origami-javadoc-parser create))
+        ;;(vsdoc (origami-csharp-vsdoc-parser create))
+        )
     (lambda (content)
       (origami-fold-children
        (origami-fold-shallow-merge (origami-fold-root-node (funcall c-style content))
-                                   (origami-fold-root-node (funcall javadoc content)))))))
+                                   (origami-fold-root-node (funcall javadoc content))
+                                   ;;(origami-fold-root-node (funcall vsdoc content))
+                                   )))))
 
 (defun origami-python-subparser (create beg end)
   "Find all fold block between BEG and END.
@@ -312,6 +326,35 @@ See function `origami-python-parser' description for argument CREATE."
   :type 'hook
   :group 'origami)
 
-(provide 'origami-parsers)
+;;
+;; (@* "Summary" )
+;;
 
+(defun origami-csharp-vsdoc-summary (doc-str)
+  "Parse C# document string."
+  (when (origami-doc-faces-p doc-str)
+    "Test summary!!"))
+
+(defun origami-javadoc-summary (doc-str)
+  ""
+  (when (origami-doc-faces-p doc-str)
+    "Test summary!!"))
+
+(defun origami-get-summary-parser ()
+  "Return the summary parser from `origami-parser-summary-alist'."
+  (assoc (buffer-local-value 'major-mode (current-buffer)) origami-parser-summary-alist))
+
+(defun origami-get-summary (doc-str)
+  "Extract summary from DOC-STR in order to display ontop of the overlay."
+  (-when-let (parser (cdr (origami-get-summary-parser)))
+    (funcall parser doc-str)))
+
+(defcustom origami-parser-summary-alist
+  `((csharp-mode . origami-csharp-vsdoc-summary)
+    (java-mode   . origami-javadoc-summary))
+  "Alist mapping major-mode to doc parser function."
+  :type 'hook
+  :group 'origami)
+
+(provide 'origami-parsers)
 ;;; origami-parsers.el ends here
