@@ -352,6 +352,7 @@ This happens only when summary length is larger than `origami-max-summary-length
 (defun origami-csharp-vsdoc-summary (doc-str)
   "Extract C# vsdoc summary from DOC-STR."
   (when (origami-doc-faces-p doc-str)
+    ;; TODO: Extract C# vsdoc summary
     "Test summary!!"))
 
 (defun origami-javadoc-summary (doc-str)
