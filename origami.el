@@ -37,6 +37,8 @@
 (require 'dash)
 (require 's)
 (require 'cl-lib)
+
+(require 'origami-util)
 (require 'origami-parsers)
 
 ;;; fold display mode and faces
@@ -150,7 +152,8 @@ Argument BUFFER is the buffer we are concerning."
 (defun origami-hide-overlay (ov)
   "Show overlay (OV) and do the folding."
   (overlay-put ov 'invisible 'origami)
-  (overlay-put ov 'display origami-fold-replacement)
+  (overlay-put ov 'display (or (origami-get-summary (origami-util-ov-string ov))
+                               origami-fold-replacement))
   (overlay-put ov 'face 'origami-fold-replacement-face)
   (when origami-show-fold-header
     (origami-activate-header (overlay-get ov 'header-ov))))
@@ -957,5 +960,4 @@ Key bindings:
   (lambda () (origami-mode 1)))
 
 (provide 'origami)
-
 ;;; origami.el ends here
