@@ -173,13 +173,14 @@ Item N and the next item (N + 1) should be a pair; hence, N should always be eve
 number (if count starting from 0 and not 1)."
   (let ((index 0) (len (length positions))
         beg end offset pos-beg pos-end
-        ovs)
+        ov ovs)
     (while (< index len)
       (setq pos-beg (nth index positions)
             pos-end (nth (1+ index) positions)
             beg (cdr pos-beg) end (cdr pos-end)
-            offset (length (car pos-beg)))
-      (push (funcall create beg end offset nil) ovs)
+            offset (length (car pos-beg))
+            ov (ignore-errors (funcall create beg end offset nil)))
+      (when ov (push ov ovs))
       (cl-incf index 2))
     (reverse ovs)))
 
@@ -283,7 +284,7 @@ function can be use for any kind of syntax like `//`, `;`, `#`."
   "Parser for Javadoc."
   (lambda (content)
     (let ((positions
-           (->> (origami-get-positions content "/\\*\\*\\|\\*/")
+           (->> (origami-get-positions content "/\\*\\|\\*/")
                 (-filter (lambda (position) (origami-doc-faces-p (car position)))))))
       (origami-build-pair-tree-2 create positions))))
 
@@ -312,7 +313,11 @@ function can be use for any kind of syntax like `//`, `;`, `#`."
     (let ((positions
            (->> (origami-get-positions content "[{}]")
                 (-filter (lambda (position)
-                           (not (origami-util-comment-or-string-p (cdr position))))))))
+                           (not (origami-util-is-face (car position)
+                                                      '(font-lock-doc-face
+                                                        font-lock-comment-face
+                                                        jcs-docstring-type-face
+                                                        font-lock-string-face))))))))
       (origami-build-pair-tree create "{" "}" positions))))
 
 (defun origami-c-macro-parser (create)
@@ -351,12 +356,7 @@ function can be use for any kind of syntax like `//`, `;`, `#`."
 
 (defun origami-js-parser (create)
   "Parser for JavaScript."
-  (let ((c-style (origami-c-style-parser create))
-        (javadoc (origami-javadoc-parser create)))
-    (lambda (content)
-      (origami-fold-children
-       (origami-fold-shallow-merge (origami-fold-root-node (funcall javadoc content))
-                                   (origami-fold-root-node (funcall c-style content)))))))
+  (origami-java-parser create))
 
 (defun origami-csharp-parser (create)
   "Parser for C#."
