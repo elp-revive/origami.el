@@ -75,7 +75,8 @@
 ;;
 
 (defun origami-seq-omit-string (seq &optional trim)
-  "Return a list of omitted empty string and nil from SEQ."
+  "Return a list of omitted empty string and nil from SEQ.
+If optional argument TRIM is non-nil; then trim all string in SEQ."
   (let (lst)
     (dolist (item seq)
       (when trim (setq item (string-trim item)))
