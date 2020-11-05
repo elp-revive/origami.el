@@ -93,6 +93,7 @@ provided so that you may compose your own custom functions.
 To some degree, yes. Currently out of the box support is provided for:
 
 * ActionScript
+* Batch
 * C/C++
 * C#
 * Clojure
