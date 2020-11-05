@@ -135,8 +135,8 @@ Argument BUFFER is the buffer we are concerning."
       (overlay-put ov 'creator 'origami)
       (overlay-put ov 'isearch-open-invisible 'origami-isearch-show)
       (overlay-put ov 'isearch-open-invisible-temporary
-                   (lambda (ov hide-p) (if hide-p (origami-hide-overlay ov)
-                                         (origami-show-overlay ov))))
+                   (lambda (ov hide-p)
+                     (if hide-p (origami-hide-overlay ov) (origami-show-overlay ov))))
       ;; We create a header overlay even when disabled; this could be avoided,
       ;; especially if we called origami-reset for each buffer if customizations
       ;; changed.
