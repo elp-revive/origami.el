@@ -70,5 +70,18 @@
            (cl-some (lambda (face) (memq face lst-face)) faces))
           (t (memq faces lst-face)))))
 
+;;
+;; (@* "String" )
+;;
+
+(defun origami-seq-omit-string (seq &optional trim)
+  "Return a list of omitted empty string and nil from SEQ."
+  (let (lst)
+    (dolist (item seq)
+      (when trim (setq item (string-trim item)))
+      (unless (string-empty-p item)
+        (push item lst)))
+    (reverse lst)))
+
 (provide 'origami-util)
 ;;; origami-util.el ends here
