@@ -250,11 +250,11 @@ function can be use for any kind of syntax like `//`, `;`, `#`."
   "Return non-nil if face at OBJ is within `origami-doc-faces' list."
   (origami-util-is-face obj origami-doc-faces))
 
-(defun origami-parser-triple-slashes (create)
+(defun origami-parser-triple-slash (create)
   "Parser for single line syntax triple slash."
   (origami-build-pair-tree-single create "///"))
 
-(defun origami-parser-double-slashes (create)
+(defun origami-parser-double-slash (create)
   "Parser for single line syntax double slash."
   (origami-build-pair-tree-single create "//"))
 
@@ -362,12 +362,14 @@ function can be use for any kind of syntax like `//`, `;`, `#`."
   "Parser for C#."
   (let ((c-style (origami-c-style-parser create))
         (javadoc (origami-javadoc-parser create))
-        (vsdoc (origami-parser-triple-slashes create)))
+        (p-ts (origami-parser-triple-slash create))
+        (p-ds (origami-parser-double-slash create)))
     (lambda (content)
       (origami-fold-children
        (origami-fold-shallow-merge (origami-fold-root-node (funcall c-style content))
                                    (origami-fold-root-node (funcall javadoc content))
-                                   (origami-fold-root-node (funcall vsdoc content)))))))
+                                   (origami-fold-root-node (funcall p-ts content))
+                                   (origami-fold-root-node (funcall p-ds content)))))))
 
 (defun origami-python-subparser (create beg end)
   "Find all fold block between BEG and END.
