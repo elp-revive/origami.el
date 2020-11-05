@@ -5,7 +5,7 @@
 ;; Version: 2.1
 ;; Keywords: folding
 ;; URL: https://github.com/jcs-elpa/origami.el
-;; Package-Requires: ((s "1.9.0") (dash "2.5.0") (emacs "24") (cl-lib "0.5"))
+;; Package-Requires: ((emacs "24.4") (s "1.9.0") (dash "2.5.0"))
 
 ;; The MIT License (MIT)
 
@@ -31,6 +31,9 @@
 ;; THE SOFTWARE.
 
 ;;; Commentary:
+;;
+;; Flexible text folding.
+;;
 
 ;;; Code:
 
