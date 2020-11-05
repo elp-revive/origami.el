@@ -555,6 +555,16 @@ See function `split-string' description for argument OMIT-NULLS."
     (setq doc-str (s-replace "\"\"\"" "" doc-str))
     (origami-doc-extract-summary doc-str 0 t)))
 
+(defun origami-c-macro-summary (doc-str)
+  "Parse C macro summary from DOC-STR."
+  (when (origami-util-is-face doc-str '(preproc-font-lock-preprocessor-background))
+    (origami-doc-extract-summary doc-str 0 t)))
+
+(defun origami-c-summary (doc-str)
+  "Summary parser for C from DOC-STR."
+  (or (origami-javadoc-summary doc-str)
+      (origami-c-macro-summary doc-str)))
+
 (defun origami-get-summary-parser ()
   "Return the summary parser from `origami-parser-summary-alist'."
   (assoc (buffer-local-value 'major-mode (current-buffer)) origami-parser-summary-alist))
@@ -587,8 +597,8 @@ See function `split-string' description for argument OMIT-NULLS."
 (defcustom origami-parser-summary-alist
   `((actionscript-mode . origami-javadoc-summary)
     (bat-mode          . origami-javadoc-summary)
-    (c-mode            . origami-javadoc-summary)
-    (c++-mode          . origami-javadoc-summary)
+    (c-mode            . origami-c-summary)
+    (c++-mode          . origami-c-summary)
     (csharp-mode       . origami-csharp-vsdoc-summary)
     (java-mode         . origami-javadoc-summary)
     (javascript-mode   . origami-javadoc-summary)
@@ -597,6 +607,7 @@ See function `split-string' description for argument OMIT-NULLS."
     (js3-mode          . origami-javadoc-summary)
     (kotlin-mode       . origami-javadoc-summary)
     (lua-mode          . origami-lua-doc-summary)
+    (objc-mode         . origami-c-summary)
     (php-mode          . origami-javadoc-summary)
     (python-mode       . origami-python-doc-summary)
     (rjsx-mode         . origami-javadoc-summary)
