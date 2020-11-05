@@ -34,9 +34,29 @@
 
 (require 'cl-lib)
 
+;;
+;; (@* "Point" )
+;;
+
+(defun origami-util-pos-line-beg (pos)
+  "Return the line beginning position after moved to POS."
+  (save-excursion (goto-char pos) (line-beginning-position)))
+
+(defun origami-util-pos-line-end (pos)
+  "Return the line end position after moved to POS."
+  (save-excursion (goto-char pos) (line-end-position)))
+
+;;
+;; (@* "Overlay" )
+;;
+
 (defun origami-util-ov-string (ov)
   "Return string from OV."
   (substring (buffer-string) (1- (overlay-start ov)) (1- (overlay-end ov))))
+
+;;
+;; (@* "Face" )
+;;
 
 (defun origami-util-get-face (obj)
   "Return face name from OBJ."
@@ -49,14 +69,6 @@
     (cond ((listp faces)
            (cl-some (lambda (face) (memq face lst-face)) faces))
           (t (memq faces lst-face)))))
-
-(defun origami-util-pos-line-beg (pos)
-  "Return the line beginning position after moved to POS."
-  (save-excursion (goto-char pos) (line-beginning-position)))
-
-(defun origami-util-pos-line-end (pos)
-  "Return the line end position after moved to POS."
-  (save-excursion (goto-char pos) (line-end-position)))
 
 (provide 'origami-util)
 ;;; origami-util.el ends here
