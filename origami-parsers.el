@@ -257,8 +257,12 @@ number (if count starting from 0 and not 1)."
 (defun origami-python-doc-parser (create)
   "Parser for Python document string."
   (lambda (content)
-    ;; TODO: Support this.
-    (user-error "[INFO] There is no parser for Python document string yet")))
+    (let ((positions
+           (->> (origami-get-positions content "\"\"\"")
+                (-filter (lambda (position) (origami-doc-faces-p (car position)))))))
+      (message "%s" positions)
+      (origami-build-pair-tree-2 create positions)
+      )))
 
 (defun origami-c-style-parser (create)
   "Parser for C style programming language."
@@ -325,13 +329,22 @@ See function `origami-python-parser' description for argument CREATE."
         (goto-char new-end)))
     acc))
 
-(defun origami-python-parser (create)
-  "Parser for Python."
+(defun origam-python-parser-internal (create)
+  "Internal Python core parser."
   (lambda (content)
     (with-temp-buffer
       (insert content)
       (python-mode)
       (origami-python-subparser create (point-min) (point-max)))))
+
+(defun origami-python-parser (create)
+  "Parser for Python."
+  (let ((py-core (origam-python-parser-internal create))
+        (python-doc (origami-python-doc-parser create)))
+    (lambda (content)
+      (origami-fold-children
+       (origami-fold-shallow-merge (origami-fold-root-node (funcall py-core content))
+                                   (origami-fold-root-node (funcall python-doc content)))))))
 
 (defun origami-lisp-parser (create regex)
   "Parser for Lisp."
@@ -449,12 +462,16 @@ This happens only when summary length is larger than `origami-max-summary-length
 (defun origami-lua-doc-summary (doc-str)
   "Extract Lua document string from DOC-STR."
   ;; TODO: Implement this..
-  (user-error "[INFO] There is no Lua document string parser yet"))
+  (when (origami-doc-faces-p doc-str)
+    (user-error "[INFO] There is no Lua document string parser yet")))
 
 (defun origami-python-doc-summary (doc-str)
   "Extract Python document string from DOC-STR."
-  ;; TODO: Implement this..
-  (user-error "[INFO] There is no Python document string parser yet"))
+  (when (origami-doc-faces-p doc-str)
+    (setq doc-str (s-replace "\"\"\"" "" doc-str))
+    (let ((lines (split-string doc-str "\n" t)) summary)
+      (setq summary (string-trim (nth 0 lines)))
+      (if (string-empty-p summary) nil summary))))
 
 (defun origami-get-summary-parser ()
   "Return the summary parser from `origami-parser-summary-alist'."
