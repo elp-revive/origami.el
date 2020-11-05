@@ -174,6 +174,8 @@ number (if count starting from 0 and not 1)."
   (let ((index 0) (len (length positions))
         beg end offset pos-beg pos-end
         ov ovs)
+    (when (origami-util-is-odd len)
+      (error "Pair tree 2 should not have length of odd number: %s" len))
     (while (< index len)
       (setq pos-beg (nth index positions)
             pos-end (nth (1+ index) positions)
@@ -184,7 +186,7 @@ number (if count starting from 0 and not 1)."
       (cl-incf index 2))
     (reverse ovs)))
 
-(defun origami-build-pair-tree-single (create syntax)
+(defun origami-build-pair-tree-single (create syntax fn-filter)
   "Build pair tree for single line SYNTAX.
 
 This is use for syntax continuous appears repeatedly on each line.
@@ -199,9 +201,8 @@ For instance,
 In the above case, L1 - L3 will be mark; but L5 will be ignored.  This
 function can be use for any kind of syntax like `//`, `;`, `#`."
   (lambda (content)
-    (let* ((positions
-            (->> (origami-get-positions content syntax)
-                 (-filter (lambda (position) (origami-doc-faces-p (car position))))))
+    (let* ((positions (->> (origami-get-positions content syntax)
+                           (-filter fn-filter)))
            valid-positions)
       (let ((index 0) (len (length positions))
             last-position position
@@ -250,33 +251,37 @@ function can be use for any kind of syntax like `//`, `;`, `#`."
   "Return non-nil if face at OBJ is within `origami-doc-faces' list."
   (origami-util-is-face obj origami-doc-faces))
 
+(defun origami-filter-doc-face (position)
+  "Filter for document face."
+  (origami-doc-faces-p (car position)))
+
 (defun origami-parser-triple-slash (create)
   "Parser for single line syntax triple slash."
-  (origami-build-pair-tree-single create "///"))
+  (origami-build-pair-tree-single create "///" 'origami-filter-doc-face))
 
 (defun origami-parser-double-slash (create)
   "Parser for single line syntax double slash."
-  (origami-build-pair-tree-single create "//"))
+  (origami-build-pair-tree-single create "//" 'origami-filter-doc-face))
 
 (defun origami-parser-single-sharp (create)
   "Parser for single line syntax single sharp."
-  (origami-build-pair-tree-single create "#"))
+  (origami-build-pair-tree-single create "#" 'origami-filter-doc-face))
 
 (defun origami-parser-double-semi-colon (create)
   "Parser for single line syntax double semi-colon."
-  (origami-build-pair-tree-single create ";;"))
+  (origami-build-pair-tree-single create ";;" 'origami-filter-doc-face))
 
 (defun origami-parser-double-dash (create)
   "Parser for single line syntax double dash."
-  (origami-build-pair-tree-single create "--"))
+  (origami-build-pair-tree-single create "--" 'origami-filter-doc-face))
 
 (defun origami-parser-double-colon (create)
   "Parser for single line syntax double colon."
-  (origami-build-pair-tree-single create "::"))
+  (origami-build-pair-tree-single create "::" 'origami-filter-doc-face))
 
 (defun origami-parser-rem (create)
   "Parser for single line syntax REM."
-  (origami-build-pair-tree-single create "[Rr][Ee][Mm]"))
+  (origami-build-pair-tree-single create "[Rr][Ee][Mm]" 'origami-filter-doc-face))
 
 ;; TODO: tag these nodes? have ability to manipulate nodes that are tagged?
 ;; in a scoped fashion?
