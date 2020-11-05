@@ -252,11 +252,11 @@ function can be use for any kind of syntax like `//`, `;`, `#`."
   (origami-util-is-face obj origami-doc-faces))
 
 (defun origami-parser-triple-slashes (create)
-  "Parser for single line syntax triple slashes."
+  "Parser for single line syntax triple slash."
   (origami-build-pair-tree-single create "///"))
 
 (defun origami-parser-double-slashes (create)
-  "Parser for single line syntax double slashes."
+  "Parser for single line syntax double slash."
   (origami-build-pair-tree-single create "//"))
 
 (defun origami-parser-single-sharp (create)
@@ -266,6 +266,10 @@ function can be use for any kind of syntax like `//`, `;`, `#`."
 (defun origami-parser-double-semi-colon (create)
   "Parser for single line syntax double semi-colon."
   (origami-build-pair-tree-single create ";;"))
+
+(defun origami-parser-double-dash (create)
+  "Parser for single line syntax double dash."
+  (origami-build-pair-tree-single create "--"))
 
 (defun origami-parser-double-colon (create)
   "Parser for single line syntax double colon."
@@ -284,12 +288,6 @@ function can be use for any kind of syntax like `//`, `;`, `#`."
            (->> (origami-get-positions content "/\\*\\*\\|\\*/")
                 (-filter (lambda (position) (origami-doc-faces-p (car position)))))))
       (origami-build-pair-tree-2 create positions))))
-
-(defun origami-lua-doc-parser (create)
-  "Parser for Lua document string."
-  (lambda (content)
-    ;; TODO: Support this.
-    (user-error "[INFO] There is no parser for Lua document string yet")))
 
 (defun origami-python-doc-parser (create)
   "Parser for Python document string."
@@ -336,10 +334,9 @@ function can be use for any kind of syntax like `//`, `;`, `#`."
         (javadoc (origami-javadoc-parser create)))
     (lambda (content)
       (origami-fold-children
-       (origami-fold-shallow-merge
-        (origami-fold-root-node (funcall javadoc content))
-        (origami-fold-root-node (funcall c-style content))
-        (origami-fold-root-node (funcall macros content)))))))
+       (origami-fold-shallow-merge (origami-fold-root-node (funcall javadoc content))
+                                   (origami-fold-root-node (funcall c-style content))
+                                   (origami-fold-root-node (funcall macros content)))))))
 
 (defun origami-c++-parser (create)
   "Parser for C++."
@@ -428,14 +425,31 @@ See function `origami-python-parser' description for argument CREATE."
   "Parser for Emacs Lisp."
   (origami-lisp-parser create "(def\\w*\\s-*\\(\\s_\\|\\w\\|[:?!]\\)*\\([ \\t]*(.*?)\\)?"))
 
+(defun origami-lua-core-parser (create)
+  "Core parser for Lua."
+  )
+
 (defun origami-lua-parser (create)
   "Parser for Lua."
-  ;; TODO: Implement Lua parser.
-  (user-error "[INFO] There is no parser for Lua yet"))
+  (let ((p-lua (origami-lua-core-parser create))
+        (p-dd (origami-parser-double-dash create)))
+    (lambda (content)
+      (origami-fold-children
+       (origami-fold-shallow-merge (origami-fold-root-node (funcall p-lua content))
+                                   (origami-fold-root-node (funcall p-dd content)))))))
 
 (defun origami-clj-parser (create)
   "Parser for Clojure."
   (origami-lisp-parser create "(def\\(\\w\\|-\\)*\\s-*\\(\\s_\\|\\w\\|[?!]\\)*\\([ \\t]*\\[.*?\\]\\)?"))
+
+(defun origami-scala-parser (create)
+  "Parser for Scala."
+  (let ((c-style (origami-c-style-parser create))
+        (javadoc (origami-javadoc-parser create)))
+    (lambda (content)
+      (origami-fold-children
+       (origami-fold-shallow-merge (origami-fold-root-node (funcall javadoc content))
+                                   (origami-fold-root-node (funcall c-style content)))))))
 
 (defun origami-sh-parser (create)
   "Parser for Shell script."
@@ -474,7 +488,7 @@ See function `origami-python-parser' description for argument CREATE."
     (php-mode              . origami-java-parser)
     (python-mode           . origami-python-parser)
     (rjsx-mode             . origami-java-parser)
-    (scala-mode            . origami-java-parser)
+    (scala-mode            . origami-scala-parser)
     (sh-mode               . origami-sh-parser)
     (triple-braces         . ,(origami-markers-parser "{{{" "}}}"))
     (typescript-mode       . origami-java-parser))
