@@ -267,13 +267,14 @@ number (if count starting from 0 and not 1)."
   (lambda (content)
     (let ((positions
            (->> (origami-get-positions content "[{}]")
-                (cl-remove-if (lambda (position)
-                                (let ((face (get-text-property 0 'face (car position))))
-                                  (-any? (lambda (f)
-                                           (memq f '(font-lock-doc-face
-                                                     font-lock-comment-face
-                                                     font-lock-string-face)))
-                                         (if (listp face) face (list face)))))))))
+                (cl-remove-if
+                 (lambda (position)
+                   (let ((face (get-text-property 0 'face (car position))))
+                     (-any? (lambda (f)
+                              (memq f '(font-lock-doc-face
+                                        font-lock-comment-face
+                                        font-lock-string-face)))
+                            (if (listp face) face (list face)))))))))
       (origami-build-pair-tree create "{" "}" positions))))
 
 (defun origami-c-macro-parser (create)
@@ -284,12 +285,16 @@ number (if count starting from 0 and not 1)."
 
 (defun origami-c-parser (create)
   "Parser for C."
-  (let ((c-style (origami-c-style-parser create))
+  (let ((p-java (origami-java-parser create))
         (macros (origami-c-macro-parser create)))
     (lambda (content)
       (origami-fold-children
-       (origami-fold-shallow-merge (origami-fold-root-node (funcall c-style content))
-                                   (origami-fold-root-node (funcall macros content)))))))
+       (origami-fold-shallow-merge (origami-fold-root-node (funcall p-java content))
+                                   (origami-fold-root-node (funcall p-java content)))))))
+
+(defun origami-c++-parser (create)
+  "Parser for C++."
+  (origami-c-parser create))
 
 (defun origami-java-parser (create)
   "Parser for Java."
@@ -388,7 +393,7 @@ See function `origami-python-parser' description for argument CREATE."
 (defcustom origami-parser-alist
   `((actionscript-mode     . origami-java-parser)
     (c-mode                . origami-c-parser)
-    (c++-mode              . origami-c-style-parser)
+    (c++-mode              . origami-c++-parser)
     (clojure-mode          . origami-clj-parser)
     (cperl-mode            . origami-c-style-parser)
     (csharp-mode           . origami-csharp-parser)
