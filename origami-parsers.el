@@ -441,21 +441,25 @@ This happens only when summary length is larger than `origami-max-summary-length
   :type 'string
   :group 'origami)
 
+(defun origami-doc-extract-summary (doc-str)
+  "Default way to extract the doc summary from DOC-STR."
+  (let ((lines (split-string doc-str "\n" t)) summary)
+    (setq lines (origami-seq-omit-string lines t))
+    (setq summary (string-trim (nth 0 lines)))
+    (if (string-empty-p summary) nil summary)))
+
 (defun origami-csharp-vsdoc-summary (doc-str)
   "Extract C# vsdoc summary from DOC-STR."
   (when (origami-doc-faces-p doc-str)
-    (setq doc-str (s-replace "///" "" doc-str))
-    (let ((lines (split-string doc-str "\n")) summary)
-      (setq summary (string-trim (nth 1 lines)))
-      (if (string-empty-p summary) nil summary))))
+    (setq doc-str (s-replace "///" "" doc-str)
+          doc-str (s-replace "<summary>" "" doc-str))
+    (origami-doc-extract-summary doc-str)))
 
 (defun origami-javadoc-summary (doc-str)
   "Extract javadoc summary from DOC-STR."
   (when (origami-doc-faces-p doc-str)
     (setq doc-str (s-replace "*" "" doc-str))
-    (let ((lines (split-string doc-str "\n" t)) summary)
-      (setq summary (string-trim (nth 0 lines)))
-      (if (string-empty-p summary) nil summary))))
+    (origami-doc-extract-summary doc-str)))
 
 (defun origami-lua-doc-summary (doc-str)
   "Extract Lua document string from DOC-STR."
@@ -467,9 +471,7 @@ This happens only when summary length is larger than `origami-max-summary-length
   "Extract Python document string from DOC-STR."
   (when (origami-doc-faces-p doc-str)
     (setq doc-str (s-replace "\"\"\"" "" doc-str))
-    (let ((lines (split-string doc-str "\n" t)) summary)
-      (setq summary (string-trim (nth 0 lines)))
-      (if (string-empty-p summary) nil summary))))
+    (origami-doc-extract-summary doc-str)))
 
 (defun origami-get-summary-parser ()
   "Return the summary parser from `origami-parser-summary-alist'."
@@ -501,10 +503,21 @@ This happens only when summary length is larger than `origami-max-summary-length
     summary))
 
 (defcustom origami-parser-summary-alist
-  `((csharp-mode . origami-csharp-vsdoc-summary)
-    (java-mode   . origami-javadoc-summary)
-    (lua-mode    . origami-lua-doc-summary)
-    (python-mode . origami-python-doc-summary))
+  `((actionscript-mode . origami-javadoc-summary)
+    (c-mode            . origami-javadoc-summary)
+    (c++-mode          . origami-javadoc-summary)
+    (csharp-mode       . origami-csharp-vsdoc-summary)
+    (java-mode         . origami-javadoc-summary)
+    (javascript-mode   . origami-javadoc-summary)
+    (js-mode           . origami-javadoc-summary)
+    (js2-mode          . origami-javadoc-summary)
+    (js3-mode          . origami-javadoc-summary)
+    (kotlin-mode       . origami-javadoc-summary)
+    (lua-mode          . origami-lua-doc-summary)
+    (php-mode          . origami-javadoc-summary)
+    (python-mode       . origami-python-doc-summary)
+    (rjsx-mode         . origami-javadoc-summary)
+    (typescript-mode   . origami-javadoc-summary))
   "Alist mapping major-mode to doc parser function."
   :type 'hook
   :group 'origami)
