@@ -260,9 +260,7 @@ number (if count starting from 0 and not 1)."
     (let ((positions
            (->> (origami-get-positions content "\"\"\"")
                 (-filter (lambda (position) (origami-doc-faces-p (car position)))))))
-      (message "%s" positions)
-      (origami-build-pair-tree-2 create positions)
-      )))
+      (origami-build-pair-tree-2 create positions))))
 
 (defun origami-c-style-parser (create)
   "Parser for C style programming language."
@@ -438,7 +436,7 @@ This happens only when summary length is larger than `origami-max-summary-length
   :type 'string
   :group 'origami)
 
-(defcustom origami-summary-prefix " <S> "
+(defcustom origami-summary-format " <S> %s "
   "Prefix string added before summary overlay."
   :type 'string
   :group 'origami)
@@ -486,9 +484,9 @@ This happens only when summary length is larger than `origami-max-summary-length
       (setq summary (concat summary origami-summary-exceeded-string))))
   summary)
 
-(defun origami-summary-prefix-add (summary)
+(defun origami-summary-apply-format (summary)
   "Return the SUMMARY that has added the summary prefix."
-  (if origami-summary-prefix (concat origami-summary-prefix summary) summary))
+  (format origami-summary-format summary))
 
 (defun origami-get-summary (doc-str)
   "Extract summary from DOC-STR in order to display ontop of the overlay."
@@ -498,7 +496,7 @@ This happens only when summary length is larger than `origami-max-summary-length
       (when (integerp origami-max-summary-length)
         (setq summary (origami--keep-summary-length summary)))
       (when summary
-        (setq summary (origami-summary-prefix-add summary)
+        (setq summary (origami-summary-apply-format summary)
               summary (propertize summary 'face 'origami-fold-replacement-face))))
     summary))
 
