@@ -159,6 +159,32 @@ form by (syntax . point)."
                 (cons positions (reverse acc)))))
     (cdr (build positions))))
 
+(defun origami-build-pair-tree-2 (create positions)
+  "Build pair list tree.
+
+POSITIONS is from by a list of cons cell form by (syntax . point).
+Notice POSITIONS' length must be an even number due to the list must be
+pair up.  For instance,
+
+  <0> (syntax . point),
+  <1> (syntax . point),
+  <2> (syntax . point),
+  <3> (syntax . point), ...
+
+Item N and the next item (N + 1) should be a pair; hence, N should always be even
+number (if count starting from 0 and not 1)."
+  (let ((index 0) (len (length positions))
+        beg end offset pos-beg pos-end
+        ovs)
+    (while (< index len)
+      (setq pos-beg (nth index positions)
+            pos-end (nth (1+ index) positions)
+            beg (cdr pos-beg) end (cdr pos-end)
+            offset (length (car pos-beg)))
+      (push (funcall create beg end offset nil) ovs)
+      (cl-incf index 2))
+    (reverse ovs)))
+
 ;;
 ;; (@* "Parsers" )
 ;;
@@ -179,7 +205,7 @@ form by (syntax . point)."
     (let* ((positions
             (->> (origami-get-positions content "///")
                  (-filter (lambda (position) (origami-doc-faces-p (car position))))))
-           valid-positions ovs)
+           valid-positions)
       (let ((index 0) (len (length positions))
             last-position position
             line pos last-line start-p
@@ -214,15 +240,7 @@ form by (syntax . point)."
                                   (line-end-position)))
           (push last-position valid-positions)))
       (setq valid-positions (reverse valid-positions))
-      (let ((index 0) (len (length valid-positions))
-            beg end (offset 3) pos-beg pos-end)
-        (while (< index len)
-          (setq pos-beg (nth index valid-positions)
-                pos-end (nth (1+ index) valid-positions)
-                beg (cdr pos-beg) end (cdr pos-end))
-          (push (funcall create beg end offset nil) ovs)
-          (cl-incf index 2)))
-      (reverse ovs))))
+      (origami-build-pair-tree-2 create valid-positions))))
 
 ;; TODO: tag these nodes? have ability to manipulate nodes that are tagged?
 ;; in a scoped fashion?
