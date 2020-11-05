@@ -409,6 +409,7 @@ See function `origami-python-parser' description for argument CREATE."
     (php-mode              . origami-c-style-parser)
     (python-mode           . origami-python-parser)
     (rjsx-mode             . origami-c-style-parser)
+    (scala-mode            . origami-c-style-parser)
     (triple-braces         . ,(origami-markers-parser "{{{" "}}}"))
     (typescript-mode       . origami-c-style-parser))
   "alist mapping major-mode to parser function."
@@ -517,6 +518,7 @@ This happens only when summary length is larger than `origami-max-summary-length
     (php-mode          . origami-javadoc-summary)
     (python-mode       . origami-python-doc-summary)
     (rjsx-mode         . origami-javadoc-summary)
+    (scala-mode        . origami-javadoc-summary)
     (typescript-mode   . origami-javadoc-summary))
   "Alist mapping major-mode to doc parser function."
   :type 'hook
