@@ -96,5 +96,17 @@ If optional argument TRIM is non-nil; then trim all string in SEQ."
         (push item lst)))
     (reverse lst)))
 
+;;
+;; (@* "Math" )
+;;
+
+(defun origami-util-is-odd (in-val)
+  "Check IN-VAL an odd number."
+  (= (% in-val 2) 1))
+
+(defun origami-util-is-even (in-val)
+  "Check IN-VAL an even number."
+  (not (origami-util-is-odd in-val)))
+
 (provide 'origami-util)
 ;;; origami-util.el ends here
