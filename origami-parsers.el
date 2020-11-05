@@ -149,7 +149,7 @@ form by (syntax . point)."
                                  positions (cdr positions))))
                         ((equal (caar positions) close)
                          (if beg  ; close with no children
-                             (setq acc (cons (funcall create beg (cdar positions) (length close) nil)
+                             (setq acc (cons (funcall create beg (cdar positions) (length open) nil)
                                              acc)
                                    positions (cdr positions)
                                    beg nil)
