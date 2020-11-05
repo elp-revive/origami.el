@@ -185,25 +185,23 @@ number (if count starting from 0 and not 1)."
       (cl-incf index 2))
     (reverse ovs)))
 
-;;
-;; (@* "Parsers" )
-;;
+(defun origami-build-pair-tree-single (create syntax)
+  "Build pair tree for single line SYNTAX.
 
-(defvar origami-doc-faces
-  '(font-lock-doc-face
-    font-lock-comment-face
-    font-lock-comment-delimiter-face)
-  "List of face that apply for docstring.")
+This is use for syntax continuous appears repeatedly on each line.
+For instance,
 
-(defun origami-doc-faces-p (obj)
-  "Return non-nil if face at OBJ is within `origami-doc-faces' list."
-  (origami-util-is-face obj origami-doc-faces))
+  1 | # This is comment line.
+  2 | #
+  3 | # This is also a comment line.
+  4 |
+  5 | # Another comment line.
 
-(defun origami-csharp-vsdoc-parser (create)
-  "Parser for VS C# document string."
+In the above case, L1 - L3 will be mark; but L5 will be ignored.  This
+function can be use for any kind of syntax like `//`, `;`, `#`."
   (lambda (content)
     (let* ((positions
-            (->> (origami-get-positions content "///")
+            (->> (origami-get-positions content syntax)
                  (-filter (lambda (position) (origami-doc-faces-p (car position))))))
            valid-positions)
       (let ((index 0) (len (length positions))
@@ -237,6 +235,25 @@ number (if count starting from 0 and not 1)."
           (push last-position valid-positions)))
       (setq valid-positions (reverse valid-positions))
       (origami-build-pair-tree-2 create valid-positions))))
+
+;;
+;; (@* "Parsers" )
+;;
+
+(defvar origami-doc-faces
+  '(font-lock-doc-face
+    font-lock-comment-face
+    font-lock-comment-delimiter-face
+    hl-todo)
+  "List of face that apply for docstring.")
+
+(defun origami-doc-faces-p (obj)
+  "Return non-nil if face at OBJ is within `origami-doc-faces' list."
+  (origami-util-is-face obj origami-doc-faces))
+
+(defun origami-csharp-vsdoc-parser (create)
+  "Parser for VS C# document string."
+  (origami-build-pair-tree-single create "///"))
 
 ;; TODO: tag these nodes? have ability to manipulate nodes that are tagged?
 ;; in a scoped fashion?
@@ -451,12 +468,14 @@ This happens only when summary length is larger than `origami-max-summary-length
   :type 'string
   :group 'origami)
 
-(defun origami-doc-extract-summary (doc-str &optional index-line)
+(defun origami-doc-extract-summary (doc-str &optional index-line omit-nulls)
   "Default way to extract the doc summary from DOC-STR.
 
-Optional argument INDEX-LINE is the index after splitting DOC-STR with newline."
+Optional argument INDEX-LINE is the index after splitting DOC-STR with newline.
+
+See function `split-string' description for argument OMIT-NULLS."
   (unless index-line (setq index-line 0))
-  (let ((lines (split-string doc-str "\n" t)) summary)
+  (let ((lines (split-string doc-str "\n" omit-nulls)) summary)
     (setq summary (string-trim (nth index-line lines)))
     (if (string-empty-p summary) nil summary)))
 
@@ -470,19 +489,19 @@ Optional argument INDEX-LINE is the index after splitting DOC-STR with newline."
   "Extract javadoc summary from DOC-STR."
   (when (origami-doc-faces-p doc-str)
     (setq doc-str (s-replace "*" "" doc-str))
-    (origami-doc-extract-summary doc-str)))
+    (origami-doc-extract-summary doc-str 0 t)))
 
 (defun origami-lua-doc-summary (doc-str)
   "Extract Lua document string from DOC-STR."
-  ;; TODO: Implement this..
   (when (origami-doc-faces-p doc-str)
+    ;; TODO: Implement this..
     (user-error "[INFO] There is no Lua document string parser yet")))
 
 (defun origami-python-doc-summary (doc-str)
   "Extract Python document string from DOC-STR."
   (when (origami-doc-faces-p doc-str)
     (setq doc-str (s-replace "\"\"\"" "" doc-str))
-    (origami-doc-extract-summary doc-str)))
+    (origami-doc-extract-summary doc-str 0 t)))
 
 (defun origami-get-summary-parser ()
   "Return the summary parser from `origami-parser-summary-alist'."
