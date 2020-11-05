@@ -296,6 +296,10 @@ number (if count starting from 0 and not 1)."
   "Parser for C++."
   (origami-c-parser create))
 
+(defun origami-objc-parser (create)
+  "Parser for Objective-C."
+  (origami-c-parser create))
+
 (defun origami-java-parser (create)
   "Parser for Java."
   (let ((c-style (origami-c-style-parser create))
@@ -409,7 +413,7 @@ See function `origami-python-parser' description for argument CREATE."
     (lisp-mode             . origami-elisp-parser)
     (lisp-interaction-mode . origami-elisp-parser)
     (lua-mode              . origami-lua-parser)
-    (objc-mode             . origami-java-parser)
+    (objc-mode             . origami-objc-parser)
     (perl-mode             . origami-c-style-parser)
     (php-mode              . origami-java-parser)
     (python-mode           . origami-python-parser)
