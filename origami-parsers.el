@@ -434,6 +434,10 @@ See function `origami-python-parser' description for argument CREATE."
   "Parser for Clojure."
   (origami-lisp-parser create "(def\\(\\w\\|-\\)*\\s-*\\(\\s_\\|\\w\\|[?!]\\)*\\([ \\t]*\\[.*?\\]\\)?"))
 
+(defun origami-sh-parser (create)
+  "Parser for Shell script."
+  (origami-parser-single-sharp create))
+
 (defun origami-markers-parser (start-marker end-marker)
   "Create a parser for simple start and end markers."
   (let ((regex (rx-to-string `(or ,start-marker ,end-marker))))
@@ -468,6 +472,7 @@ See function `origami-python-parser' description for argument CREATE."
     (python-mode           . origami-python-parser)
     (rjsx-mode             . origami-java-parser)
     (scala-mode            . origami-java-parser)
+    (sh-mode               . origami-sh-parser)
     (triple-braces         . ,(origami-markers-parser "{{{" "}}}"))
     (typescript-mode       . origami-java-parser))
   "alist mapping major-mode to parser function."
@@ -581,6 +586,7 @@ See function `split-string' description for argument OMIT-NULLS."
     (python-mode       . origami-python-doc-summary)
     (rjsx-mode         . origami-javadoc-summary)
     (scala-mode        . origami-javadoc-summary)
+    (sh-mode           . origami-javadoc-summary)
     (typescript-mode   . origami-javadoc-summary))
   "Alist mapping major-mode to doc parser function."
   :type 'hook
