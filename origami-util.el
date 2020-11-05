@@ -50,5 +50,13 @@
            (cl-some (lambda (face) (memq face lst-face)) faces))
           (t (memq faces lst-face)))))
 
+(defun origami-util-pos-line-beg (pos)
+  "Return the line beginning position after moved to POS."
+  (save-excursion (goto-char pos) (line-beginning-position)))
+
+(defun origami-util-pos-line-end (pos)
+  "Return the line end position after moved to POS."
+  (save-excursion (goto-char pos) (line-end-position)))
+
 (provide 'origami-util)
 ;;; origami-util.el ends here
