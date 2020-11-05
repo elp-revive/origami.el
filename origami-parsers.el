@@ -451,19 +451,20 @@ This happens only when summary length is larger than `origami-max-summary-length
   :type 'string
   :group 'origami)
 
-(defun origami-doc-extract-summary (doc-str)
-  "Default way to extract the doc summary from DOC-STR."
+(defun origami-doc-extract-summary (doc-str &optional index-line)
+  "Default way to extract the doc summary from DOC-STR.
+
+Optional argument INDEX-LINE is the index after splitting DOC-STR with newline."
+  (unless index-line (setq index-line 0))
   (let ((lines (split-string doc-str "\n" t)) summary)
-    (setq lines (origami-seq-omit-string lines t))
-    (setq summary (string-trim (nth 0 lines)))
+    (setq summary (string-trim (nth index-line lines)))
     (if (string-empty-p summary) nil summary)))
 
 (defun origami-csharp-vsdoc-summary (doc-str)
   "Extract C# vsdoc summary from DOC-STR."
   (when (origami-doc-faces-p doc-str)
-    (setq doc-str (s-replace "///" "" doc-str)
-          doc-str (s-replace "<summary>" "" doc-str))
-    (origami-doc-extract-summary doc-str)))
+    (setq doc-str (s-replace "///" "" doc-str))
+    (origami-doc-extract-summary doc-str 1)))
 
 (defun origami-javadoc-summary (doc-str)
   "Extract javadoc summary from DOC-STR."
@@ -492,8 +493,8 @@ This happens only when summary length is larger than `origami-max-summary-length
   (let ((len-sum (length summary))
         (len-exc (length origami-summary-exceeded-string)))
     (when (< origami-max-summary-length len-sum)
-      (setq summary (substring summary 0 (- origami-max-summary-length len-exc)))
-      (setq summary (concat summary origami-summary-exceeded-string))))
+      (setq summary (substring summary 0 (- origami-max-summary-length len-exc))
+            summary (concat summary origami-summary-exceeded-string))))
   summary)
 
 (defun origami-summary-apply-format (summary)
