@@ -251,9 +251,29 @@ function can be use for any kind of syntax like `//`, `;`, `#`."
   "Return non-nil if face at OBJ is within `origami-doc-faces' list."
   (origami-util-is-face obj origami-doc-faces))
 
-(defun origami-csharp-vsdoc-parser (create)
-  "Parser for VS C# document string."
+(defun origami-parser-triple-slashes (create)
+  "Parser for single line syntax triple slashes."
   (origami-build-pair-tree-single create "///"))
+
+(defun origami-parser-double-slashes (create)
+  "Parser for single line syntax double slashes."
+  (origami-build-pair-tree-single create "//"))
+
+(defun origami-parser-single-sharp (create)
+  "Parser for single line syntax single sharp."
+  (origami-build-pair-tree-single create "#"))
+
+(defun origami-parser-double-semi-colon (create)
+  "Parser for single line syntax double semi-colon."
+  (origami-build-pair-tree-single create ";;"))
+
+(defun origami-parser-double-colon (create)
+  "Parser for single line syntax double colon."
+  (origami-build-pair-tree-single create "::"))
+
+(defun origami-parser-rem (create)
+  "Parser for single line syntax REM."
+  (origami-build-pair-tree-single create "[Rr][Ee][Mm]"))
 
 ;; TODO: tag these nodes? have ability to manipulate nodes that are tagged?
 ;; in a scoped fashion?
@@ -278,6 +298,15 @@ function can be use for any kind of syntax like `//`, `;`, `#`."
            (->> (origami-get-positions content "\"\"\"")
                 (-filter (lambda (position) (origami-doc-faces-p (car position)))))))
       (origami-build-pair-tree-2 create positions))))
+
+(defun origami-batch-parser (create)
+  "Parser for Batch."
+  (let ((p-rem (origami-parser-rem create))
+        (p-dc (origami-parser-double-colon create)))
+    (lambda (content)
+      (origami-fold-children
+       (origami-fold-shallow-merge (origami-fold-root-node (funcall p-rem content))
+                                   (origami-fold-root-node (funcall p-dc content)))))))
 
 (defun origami-c-style-parser (create)
   "Parser for C style programming language."
@@ -330,7 +359,7 @@ function can be use for any kind of syntax like `//`, `;`, `#`."
   "Parser for C#."
   (let ((c-style (origami-c-style-parser create))
         (javadoc (origami-javadoc-parser create))
-        (vsdoc (origami-csharp-vsdoc-parser create)))
+        (vsdoc (origami-parser-triple-slashes create)))
     (lambda (content)
       (origami-fold-children
        (origami-fold-shallow-merge (origami-fold-root-node (funcall c-style content))
@@ -353,8 +382,8 @@ See function `origami-python-parser' description for argument CREATE."
         (goto-char new-end)))
     acc))
 
-(defun origam-python-parser-internal (create)
-  "Internal Python core parser."
+(defun origam-python-parser-indent (create)
+  "Indent Python core parser."
   (lambda (content)
     (with-temp-buffer
       (insert content)
@@ -363,12 +392,14 @@ See function `origami-python-parser' description for argument CREATE."
 
 (defun origami-python-parser (create)
   "Parser for Python."
-  (let ((py-core (origam-python-parser-internal create))
-        (python-doc (origami-python-doc-parser create)))
+  (let ((py-indent (origam-python-parser-indent create))
+        (python-doc (origami-python-doc-parser create))
+        (p-ss (origami-parser-single-sharp create)))
     (lambda (content)
       (origami-fold-children
-       (origami-fold-shallow-merge (origami-fold-root-node (funcall py-core content))
-                                   (origami-fold-root-node (funcall python-doc content)))))))
+       (origami-fold-shallow-merge (origami-fold-root-node (funcall py-indent content))
+                                   (origami-fold-root-node (funcall python-doc content))
+                                   (origami-fold-root-node (funcall p-ss content)))))))
 
 (defun origami-lisp-parser (create regex)
   "Parser for Lisp."
@@ -413,6 +444,7 @@ See function `origami-python-parser' description for argument CREATE."
 
 (defcustom origami-parser-alist
   `((actionscript-mode     . origami-java-parser)
+    (bat-mode              . origami-batch-parser)
     (c-mode                . origami-c-parser)
     (c++-mode              . origami-c++-parser)
     (clojure-mode          . origami-clj-parser)
@@ -534,6 +566,7 @@ See function `split-string' description for argument OMIT-NULLS."
 
 (defcustom origami-parser-summary-alist
   `((actionscript-mode . origami-javadoc-summary)
+    (bat-mode          . origami-javadoc-summary)
     (c-mode            . origami-javadoc-summary)
     (c++-mode          . origami-javadoc-summary)
     (csharp-mode       . origami-csharp-vsdoc-summary)
