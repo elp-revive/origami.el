@@ -296,6 +296,10 @@ number (if count starting from 0 and not 1)."
   "Parser for C++."
   (origami-c-parser create))
 
+(defun origami-objc-parser (create)
+  "Parser for Objective-C."
+  (origami-c-parser create))
+
 (defun origami-java-parser (create)
   "Parser for Java."
   (let ((c-style (origami-c-style-parser create))
@@ -438,24 +442,24 @@ See function `origami-python-parser' description for argument CREATE."
     (emacs-lisp-mode       . origami-elisp-parser)
     (go-mode               . origami-c-style-parser)
     (java-mode             . origami-java-parser)
-    (javascript-mode       . origami-c-style-parser)
-    (js-mode               . origami-c-style-parser)
-    (js2-mode              . origami-c-style-parser)
-    (js3-mode              . origami-c-style-parser)
-    (kotlin-mode           . origami-c-style-parser)
+    (javascript-mode       . origami-java-parser)
+    (js-mode               . origami-java-parser)
+    (js2-mode              . origami-java-parser)
+    (js3-mode              . origami-java-parser)
+    (kotlin-mode           . origami-java-parser)
     (lisp-mode             . origami-elisp-parser)
     (lisp-interaction-mode . origami-elisp-parser)
     (lua-mode              . origami-lua-parser)
-    (objc-mode             . origami-c-style-parser)
+    (objc-mode             . origami-objc-parser)
     (perl-mode             . origami-c-style-parser)
-    (php-mode              . origami-c-style-parser)
+    (php-mode              . origami-java-parser)
     (python-mode           . origami-parser-imenu-flat)
-    (rjsx-mode             . origami-c-style-parser)
+    (rjsx-mode             . origami-java-parser)
     (rst-mode              . origami-parser-imenu-flat)
     (rust-mode             . origami-parser-imenu-flat)
-    (scala-mode            . origami-c-style-parser)
+    (scala-mode            . origami-java-parser)
     (triple-braces         . ,(origami-markers-parser "{{{" "}}}"))
-    (typescript-mode       . origami-c-style-parser))
+    (typescript-mode       . origami-java-parser))
   "alist mapping major-mode to parser function."
   :type 'hook
   :group 'origami)
