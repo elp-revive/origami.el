@@ -304,19 +304,15 @@ function can be use for any kind of syntax like `//`, `;`, `#`."
        (origami-fold-shallow-merge (origami-fold-root-node (funcall p-rem content))
                                    (origami-fold-root-node (funcall p-dc content)))))))
 
+
+
 (defun origami-c-style-parser (create)
   "Parser for C style programming language."
   (lambda (content)
     (let ((positions
            (->> (origami-get-positions content "[{}]")
-                (cl-remove-if
-                 (lambda (position)
-                   (let ((face (get-text-property 0 'face (car position))))
-                     (-any? (lambda (f)
-                              (memq f '(font-lock-doc-face
-                                        font-lock-comment-face
-                                        font-lock-string-face)))
-                            (if (listp face) face (list face)))))))))
+                (-filter (lambda (position)
+                           (not (origami-util-comment-or-string-p (cdr position))))))))
       (origami-build-pair-tree create "{" "}" positions))))
 
 (defun origami-c-macro-parser (create)
@@ -434,6 +430,7 @@ See function `origami-python-parser' description for argument CREATE."
 
 (defun origami-lua-core-parser (create)
   "Core parser for Lua."
+  ;; TODO: do this
   )
 
 (defun origami-lua-parser (create)
@@ -498,7 +495,7 @@ See function `origami-python-parser' description for argument CREATE."
     (scala-mode            . origami-scala-parser)
     (sh-mode               . origami-sh-parser)
     (triple-braces         . ,(origami-markers-parser "{{{" "}}}"))
-    (typescript-mode       . origami-java-parser))
+    (typescript-mode       . origami-js-parser))
   "alist mapping major-mode to parser function."
   :type 'hook
   :group 'origami)

@@ -46,6 +46,18 @@
   "Return the line end position after moved to POS."
   (save-excursion (goto-char pos) (line-end-position)))
 
+(defun origami-util-comment-block-p (pos)
+  "Return non-nil if POS is inside a comment block."
+  (save-excursion (goto-char pos) (nth 4 (syntax-ppss))))
+
+(defun origami-util-string-block-p (pos)
+  "Return non-nil if POS is inside a string."
+  (save-excursion (goto-char pos) (nth 8 (syntax-ppss))))
+
+(defun origami-util-comment-or-string-p (pos)
+  "Return non-nil if POS is inside a comment or string."
+  (or (origami-util-comment-block-p pos) (origami-util-string-block-p pos)))
+
 ;;
 ;; (@* "Overlay" )
 ;;
