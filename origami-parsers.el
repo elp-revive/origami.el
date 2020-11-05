@@ -331,12 +331,15 @@ function can be use for any kind of syntax like `//`, `;`, `#`."
 
 (defun origami-c-parser (create)
   "Parser for C."
-  (let ((p-java (origami-java-parser create))
-        (macros (origami-c-macro-parser create)))
+  (let ((c-style (origami-c-style-parser create))
+        (macros (origami-c-macro-parser create))
+        (javadoc (origami-javadoc-parser create)))
     (lambda (content)
       (origami-fold-children
-       (origami-fold-shallow-merge (origami-fold-root-node (funcall p-java content))
-                                   (origami-fold-root-node (funcall p-java content)))))))
+       (origami-fold-shallow-merge
+        (origami-fold-root-node (funcall javadoc content))
+        (origami-fold-root-node (funcall c-style content))
+        (origami-fold-root-node (funcall macros content)))))))
 
 (defun origami-c++-parser (create)
   "Parser for C++."
