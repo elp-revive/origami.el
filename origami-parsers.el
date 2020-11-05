@@ -305,19 +305,13 @@ function can be use for any kind of syntax like `//`, `;`, `#`."
        (origami-fold-shallow-merge (origami-fold-root-node (funcall p-rem content))
                                    (origami-fold-root-node (funcall p-dc content)))))))
 
-
-
 (defun origami-c-style-parser (create)
   "Parser for C style programming language."
   (lambda (content)
     (let ((positions
            (->> (origami-get-positions content "[{}]")
                 (-filter (lambda (position)
-                           (not (origami-util-is-face (car position)
-                                                      '(font-lock-doc-face
-                                                        font-lock-comment-face
-                                                        jcs-docstring-type-face
-                                                        font-lock-string-face))))))))
+                           (not (origami-util-comment-block-p (cdr position))))))))
       (origami-build-pair-tree create "{" "}" positions))))
 
 (defun origami-c-macro-parser (create)
