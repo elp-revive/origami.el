@@ -32,6 +32,8 @@
 
 ;;; Code:
 
+(require 'cl-lib)
+
 (defun origami-util-ov-string (ov)
   "Return string from OV."
   (substring (buffer-string) (overlay-start ov) (overlay-end ov)))
