@@ -353,6 +353,15 @@ function can be use for any kind of syntax like `//`, `;`, `#`."
        (origami-fold-shallow-merge (origami-fold-root-node (funcall c-style content))
                                    (origami-fold-root-node (funcall javadoc content)))))))
 
+(defun origami-js-parser (create)
+  "Parser for JavaScript."
+  (let ((c-style (origami-c-style-parser create))
+        (javadoc (origami-javadoc-parser create)))
+    (lambda (content)
+      (origami-fold-children
+       (origami-fold-shallow-merge (origami-fold-root-node (funcall javadoc content))
+                                   (origami-fold-root-node (funcall c-style content)))))))
+
 (defun origami-csharp-parser (create)
   "Parser for C#."
   (let ((c-style (origami-c-style-parser create))
@@ -473,10 +482,10 @@ See function `origami-python-parser' description for argument CREATE."
     (emacs-lisp-mode       . origami-elisp-parser)
     (go-mode               . origami-c-style-parser)
     (java-mode             . origami-java-parser)
-    (javascript-mode       . origami-java-parser)
-    (js-mode               . origami-java-parser)
-    (js2-mode              . origami-java-parser)
-    (js3-mode              . origami-java-parser)
+    (javascript-mode       . origami-js-parser)
+    (js-mode               . origami-js-parser)
+    (js2-mode              . origami-js-parser)
+    (js3-mode              . origami-js-parser)
     (kotlin-mode           . origami-java-parser)
     (lisp-mode             . origami-elisp-parser)
     (lisp-interaction-mode . origami-elisp-parser)
@@ -485,7 +494,7 @@ See function `origami-python-parser' description for argument CREATE."
     (perl-mode             . origami-c-style-parser)
     (php-mode              . origami-java-parser)
     (python-mode           . origami-python-parser)
-    (rjsx-mode             . origami-java-parser)
+    (rjsx-mode             . origami-js-parser)
     (scala-mode            . origami-scala-parser)
     (sh-mode               . origami-sh-parser)
     (triple-braces         . ,(origami-markers-parser "{{{" "}}}"))
