@@ -250,7 +250,7 @@ number (if count starting from 0 and not 1)."
     (let ((positions
            (->> (origami-get-positions content "/\\*\\*\\|\\*/")
                 (-filter (lambda (position) (origami-doc-faces-p (car position)))))))
-      (origami-build-pair-tree create "/**" "*/" positions))))
+      (origami-build-pair-tree-2 create positions))))
 
 (defun origami-lua-doc-parser (create)
   "Parser for Lua document string."
