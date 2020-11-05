@@ -36,7 +36,7 @@
 
 (defun origami-util-ov-string (ov)
   "Return string from OV."
-  (substring (buffer-string) (overlay-start ov) (overlay-end ov)))
+  (substring (buffer-string) (1- (overlay-start ov)) (1- (overlay-end ov))))
 
 (defun origami-util-get-face (obj)
   "Return face name from OBJ."
