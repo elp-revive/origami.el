@@ -221,9 +221,7 @@ number (if count starting from 0 and not 1)."
             (if start-p
                 ;; Collect ending point; then wrap up.
                 (unless on-next-line-p
-                  (setcdr last-position (save-excursion
-                                          (goto-char (cdr last-position))
-                                          (line-end-position)))
+                  (setcdr last-position (origami-util-pos-line-end (cdr last-position)))
                   (push last-position valid-positions)
                   (setq start-p nil))
               ;; Collect starting point.
@@ -235,9 +233,7 @@ number (if count starting from 0 and not 1)."
           (cl-incf index))
         ;; NOTE: Add the last from list `positions' in order to pair up!
         (when start-p
-          (setcdr last-position (save-excursion
-                                  (goto-char (cdr last-position))
-                                  (line-end-position)))
+          (setcdr last-position (origami-util-pos-line-end (cdr last-position)))
           (push last-position valid-positions)))
       (setq valid-positions (reverse valid-positions))
       (origami-build-pair-tree-2 create valid-positions))))
