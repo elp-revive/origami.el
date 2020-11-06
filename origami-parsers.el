@@ -290,7 +290,7 @@ function can be use for any kind of syntax like `//`, `;`, `#`."
   (lambda (content)
     (let ((positions
            (->> (origami-get-positions content "/\\*\\|\\*/")
-                (-filter (lambda (position) (origami-doc-faces-p (car position)))))))
+                (-filter 'origami-filter-doc-face))))
       (origami-build-pair-tree-2 create positions))))
 
 (defun origami-python-doc-parser (create)
@@ -298,7 +298,7 @@ function can be use for any kind of syntax like `//`, `;`, `#`."
   (lambda (content)
     (let ((positions
            (->> (origami-get-positions content "\"\"\"")
-                (-filter (lambda (position) (origami-doc-faces-p (car position)))))))
+                (-filter 'origami-filter-doc-face))))
       (origami-build-pair-tree-2 create positions))))
 
 (defun origami-batch-parser (create)
