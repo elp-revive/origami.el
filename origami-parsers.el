@@ -168,7 +168,9 @@ form by (syntax . point)."
              positions)))
 
 (defvar origami--strict-pair nil
-  "Strictly check the pair tree must have length of even number.")
+  "Strictly check the pair tree must have length of even number.
+
+This flag is use to debug function `origami-build-pair-tree-2'.")
 
 (defun origami-build-pair-tree-2 (create positions)
   "Build pair list tree.
@@ -182,8 +184,8 @@ pair up.  For instance,
   <2> (syntax . point),
   <3> (syntax . point), ...
 
-Item N and the next item (N + 1) should be a pair; hence, N should always be even
-number (if count starting from 0 and not 1)."
+Item N and the next item (N + 1) should be a pair; hence, N should always
+be even number (if count starting from 0 and not 1)."
   (let ((index 0) (len (length positions))
         beg end offset pos-beg pos-end
         ov ovs)
@@ -453,12 +455,10 @@ See function `origami-python-parser' description for argument CREATE."
   "Parser for Lua."
   (let ((p-lua (origami-lua-core-parser create))
         (p-dd (origami-parser-double-dash create)))
-    ;; (lambda (content)
-    ;;   (origami-fold-children
-    ;;    (origami-fold-shallow-merge (origami-fold-root-node (funcall p-lua content))
-    ;;                                (origami-fold-root-node (funcall p-dd content)))))
-    (message "p-dd: %s" p-dd)
-    p-dd))
+    (lambda (content)
+      (origami-fold-children
+       (origami-fold-shallow-merge (origami-fold-root-node (funcall p-lua content))
+                                   (origami-fold-root-node (funcall p-dd content)))))))
 
 (defun origami-clj-parser (create)
   "Parser for Clojure."
