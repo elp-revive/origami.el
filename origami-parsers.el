@@ -561,14 +561,14 @@ type of content by checking the word boundary's existence."
   (when (origami-doc-faces-p doc-str)
     (origami-doc-extract-summary doc-str sym)))
 
+(defun origami-batch-summary (doc-str)
+  "Extract batch summary from DOC-STR."
+  (origami--generic-summary doc-str "::"))
+
 (defun origami-csharp-vsdoc-summary (doc-str)
   "Extract C# vsdoc summary from DOC-STR."
   (setq doc-str (s-replace-regexp "<[/]*[^>]+." "" doc-str))
   (origami--generic-summary doc-str "///"))
-
-(defun origami-batch-summary (doc-str)
-  "Extract batch summary from DOC-STR."
-  (origami--generic-summary doc-str "::"))
 
 (defun origami-javadoc-summary (doc-str)
   "Extract javadoc summary from DOC-STR."
