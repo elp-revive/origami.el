@@ -537,8 +537,7 @@ This happens only when summary length is larger than `origami-max-summary-length
       (when (string-prefix-p sym line)
         (setq line (substring line (length sym) (length line))
               line (string-trim line)))
-      (when (or (not (string-empty-p line))
-                (not omit-nulls))
+      (when (or (not (string-empty-p line)) (not omit-nulls))
         (push line new-lines)))
     (reverse new-lines)))
 
