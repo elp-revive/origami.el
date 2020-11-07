@@ -556,27 +556,32 @@ type of content by checking the word boundary's existence."
     (when summary (setq summary (string-trim summary)))
     (if (string-empty-p summary) nil summary)))
 
+(defun origami--generic-summary (doc-str sym)
+  "Generic DOC-STR extraction using SYM."
+  (when (origami-doc-faces-p doc-str)
+    (origami-doc-extract-summary doc-str sym)))
+
 (defun origami-csharp-vsdoc-summary (doc-str)
   "Extract C# vsdoc summary from DOC-STR."
-  (when (origami-doc-faces-p doc-str)
-    (setq doc-str (s-replace-regexp "<[/]*[^>]+." "" doc-str))
-    (origami-doc-extract-summary doc-str "///")))
+  (setq doc-str (s-replace-regexp "<[/]*[^>]+." "" doc-str))
+  (origami--generic-summary doc-str "///"))
+
+(defun origami-batch-summary (doc-str)
+  "Extract batch summary from DOC-STR."
+  (origami--generic-summary doc-str "::"))
 
 (defun origami-javadoc-summary (doc-str)
   "Extract javadoc summary from DOC-STR."
-  (when (origami-doc-faces-p doc-str)
-    (origami-doc-extract-summary doc-str "*")))
+  (origami--generic-summary doc-str "*"))
 
 (defun origami-lua-doc-summary (doc-str)
   "Extract Lua document string from DOC-STR."
-  (when (origami-doc-faces-p doc-str)
-    ;; TODO: Implement this..
-    (user-error "[INFO] There is no Lua document string parser yet")))
+  ;; TODO: Implement this..
+  (user-error "[INFO] There is no Lua document string parser yet"))
 
 (defun origami-python-doc-summary (doc-str)
   "Extract Python document string from DOC-STR."
-  (when (origami-doc-faces-p doc-str)
-    (origami-doc-extract-summary doc-str "\"\"\"")))
+  (origami--generic-summary doc-str "\"\"\""))
 
 (defun origami-c-macro-summary (doc-str)
   "Parse C macro summary from DOC-STR."
@@ -619,7 +624,7 @@ type of content by checking the word boundary's existence."
 
 (defcustom origami-parser-summary-alist
   `((actionscript-mode . origami-javadoc-summary)
-    (bat-mode          . origami-javadoc-summary)
+    (bat-mode          . origami-batch-summary)
     (c-mode            . origami-c-summary)
     (c++-mode          . origami-c-summary)
     (csharp-mode       . origami-csharp-vsdoc-summary)
