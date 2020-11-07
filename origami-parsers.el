@@ -537,7 +537,9 @@ This happens only when summary length is larger than `origami-max-summary-length
       (when (string-prefix-p sym line)
         (setq line (substring line (length sym) (length line))
               line (string-trim line)))
-      (unless (string-empty-p line) (push line new-lines)))
+      (when (or (not (string-empty-p line))
+                (not omit-nulls))
+        (push line new-lines)))
     (reverse new-lines)))
 
 (defun origami-doc-extract-summary (doc-str sym &optional index-line omit-nulls)
