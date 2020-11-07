@@ -158,6 +158,18 @@ form by (syntax . point)."
                 (cons positions (reverse acc)))))
     (cdr (build positions))))
 
+(defun origami--force-pair-positions (positions)
+  "Force POSITIONS pair into a length of even number."
+  (let ((last-pos-symbol "") result)
+    (-filter (lambda (position)
+               (setq result (not (string= last-pos-symbol (car position)))
+                     last-pos-symbol (car position))
+               result)
+             positions)))
+
+(defvar origami--strict-pair nil
+  "Strictly check the pair tree must have length of even number.")
+
 (defun origami-build-pair-tree-2 (create positions)
   "Build pair list tree.
 
@@ -176,7 +188,9 @@ number (if count starting from 0 and not 1)."
         beg end offset pos-beg pos-end
         ov ovs)
     (when (origami-util-is-odd len)
-      (error "Pair tree 2 should not have length of odd number: %s" len))
+      (if origami--strict-pair
+          (error "Pair tree 2 should not have length of odd number: %s" len)
+        (setq positions (origami--force-pair-positions positions))))
     (while (< index len)
       (setq pos-beg (nth index positions)
             pos-end (nth (1+ index) positions)
@@ -538,16 +552,22 @@ into sections.  For instance, ===, ---, ///, =-=, etc.  Try to omit these
 type of content by checking the word boundary's existence."
   (string-match-p "\\w" content))
 
+(defun origami--apply-sym (line sym)
+  "Remove SYM from LINE."
+  (when (string-prefix-p sym line)
+    (setq line (substring line (length sym) (length line))
+          line (string-trim line)))
+  line)
+
 (defun origami-extract-doc (doc-str sym)
   "Extract only document content from DOC-STR using SYM"
   (let ((lines (split-string doc-str "\n")) new-lines)
     (dolist (line lines)
       (setq line (string-trim line))
-      (when (string-prefix-p sym line)
-        (setq line (substring line (length sym) (length line))
-              line (string-trim line)))
-      (when (origami-valid-content-p line)
-        (push line new-lines)))
+      (cond ((listp sym)
+             (dolist (c sym) (setq line (origami--apply-sym line c))))
+            (t (setq line (origami--apply-sym line sym))))
+      (when (origami-valid-content-p line) (push line new-lines)))
     (reverse new-lines)))
 
 (defun origami-doc-extract-summary (doc-str sym)
@@ -563,7 +583,7 @@ type of content by checking the word boundary's existence."
 
 (defun origami-batch-summary (doc-str)
   "Extract batch summary from DOC-STR."
-  (origami--generic-summary doc-str "::"))
+  (origami--generic-summary doc-str '("::" "rem" "REM")))
 
 (defun origami-csharp-vsdoc-summary (doc-str)
   "Extract C# vsdoc summary from DOC-STR."
