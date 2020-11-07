@@ -530,18 +530,6 @@ This happens only when summary length is larger than `origami-max-summary-length
   :type 'string
   :group 'origami)
 
-(defun origami-extract-doc (doc-str sym &optional omit-nulls)
-  "Extract only document content from DOC-STR using SYM"
-  (let ((lines (split-string doc-str "\n" omit-nulls)) new-lines)
-    (dolist (line lines)
-      (setq line (string-trim line))
-      (when (string-prefix-p sym line)
-        (setq line (substring line (length sym) (length line))
-              line (string-trim line)))
-      (when (or (not (string-empty-p line)) (not omit-nulls))
-        (push line new-lines)))
-    (reverse new-lines)))
-
 (defun origami-valid-content-p (content)
   "Return non-nil if CONTENT is a valid document string for extraction.
 
@@ -550,26 +538,34 @@ into sections.  For instance, ===, ---, ///, =-=, etc.  Try to omit these
 type of content by checking the word boundary's existence."
   (string-match-p "\\w" content))
 
-(defun origami-doc-extract-summary (doc-str sym &optional index-line omit-nulls)
-  "Default way to extract the doc summary from DOC-STR.
+(defun origami-extract-doc (doc-str sym)
+  "Extract only document content from DOC-STR using SYM"
+  (let ((lines (split-string doc-str "\n")) new-lines)
+    (dolist (line lines)
+      (setq line (string-trim line))
+      (when (string-prefix-p sym line)
+        (setq line (substring line (length sym) (length line))
+              line (string-trim line)))
+      (when (origami-valid-content-p line)
+        (push line new-lines)))
+    (reverse new-lines)))
 
-Optional argument INDEX-LINE is the index after splitting DOC-STR with newline.
-
-See function `split-string' description for argument OMIT-NULLS."
-  (unless index-line (setq index-line 0))
-  (let ((lines (origami-extract-doc doc-str sym omit-nulls)) summary)
-    (setq summary (string-trim (nth index-line lines)))
+(defun origami-doc-extract-summary (doc-str sym)
+  "Default way to extract the doc summary from DOC-STR."
+  (let* ((lines (origami-extract-doc doc-str sym)) (summary (nth 0 lines)))
+    (when summary (setq summary (string-trim summary)))
     (if (string-empty-p summary) nil summary)))
 
 (defun origami-csharp-vsdoc-summary (doc-str)
   "Extract C# vsdoc summary from DOC-STR."
   (when (origami-doc-faces-p doc-str)
-    (origami-doc-extract-summary doc-str "///" 1)))
+    (setq doc-str (s-replace-regexp "<[/]*[^>]+." "" doc-str))
+    (origami-doc-extract-summary doc-str "///")))
 
 (defun origami-javadoc-summary (doc-str)
   "Extract javadoc summary from DOC-STR."
   (when (origami-doc-faces-p doc-str)
-    (origami-doc-extract-summary doc-str "*" 0 t)))
+    (origami-doc-extract-summary doc-str "*")))
 
 (defun origami-lua-doc-summary (doc-str)
   "Extract Lua document string from DOC-STR."
@@ -580,12 +576,12 @@ See function `split-string' description for argument OMIT-NULLS."
 (defun origami-python-doc-summary (doc-str)
   "Extract Python document string from DOC-STR."
   (when (origami-doc-faces-p doc-str)
-    (origami-doc-extract-summary doc-str "\"\"\"" 0 t)))
+    (origami-doc-extract-summary doc-str "\"\"\"")))
 
 (defun origami-c-macro-summary (doc-str)
   "Parse C macro summary from DOC-STR."
   (when (origami-util-is-face doc-str '(preproc-font-lock-preprocessor-background))
-    (origami-doc-extract-summary doc-str 0 t)))
+    (origami-doc-extract-summary doc-str "")))
 
 (defun origami-c-summary (doc-str)
   "Summary parser for C from DOC-STR."
