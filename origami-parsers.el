@@ -443,6 +443,7 @@ See function `origami-python-parser' description for argument CREATE."
     ;;   (origami-fold-children
     ;;    (origami-fold-shallow-merge (origami-fold-root-node (funcall p-lua content))
     ;;                                (origami-fold-root-node (funcall p-dd content)))))
+    (message "p-dd: %s" p-dd)
     p-dd))
 
 (defun origami-clj-parser (create)
@@ -540,6 +541,14 @@ This happens only when summary length is larger than `origami-max-summary-length
       (when (or (not (string-empty-p line)) (not omit-nulls))
         (push line new-lines)))
     (reverse new-lines)))
+
+(defun origami-valid-content-p (content)
+  "Return non-nil if CONTENT is a valid document string for extraction.
+
+Some programmers use some type of characters for splitting the code module
+into sections.  For instance, ===, ---, ///, =-=, etc.  Try to omit these
+type of content by checking the word boundary's existence."
+  (string-match-p "\\w" content))
 
 (defun origami-doc-extract-summary (doc-str sym &optional index-line omit-nulls)
   "Default way to extract the doc summary from DOC-STR.
