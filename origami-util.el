@@ -46,6 +46,18 @@
   "Return the line end position after moved to POS."
   (save-excursion (goto-char pos) (line-end-position)))
 
+(defun origami-util-comment-block-p (pos)
+  "Return non-nil if POS is inside a comment block."
+  (save-excursion (goto-char pos) (nth 4 (syntax-ppss))))
+
+(defun origami-util-string-block-p (pos)
+  "Return non-nil if POS is inside a string."
+  (save-excursion (goto-char pos) (nth 8 (syntax-ppss))))
+
+(defun origami-util-comment-or-string-p (pos)
+  "Return non-nil if POS is inside a comment or string."
+  (or (origami-util-comment-block-p pos) (origami-util-string-block-p pos)))
+
 ;;
 ;; (@* "Overlay" )
 ;;
@@ -83,6 +95,18 @@ If optional argument TRIM is non-nil; then trim all string in SEQ."
       (unless (string-empty-p item)
         (push item lst)))
     (reverse lst)))
+
+;;
+;; (@* "Math" )
+;;
+
+(defun origami-util-is-odd (in-val)
+  "Check IN-VAL an odd number."
+  (= (% in-val 2) 1))
+
+(defun origami-util-is-even (in-val)
+  "Check IN-VAL an even number."
+  (not (origami-util-is-odd in-val)))
 
 (provide 'origami-util)
 ;;; origami-util.el ends here

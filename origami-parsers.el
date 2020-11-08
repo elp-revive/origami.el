@@ -36,6 +36,7 @@
 (require 'cl-lib)
 (require 'dash)
 (require 's)
+(require 'subr-x)
 
 ;;
 ;; (@* "Utility" )
@@ -139,25 +140,37 @@ form by (syntax . point)."
                   (cond ((equal (caar positions) open)
                          (if beg  ; go down a level
                              (let* ((res (build positions))
-                                    (new-pos (car res))
-                                    (children (cdr res)))
-                               (setq positions (cdr new-pos))
-                               (setq acc (cons (funcall create beg (cdar new-pos) (length open) children)
-                                               acc))
-                               (setq beg nil))
+                                    (new-pos (car res)) (children (cdr res)))
+                               (setq positions (cdr new-pos)
+                                     acc (cons (funcall create beg (cdar new-pos) (length open) children)
+                                               acc)
+                                     beg nil))
                            ;; begin a new pair
-                           (setq beg (cdar positions))
-                           (setq positions (cdr positions))))
+                           (setq beg (cdar positions)
+                                 positions (cdr positions))))
                         ((equal (caar positions) close)
-                         (if beg
-                             (progn  ; close with no children
-                               (setq acc (cons (funcall create beg (cdar positions) (length close) nil)
-                                               acc))
-                               (setq positions (cdr positions))
-                               (setq beg nil))
+                         (if beg  ; close with no children
+                             (setq acc (cons (funcall create beg (cdar positions) (length open) nil)
+                                             acc)
+                                   positions (cdr positions)
+                                   beg nil)
                            (setq should-continue nil)))))
                 (cons positions (reverse acc)))))
     (cdr (build positions))))
+
+(defun origami--force-pair-positions (positions)
+  "Force POSITIONS pair into a length of even number."
+  (let ((last-pos-symbol "") result)
+    (-filter (lambda (position)
+               (setq result (not (string= last-pos-symbol (car position)))
+                     last-pos-symbol (car position))
+               result)
+             positions)))
+
+(defvar origami--strict-pair nil
+  "Strictly check the pair tree must have length of even number.
+
+This flag is use to debug function `origami-build-pair-tree-2'.")
 
 (defun origami-build-pair-tree-2 (create positions)
   "Build pair list tree.
@@ -171,40 +184,42 @@ pair up.  For instance,
   <2> (syntax . point),
   <3> (syntax . point), ...
 
-Item N and the next item (N + 1) should be a pair; hence, N should always be even
-number (if count starting from 0 and not 1)."
+Item N and the next item (N + 1) should be a pair; hence, N should always
+be even number (if count starting from 0 and not 1)."
   (let ((index 0) (len (length positions))
         beg end offset pos-beg pos-end
-        ovs)
+        ov ovs)
+    (when (origami-util-is-odd len)
+      (if origami--strict-pair
+          (error "Pair tree 2 should not have length of odd number: %s" len)
+        (setq positions (origami--force-pair-positions positions))))
     (while (< index len)
       (setq pos-beg (nth index positions)
             pos-end (nth (1+ index) positions)
             beg (cdr pos-beg) end (cdr pos-end)
-            offset (length (car pos-beg)))
-      (push (funcall create beg end offset nil) ovs)
+            offset (length (car pos-beg))
+            ov (ignore-errors (funcall create beg end offset nil)))
+      (when ov (push ov ovs))
       (cl-incf index 2))
     (reverse ovs)))
 
-;;
-;; (@* "Parsers" )
-;;
+(defun origami-build-pair-tree-single (create syntax fn-filter)
+  "Build pair tree for single line SYNTAX.
 
-(defvar origami-doc-faces
-  '(font-lock-doc-face
-    font-lock-comment-face
-    font-lock-comment-delimiter-face)
-  "List of face that apply for docstring.")
+This is use for syntax continuous appears repeatedly on each line.
+For instance,
 
-(defun origami-doc-faces-p (obj)
-  "Return non-nil if face at OBJ is within `origami-doc-faces' list."
-  (origami-util-is-face obj origami-doc-faces))
+  1 | # This is comment line.
+  2 | #
+  3 | # This is also a comment line.
+  4 |
+  5 | # Another comment line.
 
-(defun origami-csharp-vsdoc-parser (create)
-  "Parser for VS C# document string."
+In the above case, L1 - L3 will be mark; but L5 will be ignored.  This
+function can be use for any kind of syntax like `//`, `;`, `#`."
   (lambda (content)
-    (let* ((positions
-            (->> (origami-get-positions content "///")
-                 (-filter (lambda (position) (origami-doc-faces-p (car position))))))
+    (let* ((positions (->> (origami-get-positions content syntax)
+                           (-filter fn-filter)))
            valid-positions)
       (let ((index 0) (len (length positions))
             last-position position
@@ -238,43 +253,87 @@ number (if count starting from 0 and not 1)."
       (setq valid-positions (reverse valid-positions))
       (origami-build-pair-tree-2 create valid-positions))))
 
+;;
+;; (@* "Parsers" )
+;;
+
+(defvar origami-doc-faces
+  '(font-lock-doc-face
+    font-lock-comment-face
+    font-lock-comment-delimiter-face
+    hl-todo)
+  "List of face that apply for docstring.")
+
+(defun origami-doc-faces-p (obj)
+  "Return non-nil if face at OBJ is within `origami-doc-faces' list."
+  (origami-util-is-face obj origami-doc-faces))
+
+(defun origami-filter-doc-face (position)
+  "Filter for document face."
+  (origami-doc-faces-p (car position)))
+
+(defun origami-parser-triple-slash (create)
+  "Parser for single line syntax triple slash."
+  (origami-build-pair-tree-single create "///" 'origami-filter-doc-face))
+
+(defun origami-parser-double-slash (create)
+  "Parser for single line syntax double slash."
+  (origami-build-pair-tree-single create "//" 'origami-filter-doc-face))
+
+(defun origami-parser-single-sharp (create)
+  "Parser for single line syntax single sharp."
+  (origami-build-pair-tree-single create "#" 'origami-filter-doc-face))
+
+(defun origami-parser-double-semi-colon (create)
+  "Parser for single line syntax double semi-colon."
+  (origami-build-pair-tree-single create ";;" 'origami-filter-doc-face))
+
+(defun origami-parser-double-dash (create)
+  "Parser for single line syntax double dash."
+  (origami-build-pair-tree-single create "--" 'origami-filter-doc-face))
+
+(defun origami-parser-double-colon (create)
+  "Parser for single line syntax double colon."
+  (origami-build-pair-tree-single create "::" 'origami-filter-doc-face))
+
+(defun origami-parser-rem (create)
+  "Parser for single line syntax REM."
+  (origami-build-pair-tree-single create "[Rr][Ee][Mm]" 'origami-filter-doc-face))
+
 ;; TODO: tag these nodes? have ability to manipulate nodes that are tagged?
 ;; in a scoped fashion?
 (defun origami-javadoc-parser (create)
   "Parser for Javadoc."
   (lambda (content)
     (let ((positions
-           (->> (origami-get-positions content "/\\*\\*\\|\\*/")
-                (-filter (lambda (position) (origami-doc-faces-p (car position)))))))
+           (->> (origami-get-positions content "/\\*\\|\\*/")
+                (-filter 'origami-filter-doc-face))))
       (origami-build-pair-tree-2 create positions))))
-
-(defun origami-lua-doc-parser (create)
-  "Parser for Lua document string."
-  (lambda (content)
-    ;; TODO: Support this.
-    (user-error "[INFO] There is no parser for Lua document string yet")))
 
 (defun origami-python-doc-parser (create)
   "Parser for Python document string."
   (lambda (content)
     (let ((positions
            (->> (origami-get-positions content "\"\"\"")
-                (-filter (lambda (position) (origami-doc-faces-p (car position)))))))
+                (-filter 'origami-filter-doc-face))))
       (origami-build-pair-tree-2 create positions))))
+
+(defun origami-batch-parser (create)
+  "Parser for Batch."
+  (let ((p-rem (origami-parser-rem create))
+        (p-dc (origami-parser-double-colon create)))
+    (lambda (content)
+      (origami-fold-children
+       (origami-fold-shallow-merge (origami-fold-root-node (funcall p-rem content))
+                                   (origami-fold-root-node (funcall p-dc content)))))))
 
 (defun origami-c-style-parser (create)
   "Parser for C style programming language."
   (lambda (content)
     (let ((positions
            (->> (origami-get-positions content "[{}]")
-                (cl-remove-if
-                 (lambda (position)
-                   (let ((face (get-text-property 0 'face (car position))))
-                     (-any? (lambda (f)
-                              (memq f '(font-lock-doc-face
-                                        font-lock-comment-face
-                                        font-lock-string-face)))
-                            (if (listp face) face (list face)))))))))
+                (-filter (lambda (position)
+                           (not (origami-util-comment-block-p (cdr position))))))))
       (origami-build-pair-tree create "{" "}" positions))))
 
 (defun origami-c-macro-parser (create)
@@ -285,12 +344,14 @@ number (if count starting from 0 and not 1)."
 
 (defun origami-c-parser (create)
   "Parser for C."
-  (let ((p-java (origami-java-parser create))
-        (macros (origami-c-macro-parser create)))
+  (let ((c-style (origami-c-style-parser create))
+        (macros (origami-c-macro-parser create))
+        (javadoc (origami-javadoc-parser create)))
     (lambda (content)
       (origami-fold-children
-       (origami-fold-shallow-merge (origami-fold-root-node (funcall p-java content))
-                                   (origami-fold-root-node (funcall p-java content)))))))
+       (origami-fold-shallow-merge (origami-fold-root-node (funcall javadoc content))
+                                   (origami-fold-root-node (funcall c-style content))
+                                   (origami-fold-root-node (funcall macros content)))))))
 
 (defun origami-c++-parser (create)
   "Parser for C++."
@@ -309,16 +370,22 @@ number (if count starting from 0 and not 1)."
        (origami-fold-shallow-merge (origami-fold-root-node (funcall c-style content))
                                    (origami-fold-root-node (funcall javadoc content)))))))
 
+(defun origami-js-parser (create)
+  "Parser for JavaScript."
+  (origami-java-parser create))
+
 (defun origami-csharp-parser (create)
   "Parser for C#."
   (let ((c-style (origami-c-style-parser create))
         (javadoc (origami-javadoc-parser create))
-        (vsdoc (origami-csharp-vsdoc-parser create)))
+        (p-ts (origami-parser-triple-slash create))
+        (p-ds (origami-parser-double-slash create)))
     (lambda (content)
       (origami-fold-children
        (origami-fold-shallow-merge (origami-fold-root-node (funcall c-style content))
                                    (origami-fold-root-node (funcall javadoc content))
-                                   (origami-fold-root-node (funcall vsdoc content)))))))
+                                   (origami-fold-root-node (funcall p-ts content))
+                                   (origami-fold-root-node (funcall p-ds content)))))))
 
 (defun origami-python-subparser (create beg end)
   "Find all fold block between BEG and END.
@@ -336,8 +403,8 @@ See function `origami-python-parser' description for argument CREATE."
         (goto-char new-end)))
     acc))
 
-(defun origam-python-parser-internal (create)
-  "Internal Python core parser."
+(defun origam-python-parser-indent (create)
+  "Indent Python core parser."
   (lambda (content)
     (with-temp-buffer
       (insert content)
@@ -346,12 +413,14 @@ See function `origami-python-parser' description for argument CREATE."
 
 (defun origami-python-parser (create)
   "Parser for Python."
-  (let ((py-core (origam-python-parser-internal create))
-        (python-doc (origami-python-doc-parser create)))
+  (let ((py-indent (origam-python-parser-indent create))
+        (python-doc (origami-python-doc-parser create))
+        (p-ss (origami-parser-single-sharp create)))
     (lambda (content)
       (origami-fold-children
-       (origami-fold-shallow-merge (origami-fold-root-node (funcall py-core content))
-                                   (origami-fold-root-node (funcall python-doc content)))))))
+       (origami-fold-shallow-merge (origami-fold-root-node (funcall py-indent content))
+                                   (origami-fold-root-node (funcall python-doc content))
+                                   (origami-fold-root-node (funcall p-ss content)))))))
 
 (defun origami-parser-imenu-flat (create)
   "Origami parser producing folds for each imenu entry, without nesting."
@@ -414,14 +483,36 @@ See function `origami-python-parser' description for argument CREATE."
   "Parser for Emacs Lisp."
   (origami-lisp-parser create "(def\\w*\\s-*\\(\\s_\\|\\w\\|[:?!]\\)*\\([ \\t]*(.*?)\\)?"))
 
+(defun origami-lua-core-parser (create)
+  "Core parser for Lua."
+  ;; TODO: do this
+  )
+
 (defun origami-lua-parser (create)
   "Parser for Lua."
-  ;; TODO: Implement Lua parser.
-  (user-error "[INFO] There is no parser for Lua yet"))
+  (let ((p-lua (origami-lua-core-parser create))
+        (p-dd (origami-parser-double-dash create)))
+    (lambda (content)
+      (origami-fold-children
+       (origami-fold-shallow-merge (origami-fold-root-node (funcall p-lua content))
+                                   (origami-fold-root-node (funcall p-dd content)))))))
 
 (defun origami-clj-parser (create)
   "Parser for Clojure."
   (origami-lisp-parser create "(def\\(\\w\\|-\\)*\\s-*\\(\\s_\\|\\w\\|[?!]\\)*\\([ \\t]*\\[.*?\\]\\)?"))
+
+(defun origami-scala-parser (create)
+  "Parser for Scala."
+  (let ((c-style (origami-c-style-parser create))
+        (javadoc (origami-javadoc-parser create)))
+    (lambda (content)
+      (origami-fold-children
+       (origami-fold-shallow-merge (origami-fold-root-node (funcall javadoc content))
+                                   (origami-fold-root-node (funcall c-style content)))))))
+
+(defun origami-sh-parser (create)
+  "Parser for Shell script."
+  (origami-parser-single-sharp create))
 
 (defun origami-markers-parser (start-marker end-marker)
   "Create a parser for simple start and end markers."
@@ -433,6 +524,7 @@ See function `origami-python-parser' description for argument CREATE."
 
 (defcustom origami-parser-alist
   `((actionscript-mode     . origami-java-parser)
+    (bat-mode              . origami-batch-parser)
     (c-mode                . origami-c-parser)
     (c++-mode              . origami-c++-parser)
     (clojure-mode          . origami-clj-parser)
@@ -442,10 +534,10 @@ See function `origami-python-parser' description for argument CREATE."
     (emacs-lisp-mode       . origami-elisp-parser)
     (go-mode               . origami-c-style-parser)
     (java-mode             . origami-java-parser)
-    (javascript-mode       . origami-java-parser)
-    (js-mode               . origami-java-parser)
-    (js2-mode              . origami-java-parser)
-    (js3-mode              . origami-java-parser)
+    (javascript-mode       . origami-js-parser)
+    (js-mode               . origami-js-parser)
+    (js2-mode              . origami-js-parser)
+    (js3-mode              . origami-js-parser)
     (kotlin-mode           . origami-java-parser)
     (lisp-mode             . origami-elisp-parser)
     (lisp-interaction-mode . origami-elisp-parser)
@@ -454,12 +546,13 @@ See function `origami-python-parser' description for argument CREATE."
     (perl-mode             . origami-c-style-parser)
     (php-mode              . origami-java-parser)
     (python-mode           . origami-parser-imenu-flat)
-    (rjsx-mode             . origami-java-parser)
+    (rjsx-mode             . origami-js-parser)
     (rst-mode              . origami-parser-imenu-flat)
     (rust-mode             . origami-parser-imenu-flat)
-    (scala-mode            . origami-java-parser)
+    (scala-mode            . origami-scala-parser)
+    (sh-mode               . origami-sh-parser)
     (triple-braces         . ,(origami-markers-parser "{{{" "}}}"))
-    (typescript-mode       . origami-java-parser))
+    (typescript-mode       . origami-js-parser))
   "alist mapping major-mode to parser function."
   :type 'hook
   :group 'origami)
@@ -490,37 +583,74 @@ This happens only when summary length is larger than `origami-max-summary-length
   :type 'string
   :group 'origami)
 
-(defun origami-doc-extract-summary (doc-str)
+(defun origami-valid-content-p (content)
+  "Return non-nil if CONTENT is a valid document string for extraction.
+
+Some programmers use some type of characters for splitting the code module
+into sections.  For instance, ===, ---, ///, =-=, etc.  Try to omit these
+type of content by checking the word boundary's existence."
+  (string-match-p "\\w" content))
+
+(defun origami--apply-sym (line sym)
+  "Remove SYM from LINE."
+  (when (string-prefix-p sym line)
+    (setq line (substring line (length sym) (length line))
+          line (string-trim line)))
+  line)
+
+(defun origami-extract-doc (doc-str sym)
+  "Extract only document content from DOC-STR using SYM"
+  (let ((lines (split-string doc-str "\n")) new-lines)
+    (dolist (line lines)
+      (setq line (string-trim line))
+      (cond ((listp sym)
+             (dolist (c sym) (setq line (origami--apply-sym line c))))
+            (t (setq line (origami--apply-sym line sym))))
+      (when (origami-valid-content-p line) (push line new-lines)))
+    (reverse new-lines)))
+
+(defun origami-doc-extract-summary (doc-str sym)
   "Default way to extract the doc summary from DOC-STR."
-  (let ((lines (split-string doc-str "\n" t)) summary)
-    (setq lines (origami-seq-omit-string lines t))
-    (setq summary (string-trim (nth 0 lines)))
+  (let* ((lines (origami-extract-doc doc-str sym)) (summary (nth 0 lines)))
+    (when summary (setq summary (string-trim summary)))
     (if (string-empty-p summary) nil summary)))
+
+(defun origami--generic-summary (doc-str sym)
+  "Generic DOC-STR extraction using SYM."
+  (when (origami-doc-faces-p doc-str)
+    (origami-doc-extract-summary doc-str sym)))
+
+(defun origami-batch-summary (doc-str)
+  "Extract batch summary from DOC-STR."
+  (origami--generic-summary doc-str '("::" "rem" "REM")))
 
 (defun origami-csharp-vsdoc-summary (doc-str)
   "Extract C# vsdoc summary from DOC-STR."
-  (when (origami-doc-faces-p doc-str)
-    (setq doc-str (s-replace "///" "" doc-str)
-          doc-str (s-replace "<summary>" "" doc-str))
-    (origami-doc-extract-summary doc-str)))
+  (setq doc-str (s-replace-regexp "<[/]*[^>]+." "" doc-str))
+  (origami--generic-summary doc-str "///"))
 
 (defun origami-javadoc-summary (doc-str)
   "Extract javadoc summary from DOC-STR."
-  (when (origami-doc-faces-p doc-str)
-    (setq doc-str (s-replace "*" "" doc-str))
-    (origami-doc-extract-summary doc-str)))
+  (origami--generic-summary doc-str "*"))
 
 (defun origami-lua-doc-summary (doc-str)
   "Extract Lua document string from DOC-STR."
   ;; TODO: Implement this..
-  (when (origami-doc-faces-p doc-str)
-    (user-error "[INFO] There is no Lua document string parser yet")))
+  (user-error "[INFO] There is no Lua document string parser yet"))
 
 (defun origami-python-doc-summary (doc-str)
   "Extract Python document string from DOC-STR."
-  (when (origami-doc-faces-p doc-str)
-    (setq doc-str (s-replace "\"\"\"" "" doc-str))
-    (origami-doc-extract-summary doc-str)))
+  (origami--generic-summary doc-str "\"\"\""))
+
+(defun origami-c-macro-summary (doc-str)
+  "Parse C macro summary from DOC-STR."
+  (when (origami-util-is-face doc-str '(preproc-font-lock-preprocessor-background))
+    (origami-doc-extract-summary doc-str "")))
+
+(defun origami-c-summary (doc-str)
+  "Summary parser for C from DOC-STR."
+  (or (origami-javadoc-summary doc-str)
+      (origami-c-macro-summary doc-str)))
 
 (defun origami-get-summary-parser ()
   "Return the summary parser from `origami-parser-summary-alist'."
@@ -531,8 +661,8 @@ This happens only when summary length is larger than `origami-max-summary-length
   (let ((len-sum (length summary))
         (len-exc (length origami-summary-exceeded-string)))
     (when (< origami-max-summary-length len-sum)
-      (setq summary (substring summary 0 (- origami-max-summary-length len-exc)))
-      (setq summary (concat summary origami-summary-exceeded-string))))
+      (setq summary (substring summary 0 (- origami-max-summary-length len-exc))
+            summary (concat summary origami-summary-exceeded-string))))
   summary)
 
 (defun origami-summary-apply-format (summary)
@@ -553,8 +683,9 @@ This happens only when summary length is larger than `origami-max-summary-length
 
 (defcustom origami-parser-summary-alist
   `((actionscript-mode . origami-javadoc-summary)
-    (c-mode            . origami-javadoc-summary)
-    (c++-mode          . origami-javadoc-summary)
+    (bat-mode          . origami-batch-summary)
+    (c-mode            . origami-c-summary)
+    (c++-mode          . origami-c-summary)
     (csharp-mode       . origami-csharp-vsdoc-summary)
     (java-mode         . origami-javadoc-summary)
     (javascript-mode   . origami-javadoc-summary)
@@ -563,10 +694,12 @@ This happens only when summary length is larger than `origami-max-summary-length
     (js3-mode          . origami-javadoc-summary)
     (kotlin-mode       . origami-javadoc-summary)
     (lua-mode          . origami-lua-doc-summary)
+    (objc-mode         . origami-c-summary)
     (php-mode          . origami-javadoc-summary)
     (python-mode       . origami-python-doc-summary)
     (rjsx-mode         . origami-javadoc-summary)
     (scala-mode        . origami-javadoc-summary)
+    (sh-mode           . origami-javadoc-summary)
     (typescript-mode   . origami-javadoc-summary))
   "Alist mapping major-mode to doc parser function."
   :type 'hook

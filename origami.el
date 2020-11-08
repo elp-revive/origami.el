@@ -220,20 +220,22 @@ Argument BUFFER is the buffer we are concerning."
   "Fold the node.
 Argument BEG is the beginning folding point described by the node.
 Argument END is the end folding point described by the node."
-  (let ((sorted-children (-sort (lambda (a b)
-                                  (or (< (origami-fold-beg a) (origami-fold-beg b))
-                                      (and (= (origami-fold-beg a) (origami-fold-beg b))
-                                           (< (origami-fold-end a) (origami-fold-end b)))))
-                                (remove nil children))))
+  (let ((sorted-children
+         (-sort (lambda (a b)
+                  (or (< (origami-fold-beg a) (origami-fold-beg b))
+                      (and (= (origami-fold-beg a) (origami-fold-beg b))
+                           (< (origami-fold-end a) (origami-fold-end b)))))
+                (remove nil children))))
     ;; ensure invariant: no children overlap
-    (when (-some? (lambda (pair)
-                    (let ((a (car pair)) (b (cadr pair)))
-                      (when b  ;for the odd numbered case - there may be a single item
-                        ;; the < function doesn't support varargs
-                        (or (>= (origami-fold-beg a) (origami-fold-end a))
-                            (>= (origami-fold-end a) (origami-fold-beg b))
-                            (>= (origami-fold-beg b) (origami-fold-end b))))))
-                  (-partition-all-in-steps 2 1 sorted-children))
+    (when (-some?
+           (lambda (pair)
+             (let ((a (car pair)) (b (cadr pair)))
+               (when b  ;for the odd numbered case - there may be a single item
+                 ;; the < function doesn't support varargs
+                 (or (>= (origami-fold-beg a) (origami-fold-end a))
+                     (>= (origami-fold-end a) (origami-fold-beg b))
+                     (>= (origami-fold-beg b) (origami-fold-end b))))))
+           (-partition-all-in-steps 2 1 sorted-children))
       (error "Tried to construct a node where the children overlap or are not distinct regions: %s"
              sorted-children))
     ;; ensure invariant: parent encompases children
@@ -425,12 +427,14 @@ with the current state and the current node at each iteration."
            tree))
 
 (defun origami-fold-node-recursively-closed? (node)
-  (origami-fold-postorder-reduce node (lambda (acc node)
-                                        (and acc (not (origami-fold-open? node)))) t))
+  "No documentation, NODE."
+  (origami-fold-postorder-reduce
+   node (lambda (acc node) (and acc (not (origami-fold-open? node)))) t))
 
 (defun origami-fold-node-recursively-open? (node)
-  (origami-fold-postorder-reduce node (lambda (acc node)
-                                        (and acc (origami-fold-open? node))) t))
+  "No documentation, NODE."
+  (origami-fold-postorder-reduce
+   node (lambda (acc node) (and acc (origami-fold-open? node))) t))
 
 (defun origami-fold-shallow-merge-2 (tree1 tree2)
   "Shallow merge the children of TREE2 in to TREE1."
@@ -448,8 +452,8 @@ with the current state and the current node at each iteration."
   (let ((final-tree (nth 0 trees)) current-tree
         (index 1) (len (length trees)))
     (while (< index len)
-      (setq current-tree (nth index trees))
-      (setq final-tree (origami-fold-shallow-merge-2 final-tree current-tree))
+      (setq current-tree (nth index trees)
+            final-tree (origami-fold-shallow-merge-2 final-tree current-tree))
       (cl-incf index))
     final-tree))
 
