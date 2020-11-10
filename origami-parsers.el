@@ -146,19 +146,18 @@ form by (syntax . point)."
                          (if beg  ; go down a level
                              (let* ((res (build positions))
                                     (new-pos (car res)) (children (cdr res)))
-                               (setq positions (cdr new-pos)
-                                     acc (cons (funcall create beg (cdar new-pos) (length open) children)
-                                               acc)
-                                     beg nil))
+                               (setq positions (cdr new-pos))
+                               (push (funcall create beg (cdar new-pos) (length open) children) acc)
+                               (setq beg nil))
                            ;; begin a new pair
                            (setq beg (cdar positions)
                                  positions (cdr positions))))
                         ((equal (caar positions) close)
                          (if beg  ; close with no children
-                             (setq acc (cons (funcall create beg (cdar positions) (length open) nil)
-                                             acc)
-                                   positions (cdr positions)
-                                   beg nil)
+                             (progn
+                               (push (funcall create beg (cdar positions) (length open) nil) acc)
+                               (setq positions (cdr positions)
+                                     beg nil))
                            (setq should-continue nil)))))
                 (cons positions (reverse acc)))))
     (cdr (build positions))))
@@ -347,7 +346,8 @@ function can be use for any kind of syntax like `//`, `;`, `#`."
     (let ((positions (origami-get-positions
                       content "#if\\|#endif"
                       (lambda (match)
-                        (unless (string= match "#if")
+                        (unless (origami-is-contain-list-string
+                                 '("#if" "#ifdef" "#ifndef") match)
                           (1- (line-beginning-position)))))))
       (origami-build-pair-tree create "#if" "#endif" positions))))
 
