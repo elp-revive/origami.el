@@ -42,18 +42,23 @@
 ;; (@* "Utility" )
 ;;
 
-(defun origami-get-positions (content regex)
+(defun origami-get-positions (content regex &optional fnc-pos)
   "Return a list of positions where REGEX matche in CONTENT.
 A position is a cons cell of the character and the numerical position
-in the CONTENT."
+in the CONTENT.
+
+Optional argument FNC-POS, is function that returns the mark position
+from the matching string."
   (with-temp-buffer
     (insert content)
     (goto-char (point-min))
     (let (acc)
       (while (re-search-forward regex nil t)
         (let ((match (match-string 0)))
-          (setq acc (cons (cons match (- (point) (length match)))
-                          acc))))
+          (push (cons match
+                      (or (ignore-errors (funcall fnc-pos match))
+                          (- (point) (length match))))
+                acc)))
       (reverse acc))))
 
 (defun origami-indent-parser (create)
@@ -339,7 +344,11 @@ function can be use for any kind of syntax like `//`, `;`, `#`."
 (defun origami-c-macro-parser (create)
   "Parser for C style macro."
   (lambda (content)
-    (let ((positions (origami-get-positions content "#if\\|#endif")))
+    (let ((positions (origami-get-positions
+                      content "#if\\|#endif"
+                      (lambda (match)
+                        (unless (string= match "#if")
+                          (1- (line-beginning-position)))))))
       (origami-build-pair-tree create "#if" "#endif" positions))))
 
 (defun origami-c-parser (create)
@@ -605,7 +614,8 @@ type of content by checking the word boundary's existence."
 
 (defun origami-c-macro-summary (doc-str)
   "Parse C macro summary from DOC-STR."
-  (when (origami-util-is-face doc-str '(preproc-font-lock-preprocessor-background))
+  (when (origami-util-is-face doc-str '(font-lock-preprocessor-face
+                                        preproc-font-lock-preprocessor-background))
     (origami-doc-extract-summary doc-str "")))
 
 (defun origami-c-summary (doc-str)
