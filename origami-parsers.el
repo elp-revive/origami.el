@@ -140,22 +140,25 @@ form by (syntax . point)."
   (cl-labels
       ((build (positions)
               ;; this is so horrible, but fast
-              (let (acc beg (should-continue t))
+              (let (acc beg (should-continue t) match match-open match-close)
                 (while (and should-continue positions)
-                  (cond ((equal (caar positions) open)
+                  (setq match (caar positions))
+                  (cond ((string-match-p open match)
+                         (setq match-open match)
                          (if beg  ; go down a level
                              (let* ((res (build positions))
                                     (new-pos (car res)) (children (cdr res)))
                                (setq positions (cdr new-pos))
-                               (push (funcall create beg (cdar new-pos) (length open) children) acc)
+                               (push (funcall create beg (cdar new-pos) (length match-open) children) acc)
                                (setq beg nil))
                            ;; begin a new pair
                            (setq beg (cdar positions)
                                  positions (cdr positions))))
-                        ((equal (caar positions) close)
+                        ((string-match-p close match)
+                         (setq match-close match)
                          (if beg  ; close with no children
                              (progn
-                               (push (funcall create beg (cdar positions) (length open) nil) acc)
+                               (push (funcall create beg (cdar positions) (length match-open) nil) acc)
                                (setq positions (cdr positions)
                                      beg nil))
                            (setq should-continue nil)))))
@@ -344,12 +347,12 @@ function can be use for any kind of syntax like `//`, `;`, `#`."
   "Parser for C style macro."
   (lambda (content)
     (let ((positions (origami-get-positions
-                      content "#if\\|#endif"
+                      content "#if[n]*[d]*[e]*[f]*\\|#endif"
                       (lambda (match)
                         (unless (origami-util-is-contain-list-string
                                  '("#if" "#ifdef" "#ifndef") match)
                           (1- (line-beginning-position)))))))
-      (origami-build-pair-tree create "#if" "#endif" positions))))
+      (origami-build-pair-tree create "#if[n]*[d]*[e]*[f]*" "#endif" positions))))
 
 (defun origami-c-parser (create)
   "Parser for C."
