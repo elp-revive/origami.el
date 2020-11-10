@@ -86,7 +86,7 @@
 ;; (@* "String" )
 ;;
 
-(defun origami-seq-omit-string (seq &optional trim)
+(defun origami-util-seq-omit-string (seq &optional trim)
   "Return a list of omitted empty string and nil from SEQ.
 If optional argument TRIM is non-nil; then trim all string in SEQ."
   (let (lst)
@@ -96,7 +96,7 @@ If optional argument TRIM is non-nil; then trim all string in SEQ."
         (push item lst)))
     (reverse lst)))
 
-(defun origami-is-contain-list-string (in-list in-str)
+(defun origami-util-is-contain-list-string (in-list in-str)
   "Check if IN-STR contain in any string in the IN-LIST."
   (cl-some #'(lambda (lb-sub-str) (string-match-p (regexp-quote lb-sub-str) in-str)) in-list))
 

@@ -346,7 +346,7 @@ function can be use for any kind of syntax like `//`, `;`, `#`."
     (let ((positions (origami-get-positions
                       content "#if\\|#endif"
                       (lambda (match)
-                        (unless (origami-is-contain-list-string
+                        (unless (origami-util-is-contain-list-string
                                  '("#if" "#ifdef" "#ifndef") match)
                           (1- (line-beginning-position)))))))
       (origami-build-pair-tree create "#if" "#endif" positions))))
