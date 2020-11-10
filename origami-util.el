@@ -1,4 +1,4 @@
-;;; origami-util.el --- Flexible text folding  -*- lexical-binding: t -*-
+;;; origami-util.el --- Utility module  -*- lexical-binding: t -*-
 
 ;; Author: Shen, Jen-Chieh <jcs090218@gmail.com>
 ;; Maintainer: Shen, Jen-Chieh <jcs090218@gmail.com>
@@ -29,6 +29,9 @@
 ;; THE SOFTWARE.
 
 ;;; Commentary:
+;;
+;; Utility module.
+;;
 
 ;;; Code:
 

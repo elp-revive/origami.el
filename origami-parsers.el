@@ -30,6 +30,9 @@
 ;; THE SOFTWARE.
 
 ;;; Commentary:
+;;
+;; Collection of parsers.
+;;
 
 ;;; Code:
 
