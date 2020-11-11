@@ -60,7 +60,7 @@ from the matching string."
     (let (acc)
       (while (re-search-forward regex nil t)
         (let ((match (match-string 0)))
-          (when (or (not predicate) (funcall predicate match))
+          (when (or (null predicate) (funcall predicate match))
             (push (cons match
                         (or (ignore-errors (funcall fnc-pos match))
                             (- (point) (length match))))
@@ -477,7 +477,13 @@ See function `origami-python-parser' description for argument CREATE."
   "Core parser for Lua."
   (lambda (content)
     (let ((positions
-           (->> (origami-get-positions content "\\<\\(function\\|then\\|do\\|end\\)")
+           (->> (origami-get-positions
+                 content "\\<\\(function\\|then\\|do\\|end\\)" nil
+                 (lambda (match)
+                   (when (origami-util-is-contain-list-string '("function") match)
+                     (save-excursion
+                       (re-search-forward ")" nil t)
+                       (- (point) (length match))))))
                 (-filter 'origami-filter-code-face))))
       (origami-build-pair-tree create "\\<\\(function\\|then\\|do\\)" "\\<\\(end\\)" positions))))
 
