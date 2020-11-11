@@ -629,9 +629,8 @@ The fold node opened will be the deepest nested at POINT."
 
 ;;;###autoload
 (defun origami-show-node (buffer point)
-  "Like `origami-open-node' but also opens parent fold nodes
-recursively so as to ensure the position where POINT is is
-visible."
+  "Like `origami-open-node' but also opens parent fold nodes recursively \
+so as to ensure the position where POINT is is visible."
   (interactive (list (current-buffer) (point)))
   (-when-let (tree (origami-get-fold-tree buffer))
     (-when-let (path (origami-fold-find-path-containing tree point))
@@ -644,8 +643,8 @@ visible."
 
 ;;;###autoload
 (defun origami-close-node (buffer point)
-  "Close the fold node at POINT in BUFFER. The fold node closed
-will be the deepest nested at POINT."
+  "Close the fold node at POINT in BUFFER.
+The fold node closed will be the deepest nested at POINT."
   (interactive (list (current-buffer) (point)))
   (-when-let (tree (origami-get-fold-tree buffer))
     (-when-let (path (origami-fold-find-path-containing tree point))
