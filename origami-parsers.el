@@ -167,8 +167,10 @@ form by (syntax . point)."
                                (push (funcall create beg (cdar positions) (length match-open) nil) acc)
                                (setq positions (cdr positions)
                                      beg nil))
-                           (setq should-continue nil)))))
-                (cons positions (reverse acc)))))
+                           (setq should-continue nil)))
+                        (t (user-error "[WARNING] Missing open/close: %s" match))))
+                (cons positions (reverse acc))
+                )))
     (cdr (build positions))))
 
 (defun origami--force-pair-positions (positions)
@@ -475,8 +477,7 @@ See function `origami-python-parser' description for argument CREATE."
     (let ((positions
            (->> (origami-get-positions content "\\<\\(function\\|then\\|do\\|end\\)")
                 (-filter 'origami-filter-code-face))))
-      (jcs-log-list positions)
-      (origami-build-pair-tree create "function\\|then\\|do" "end" positions))))
+      (origami-build-pair-tree create "\\<\\(function\\|then\\|do\\)" "\\<\\(end\\)" positions))))
 
 (defun origami-lua-parser (create)
   "Parser for Lua."
@@ -627,7 +628,8 @@ type of content by checking the word boundary's existence."
 (defun origami-lua-doc-summary (doc-str)
   "Extract Lua document string from DOC-STR."
   ;; TODO: Implement this..
-  (user-error "[INFO] There is no Lua document string parser yet"))
+  (message "[INFO] There is no Lua document string parser yet")
+  nil)
 
 (defun origami-python-doc-summary (doc-str)
   "Extract Python document string from DOC-STR."
