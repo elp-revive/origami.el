@@ -463,7 +463,7 @@ See function `origami-python-parser' description for argument CREATE."
           (backward-char)  ; move point to one after the last paren
           (setq end (1- (point)))  ; don't include the last paren in the fold
           (when (> offset 0)
-            (setq acc (cons (funcall create beg end offset nil) acc)))
+            (push (funcall create beg end offset nil) acc))
           (beginning-of-defun -1))
         (reverse acc)))))
 
