@@ -45,10 +45,12 @@
 ;; (@* "Utility" )
 ;;
 
-(defun origami-get-positions (content regex &optional fnc-pos)
+(defun origami-get-positions (content regex &optional predicate fnc-pos)
   "Return a list of positions where REGEX matche in CONTENT.
 A position is a cons cell of the character and the numerical position
 in the CONTENT.
+
+Optional argument PREDICATE is for filtering.
 
 Optional argument FNC-POS, is function that returns the mark position
 from the matching string."
@@ -58,10 +60,11 @@ from the matching string."
     (let (acc)
       (while (re-search-forward regex nil t)
         (let ((match (match-string 0)))
-          (push (cons match
-                      (or (ignore-errors (funcall fnc-pos match))
-                          (- (point) (length match))))
-                acc)))
+          (when (or (not predicate) (funcall predicate match))
+            (push (cons match
+                        (or (ignore-errors (funcall fnc-pos match))
+                            (- (point) (length match))))
+                  acc))))
       (reverse acc))))
 
 (defun origami-indent-parser (create)
@@ -279,8 +282,12 @@ function can be use for any kind of syntax like `//`, `;`, `#`."
   (origami-util-is-face obj origami-doc-faces))
 
 (defun origami-filter-doc-face (position)
-  "Filter for document face."
+  "Filter POSITIONS for document face."
   (origami-doc-faces-p (car position)))
+
+(defun origami-filter-code-face (position)
+  "Filter POSITIONS for code face."
+  (not (origami-util-comment-block-p (cdr position))))
 
 (defun origami-parser-triple-slash (create)
   "Parser for single line syntax triple slash."
@@ -342,8 +349,7 @@ function can be use for any kind of syntax like `//`, `;`, `#`."
   (lambda (content)
     (let ((positions
            (->> (origami-get-positions content "[{}]")
-                (-filter (lambda (position)
-                           (not (origami-util-comment-block-p (cdr position))))))))
+                (-filter 'origami-filter-code-face))))
       (origami-build-pair-tree create "{" "}" positions))))
 
 (defun origami-c-macro-parser (create)
@@ -351,6 +357,8 @@ function can be use for any kind of syntax like `//`, `;`, `#`."
   (lambda (content)
     (let ((positions (origami-get-positions
                       content "#if[n]*[d]*[e]*[f]*\\|#endif"
+                      (lambda (_match)
+                        (not (origami-util-comment-block-p)))
                       (lambda (match)
                         (unless (origami-util-is-contain-list-string
                                  '("#if" "#ifdef" "#ifndef") match)
@@ -463,17 +471,24 @@ See function `origami-python-parser' description for argument CREATE."
 
 (defun origami-lua-core-parser (create)
   "Core parser for Lua."
-  ;; TODO: do this
-  )
+  (lambda (content)
+    (let ((positions
+           (->> (origami-get-positions content "\\<\\(function\\|then\\|do\\|end\\)")
+                (-filter 'origami-filter-code-face))))
+      (jcs-log-list positions)
+      (origami-build-pair-tree create "function\\|then\\|do" "end" positions))))
 
 (defun origami-lua-parser (create)
   "Parser for Lua."
-  (let ((p-lua (origami-lua-core-parser create))
-        (p-dd (origami-parser-double-dash create)))
-    (lambda (content)
-      (origami-fold-children
-       (origami-fold-shallow-merge (origami-fold-root-node (funcall p-lua content))
-                                   (origami-fold-root-node (funcall p-dd content)))))))
+  ;; (let ((p-lua (origami-lua-core-parser create))
+  ;;       (c-style (origami-c-style-parser create))
+  ;;       (p-dd (origami-parser-double-dash create)))
+  ;;   (lambda (content)
+  ;;     (origami-fold-children
+  ;;      (origami-fold-shallow-merge (origami-fold-root-node (funcall p-lua content))
+  ;;                                  (origami-fold-root-node (funcall c-style content))
+  ;;                                  (origami-fold-root-node (funcall p-dd content))))))
+  (origami-lua-core-parser create))
 
 (defun origami-clj-parser (create)
   "Parser for Clojure."
