@@ -143,7 +143,7 @@ from the matching string."
 Argument OPEN is the open symbol in type of string.  Argument CLOSE is
 the close symbol in type of string.  POSITIONS is a list of cons cell
 form by (syntax . point)."
-  (let (ml-open ml-close)
+  (let (ml-open)
     (cl-labels
         ((build (positions)
                 ;; this is so horrible, but fast
@@ -154,20 +154,21 @@ form by (syntax . point)."
                            (setq match-open match)
                            (push match-open ml-open)
                            (if beg  ; go down a level
-                               (let* ((res (build positions))
-                                      (new-pos (car res)) (children (cdr res)))
-                                 (setq positions (cdr new-pos))
-                                 (push (funcall create beg (cdar new-pos) (length (nth 0 ml-open)) children) acc)
-                                 (setq beg nil))
+                               (progn
+                                 (pop ml-open)
+                                 (let* ((res (build positions))
+                                        (new-pos (car res)) (children (cdr res)))
+                                   (setq positions (cdr new-pos))
+                                   (push (funcall create beg (cdar new-pos) (length (nth 0 ml-open)) children) acc)
+                                   (setq beg nil)))
                              ;; begin a new pair
                              (setq beg (cdar positions)
                                    positions (cdr positions))))
                           ((string-match-p close match)
-                           (setq match-close match)
-                           (pop ml-open)
                            (if beg  ; close with no children
                                (progn
-                                 (push (funcall create beg (cdar positions) (length (nth 0 ml-open)) nil) acc)
+                                 (setq match-close (pop ml-open))
+                                 (push (funcall create beg (cdar positions) (length match-close) nil) acc)
                                  (setq positions (cdr positions)
                                        beg nil))
                              (setq should-continue nil)))))
