@@ -628,9 +628,7 @@ type of content by checking the word boundary's existence."
 
 (defun origami-lua-doc-summary (doc-str)
   "Extract Lua document string from DOC-STR."
-  ;; TODO: Implement this..
-  (message "[INFO] There is no Lua document string parser yet")
-  nil)
+  (origami--generic-summary doc-str "--"))
 
 (defun origami-python-doc-summary (doc-str)
   "Extract Python document string from DOC-STR."
