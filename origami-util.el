@@ -101,7 +101,7 @@ If optional argument TRIM is non-nil; then trim all string in SEQ."
 
 (defun origami-util-is-contain-list-string (in-list in-str)
   "Check if IN-STR contain in any string in the IN-LIST."
-  (cl-some #'(lambda (lb-sub-str) (string-match-p (regexp-quote lb-sub-str) in-str)) in-list))
+  (cl-some (lambda (lb-sub-str) (string-match-p (regexp-quote lb-sub-str) in-str)) in-list))
 
 ;;
 ;; (@* "Math" )
