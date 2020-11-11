@@ -295,31 +295,31 @@ function can be use for any kind of syntax like `//`, `;`, `#`."
 
 (defun origami-parser-triple-slash (create)
   "Parser for single line syntax triple slash."
-  (origami-build-pair-tree-single create "///" 'origami-filter-doc-face))
+  (origami-build-pair-tree-single create "^[ \t]*///" 'origami-filter-doc-face))
 
 (defun origami-parser-double-slash (create)
   "Parser for single line syntax double slash."
-  (origami-build-pair-tree-single create "//" 'origami-filter-doc-face))
+  (origami-build-pair-tree-single create "^[ \t]*//" 'origami-filter-doc-face))
 
 (defun origami-parser-single-sharp (create)
   "Parser for single line syntax single sharp."
-  (origami-build-pair-tree-single create "#" 'origami-filter-doc-face))
+  (origami-build-pair-tree-single create "^[ \t]*#" 'origami-filter-doc-face))
 
 (defun origami-parser-double-semi-colon (create)
   "Parser for single line syntax double semi-colon."
-  (origami-build-pair-tree-single create ";;" 'origami-filter-doc-face))
+  (origami-build-pair-tree-single create "^[ \t]*;;" 'origami-filter-doc-face))
 
 (defun origami-parser-double-dash (create)
   "Parser for single line syntax double dash."
-  (origami-build-pair-tree-single create "--" 'origami-filter-doc-face))
+  (origami-build-pair-tree-single create "^[ \t]*--" 'origami-filter-doc-face))
 
 (defun origami-parser-double-colon (create)
   "Parser for single line syntax double colon."
-  (origami-build-pair-tree-single create "::" 'origami-filter-doc-face))
+  (origami-build-pair-tree-single create "^[ \t]*::" 'origami-filter-doc-face))
 
 (defun origami-parser-rem (create)
   "Parser for single line syntax REM."
-  (origami-build-pair-tree-single create "[Rr][Ee][Mm]" 'origami-filter-doc-face))
+  (origami-build-pair-tree-single create "^[ \t]*[Rr][Ee][Mm]" 'origami-filter-doc-face))
 
 ;; TODO: tag these nodes? have ability to manipulate nodes that are tagged?
 ;; in a scoped fashion?
@@ -483,15 +483,14 @@ See function `origami-python-parser' description for argument CREATE."
 
 (defun origami-lua-parser (create)
   "Parser for Lua."
-  ;; (let ((p-lua (origami-lua-core-parser create))
-  ;;       (c-style (origami-c-style-parser create))
-  ;;       (p-dd (origami-parser-double-dash create)))
-  ;;   (lambda (content)
-  ;;     (origami-fold-children
-  ;;      (origami-fold-shallow-merge (origami-fold-root-node (funcall p-lua content))
-  ;;                                  (origami-fold-root-node (funcall c-style content))
-  ;;                                  (origami-fold-root-node (funcall p-dd content))))))
-  (origami-lua-core-parser create))
+  (let ((p-lua (origami-lua-core-parser create))
+        (c-style (origami-c-style-parser create))
+        (p-dd (origami-parser-double-dash create)))
+    (lambda (content)
+      (origami-fold-children
+       (origami-fold-shallow-merge (origami-fold-root-node (funcall p-lua content))
+                                   (origami-fold-root-node (funcall c-style content))
+                                   (origami-fold-root-node (funcall p-dd content)))))))
 
 (defun origami-clj-parser (create)
   "Parser for Clojure."
