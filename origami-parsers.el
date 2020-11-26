@@ -480,10 +480,12 @@ See function `origami-python-parser' description for argument CREATE."
            (->> (origami-get-positions
                  content "\\<\\(function\\|then\\|do\\|end\\)" nil
                  (lambda (match)
-                   (when (origami-util-is-contain-list-string '("function") match)
-                     (save-excursion
-                       (re-search-forward ")" nil t)
-                       (- (point) (length match))))))
+                   (cond ((origami-util-is-contain-list-string '("function") match)
+                          (save-excursion
+                            (re-search-forward ")" nil t)
+                            (- (point) (length match))))
+                         ((origami-util-is-contain-list-string '("end") match)
+                          (1- (line-beginning-position))))))
                 (-filter 'origami-filter-code-face))))
       (origami-build-pair-tree create "\\<\\(function\\|then\\|do\\)" "\\<\\(end\\)" positions))))
 
