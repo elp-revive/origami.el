@@ -388,6 +388,18 @@ function can be use for any kind of syntax like `//`, `;`, `#`."
   "Parser for Objective-C."
   (origami-c-parser create))
 
+(defun origami-org-parser (create)
+  "Parser for Org file."
+  (lambda (content)
+    (let ((positions (origami-get-positions
+                      content "#[+]BEGIN_SRC\\|#[+]END_SRC"
+                      nil
+                      (lambda (match)
+                        (when (origami-util-is-contain-list-string
+                                 '("#+END_SRC") match)
+                          (1- (line-beginning-position)))))))
+      (origami-build-pair-tree create "#[+]BEGIN_SRC" "#[+]END_SRC" positions))))
+
 (defun origami-java-parser (create)
   "Parser for Java."
   (let ((c-style (origami-c-style-parser create))
@@ -546,6 +558,7 @@ See function `origami-python-parser' description for argument CREATE."
     (lisp-interaction-mode . origami-elisp-parser)
     (lua-mode              . origami-lua-parser)
     (objc-mode             . origami-objc-parser)
+    (org-mode              . origami-org-parser)
     (perl-mode             . origami-c-style-parser)
     (php-mode              . origami-java-parser)
     (python-mode           . origami-python-parser)
@@ -638,6 +651,10 @@ type of content by checking the word boundary's existence."
   "Extract Lua document string from DOC-STR."
   (origami--generic-summary doc-str "--"))
 
+(defun origami-org-summary (doc-str)
+  "Extract Org black from DOC-STR."
+  (origami-doc-extract-summary doc-str '()))
+
 (defun origami-python-doc-summary (doc-str)
   "Extract Python document string from DOC-STR."
   (origami--generic-summary doc-str "\"\"\""))
@@ -696,6 +713,7 @@ type of content by checking the word boundary's existence."
     (kotlin-mode       . origami-javadoc-summary)
     (lua-mode          . origami-lua-doc-summary)
     (objc-mode         . origami-c-summary)
+    (org-mode          . origami-org-summary)
     (php-mode          . origami-javadoc-summary)
     (python-mode       . origami-python-doc-summary)
     (rjsx-mode         . origami-javadoc-summary)
