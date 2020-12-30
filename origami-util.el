@@ -2,7 +2,7 @@
 
 ;; Author: Shen, Jen-Chieh <jcs090218@gmail.com>
 ;; Maintainer: Shen, Jen-Chieh <jcs090218@gmail.com>
-;; Version: 2.2
+;; Version: 2.3
 ;; Keywords: utility tool
 ;; URL: https://github.com/jcs-elpa/origami.el
 
