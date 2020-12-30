@@ -189,7 +189,7 @@ form by (syntax . point)."
 
 This flag is use to debug function `origami-build-pair-tree-2'.")
 
-(defun origami-build-pair-tree-2 (create positions)
+(defun origami-build-pair-tree-2 (create positions &optional extra-offset)
   "Build pair list tree.
 
 POSITIONS is from by a list of cons cell form by (syntax . point).
@@ -202,7 +202,12 @@ pair up.  For instance,
   <3> (syntax . point), ...
 
 Item N and the next item (N + 1) should be a pair; hence, N should always
-be even number (if count starting from 0 and not 1)."
+be even number (if count starting from 0 and not 1).
+
+Optional argument EXTRA-OFFSET must be an integer, the default is 0 if the
+value is not set.  EXTRA-OFFSET will be add on to the offset of the render
+length position."
+  (unless extra-offset (setq extra-offset 0))
   (let ((index 0) (len (length positions))
         beg end offset pos-beg pos-end
         ov ovs)
@@ -214,7 +219,7 @@ be even number (if count starting from 0 and not 1)."
       (setq pos-beg (nth index positions)
             pos-end (nth (1+ index) positions)
             beg (cdr pos-beg) end (cdr pos-end)
-            offset (length (car pos-beg))
+            offset (+ (length (car pos-beg)) extra-offset)
             ov (ignore-errors (funcall create beg end offset nil)))
       (when ov (push ov ovs))
       (cl-incf index 2))
@@ -388,18 +393,6 @@ function can be use for any kind of syntax like `//`, `;`, `#`."
   "Parser for Objective-C."
   (origami-c-parser create))
 
-(defun origami-org-parser (create)
-  "Parser for Org file."
-  (lambda (content)
-    (let ((positions (origami-get-positions
-                      content "#[+]BEGIN_SRC\\|#[+]END_SRC"
-                      nil
-                      (lambda (match)
-                        (when (origami-util-is-contain-list-string
-                                 '("#+END_SRC") match)
-                          (1- (line-beginning-position)))))))
-      (origami-build-pair-tree create "#[+]BEGIN_SRC" "#[+]END_SRC" positions))))
-
 (defun origami-java-parser (create)
   "Parser for Java."
   (let ((c-style (origami-c-style-parser create))
@@ -537,6 +530,28 @@ See function `origami-python-parser' description for argument CREATE."
         (let ((positions (origami-get-positions content regex)))
           (origami-build-pair-tree create start-marker end-marker positions))))))
 
+(defun origami-markdown-parser (create)
+  "Parser for Markdown."
+  (lambda (content)
+    (let ((positions (origami-get-positions
+                      content "```"
+                      nil
+                      (lambda (_match)
+                        (1- (line-beginning-position))))))
+      (origami-build-pair-tree-2 create positions 1))))
+
+(defun origami-org-parser (create)
+  "Parser for Org."
+  (lambda (content)
+    (let ((positions (origami-get-positions
+                      content "#[+]BEGIN_SRC\\|#[+]END_SRC"
+                      nil
+                      (lambda (match)
+                        (when (origami-util-is-contain-list-string
+                               '("#+END_SRC") match)
+                          (1- (line-beginning-position)))))))
+      (origami-build-pair-tree create "#[+]BEGIN_SRC" "#[+]END_SRC" positions))))
+
 (defcustom origami-parser-alist
   `((actionscript-mode     . origami-java-parser)
     (bat-mode              . origami-batch-parser)
@@ -557,6 +572,7 @@ See function `origami-python-parser' description for argument CREATE."
     (lisp-mode             . origami-elisp-parser)
     (lisp-interaction-mode . origami-elisp-parser)
     (lua-mode              . origami-lua-parser)
+    (markdown-mode         . origami-markdown-parser)
     (objc-mode             . origami-objc-parser)
     (org-mode              . origami-org-parser)
     (perl-mode             . origami-c-style-parser)
@@ -651,10 +667,6 @@ type of content by checking the word boundary's existence."
   "Extract Lua document string from DOC-STR."
   (origami--generic-summary doc-str "--"))
 
-(defun origami-org-summary (doc-str)
-  "Extract Org black from DOC-STR."
-  (origami-doc-extract-summary doc-str '()))
-
 (defun origami-python-doc-summary (doc-str)
   "Extract Python document string from DOC-STR."
   (origami--generic-summary doc-str "\"\"\""))
@@ -669,6 +681,14 @@ type of content by checking the word boundary's existence."
   "Summary parser for C from DOC-STR."
   (or (origami-javadoc-summary doc-str)
       (origami-c-macro-summary doc-str)))
+
+(defun origami-markdown-summary (doc-str)
+  "Extract Makrdown block from DOC-STR."
+  (origami-doc-extract-summary doc-str '()))
+
+(defun origami-org-summary (doc-str)
+  "Extract Org block from DOC-STR."
+  (origami-doc-extract-summary doc-str '()))
 
 (defun origami-get-summary-parser ()
   "Return the summary parser from `origami-parser-summary-alist'."
@@ -712,6 +732,7 @@ type of content by checking the word boundary's existence."
     (js3-mode          . origami-javadoc-summary)
     (kotlin-mode       . origami-javadoc-summary)
     (lua-mode          . origami-lua-doc-summary)
+    (markdown-mode     . origami-markdown-summary)
     (objc-mode         . origami-c-summary)
     (org-mode          . origami-org-summary)
     (php-mode          . origami-javadoc-summary)
