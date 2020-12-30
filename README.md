@@ -109,6 +109,7 @@ To some degree, yes. Currently out of the box support is provided for:
 * Lisp
 * Lua
 * Objective-C
+* Org
 * PHP
 * Perl
 * Python
