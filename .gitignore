@@ -1,14 +1,8 @@
 # ignore these directories.
 /.git
 /recipes
-/oij_examples
 /src
-/test_lib
 origami-pkg.el
 
 # ignore generated files.
 *.elc
-
-# ignore example/test files.
-oij.config
-*.oij
