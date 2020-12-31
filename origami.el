@@ -4,7 +4,7 @@
 ;; Maintainer: Shen, Jen-Chieh <jcs090218@gmail.com>
 ;; Version: 2.3
 ;; Keywords: folding
-;; URL: https://github.com/jcs-elpa/origami.el
+;; URL: https://github.com/emacs-origami/origami.el
 ;; Package-Requires: ((emacs "24.4") (s "1.9.0") (dash "2.5.0"))
 
 ;; The MIT License (MIT)

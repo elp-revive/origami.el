@@ -4,7 +4,7 @@
 ;; Maintainer: Shen, Jen-Chieh <jcs090218@gmail.com>
 ;; Version: 2.3
 ;; Keywords: parsers
-;; URL: https://github.com/jcs-elpa/origami.el
+;; URL: https://github.com/emacs-origami/origami.el
 
 ;; The MIT License (MIT)
 
