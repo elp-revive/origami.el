@@ -2,7 +2,7 @@
 
 ;; Author: Greg Sexton <gregsexton@gmail.com>
 ;; Maintainer: Shen, Jen-Chieh <jcs090218@gmail.com>
-;; Version: 2.3
+;; Version: 2.4
 ;; Keywords: parsers
 ;; URL: https://github.com/emacs-origami/origami.el
 
