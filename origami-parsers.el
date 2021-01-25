@@ -660,7 +660,8 @@ type of content by checking the word boundary's existence."
     (concat
      (if (string-empty-p doc-str) "" (string-trim doc-start))
      origami-summary-header
-     (if (string-empty-p summary) "" (string-trim summary)))))
+     (if (string-empty-p summary) "" (string-trim summary))
+     " ")))
 
 (defun origami--generic-summary (doc-str sym)
   "Generic DOC-STR extraction using SYM."
