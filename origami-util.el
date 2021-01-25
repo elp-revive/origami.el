@@ -78,7 +78,7 @@
 
 (defun origami-util-get-face (obj)
   "Return face name from OBJ."
-  (get-text-property (1- (length obj)) 'face obj))
+  (get-text-property 0 'face (string-trim obj)))
 
 (defun origami-util-is-face (obj lst-face)
   "Return non-nil if OBJ's face is define inside list LST-FACE."
