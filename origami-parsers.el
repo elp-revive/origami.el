@@ -63,7 +63,7 @@ from the matching string."
           (when (or (null predicate) (funcall predicate match))
             (push (cons match
                         (or (ignore-errors (funcall fnc-pos match))
-                            (- (point) (length match))))
+                            (- (point) (length (string-trim match)))))
                   acc))))
       (reverse acc))))
 
