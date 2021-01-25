@@ -255,7 +255,6 @@ function can be use for any kind of syntax like `//`, `;`, `#`."
           (if (= index 0)
               (setq last-position position
                     last-line line)
-            (setcdr last-position (1+ (cdr last-position)))
             (if start-p
                 ;; Collect ending point; then wrap up.
                 (unless on-next-line-p
@@ -305,7 +304,7 @@ Optional argument TRIM, see function `origami-util-get-face'."
 
 (defun origami-parser-triple-slash (create)
   "Parser for single line syntax triple slash."
-  (origami-build-pair-tree-single create "^[ \t]*///" 'origami-filter-doc-face))
+  (origami-build-pair-tree-single create "^[ \t\r\n]*///" 'origami-filter-doc-face))
 
 (defun origami-parser-double-slash (create)
   "Parser for single line syntax double slash."
@@ -415,14 +414,12 @@ Optional argument TRIM, see function `origami-util-get-face'."
   "Parser for C#."
   (let ((c-style (origami-c-style-parser create))
         (javadoc (origami-javadoc-parser create))
-        (p-ts (origami-parser-triple-slash create))
-        (p-ds (origami-parser-double-slash create)))
+        (p-ts (origami-parser-triple-slash create)))
     (lambda (content)
       (origami-fold-children
        (origami-fold-shallow-merge (origami-fold-root-node (funcall c-style content))
                                    (origami-fold-root-node (funcall javadoc content))
-                                   (origami-fold-root-node (funcall p-ts content))
-                                   (origami-fold-root-node (funcall p-ds content)))))))
+                                   (origami-fold-root-node (funcall p-ts content)))))))
 
 (defun origami-python-subparser (create beg end)
   "Find all fold block between BEG and END.
@@ -482,6 +479,15 @@ See function `origami-python-parser' description for argument CREATE."
 (defun origami-elisp-parser (create)
   "Parser for Emacs Lisp."
   (origami-lisp-parser create "(def\\w*\\s-*\\(\\s_\\|\\w\\|[:?!]\\)*\\([ \\t]*(.*?)\\)?"))
+
+(defun origami-go-parser (create)
+  "Parser for Go."
+  (let ((c-style (origami-c-style-parser create))
+        (p-ds (origami-parser-double-slash create)))
+    (lambda (content)
+      (origami-fold-children
+       (origami-fold-shallow-merge (origami-fold-root-node (funcall c-style content))
+                                   (origami-fold-root-node (funcall p-ds content)))))))
 
 (defun origami-lua-core-parser (create)
   "Core parser for Lua."
@@ -571,7 +577,7 @@ See function `origami-python-parser' description for argument CREATE."
     (csharp-mode           . origami-csharp-parser)
     (dart-mode             . origami-c-style-parser)
     (emacs-lisp-mode       . origami-elisp-parser)
-    (go-mode               . origami-c-style-parser)
+    (go-mode               . origami-go-parser)
     (java-mode             . origami-java-parser)
     (javascript-mode       . origami-js-parser)
     (js-mode               . origami-js-parser)
@@ -673,6 +679,10 @@ type of content by checking the word boundary's existence."
   "Extract javadoc summary from DOC-STR."
   (origami--generic-summary doc-str "*"))
 
+(defun origami-go-summary (doc-str)
+  "Extract Go document summary from DOC-STR."
+  (origami--generic-summary doc-str "//"))
+
 (defun origami-lua-doc-summary (doc-str)
   "Extract Lua document string from DOC-STR."
   (origami--generic-summary doc-str "--"))
@@ -739,6 +749,7 @@ type of content by checking the word boundary's existence."
     (c-mode            . origami-c-summary)
     (c++-mode          . origami-c-summary)
     (csharp-mode       . origami-csharp-vsdoc-summary)
+    (go-mode           . origami-go-summary)
     (java-mode         . origami-javadoc-summary)
     (javascript-mode   . origami-javadoc-summary)
     (js-mode           . origami-javadoc-summary)
