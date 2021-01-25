@@ -289,7 +289,9 @@ function can be use for any kind of syntax like `//`, `;`, `#`."
   "List of face that apply for docstring.")
 
 (defun origami-doc-faces-p (obj &optional trim)
-  "Return non-nil if face at OBJ is within `origami-doc-faces' list."
+  "Return non-nil if face at OBJ is within `origami-doc-faces' list.
+
+Optional argument TRIM, see function `origami-util-get-face'."
   (origami-util-is-face obj origami-doc-faces trim))
 
 (defun origami-filter-doc-face (position)

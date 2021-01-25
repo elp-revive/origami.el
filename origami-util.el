@@ -77,11 +77,15 @@
 ;;
 
 (defun origami-util-get-face (obj trim)
-  "Return face name from OBJ."
+  "Return face name from OBJ.
+
+If argument TRIM is non-nil, trim the OBJ."
   (get-text-property 0 'face (if trim (string-trim obj) obj)))
 
 (defun origami-util-is-face (obj lst-face &optional trim)
-  "Return non-nil if OBJ's face is define inside list LST-FACE."
+  "Return non-nil if OBJ's face is define inside list LST-FACE.
+
+Optional argument TRIM, see function `origami-util-get-face'."
   (unless (listp lst-face) (setq lst-face (list lst-face)))
   (let ((faces (origami-util-get-face obj trim)))
     (cond ((listp faces)
