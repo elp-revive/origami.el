@@ -106,6 +106,7 @@ To some degree, yes. Currently out of the box support is provided for:
 * Markdown
 * Objective-C / Org
 * PHP / Perl / Python
+* Rust
 * Scala / Shell script
 * TypeScript
 

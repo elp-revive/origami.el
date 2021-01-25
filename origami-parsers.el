@@ -496,14 +496,18 @@ See function `origami-python-parser' description for argument CREATE."
 
 (defun origami-lua-parser (create)
   "Parser for Lua."
-  (let ((p-lua (origami-lua-core-parser create))
-        (c-style (origami-c-style-parser create))
+  (let ((c-style (origami-c-style-parser create))
+        (p-lua (origami-lua-core-parser create))
         (p-dd (origami-parser-double-dash create)))
     (lambda (content)
       (origami-fold-children
-       (origami-fold-shallow-merge (origami-fold-root-node (funcall p-lua content))
-                                   (origami-fold-root-node (funcall c-style content))
-                                   (origami-fold-root-node (funcall p-dd content)))))))
+       (origami-fold-shallow-merge  (origami-fold-root-node (funcall c-style content))
+                                    (origami-fold-root-node (funcall p-lua content))
+                                    (origami-fold-root-node (funcall p-dd content)))))))
+
+(defun origami-rust-parser (create)
+  "Parser for Rust."
+  (origami-csharp-parser create))
 
 (defun origami-clj-parser (create)
   "Parser for Clojure."
@@ -579,6 +583,7 @@ See function `origami-python-parser' description for argument CREATE."
     (php-mode              . origami-java-parser)
     (python-mode           . origami-python-parser)
     (rjsx-mode             . origami-js-parser)
+    (rust-mode             . origami-rust-parser)
     (scala-mode            . origami-scala-parser)
     (sh-mode               . origami-sh-parser)
     (triple-braces         . ,(origami-markers-parser "{{{" "}}}"))
@@ -671,6 +676,10 @@ type of content by checking the word boundary's existence."
   "Extract Python document string from DOC-STR."
   (origami--generic-summary doc-str "\"\"\""))
 
+(defun origami-rust-doc-summary (doc-str)
+  "Extract Rust document summary from DOC-STR."
+  (origami--generic-summary doc-str "///"))
+
 (defun origami-c-macro-summary (doc-str)
   "Parse C macro summary from DOC-STR."
   (when (origami-util-is-face doc-str '(font-lock-preprocessor-face
@@ -738,6 +747,7 @@ type of content by checking the word boundary's existence."
     (php-mode          . origami-javadoc-summary)
     (python-mode       . origami-python-doc-summary)
     (rjsx-mode         . origami-javadoc-summary)
+    (rust-mode         . origami-rust-doc-summary)
     (scala-mode        . origami-javadoc-summary)
     (sh-mode           . origami-javadoc-summary)
     (typescript-mode   . origami-javadoc-summary))
