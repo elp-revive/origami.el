@@ -288,13 +288,13 @@ function can be use for any kind of syntax like `//`, `;`, `#`."
     hl-todo)
   "List of face that apply for docstring.")
 
-(defun origami-doc-faces-p (obj)
+(defun origami-doc-faces-p (obj &optional trim)
   "Return non-nil if face at OBJ is within `origami-doc-faces' list."
-  (origami-util-is-face obj origami-doc-faces))
+  (origami-util-is-face obj origami-doc-faces trim))
 
 (defun origami-filter-doc-face (position)
   "Filter POSITIONS for document face."
-  (origami-doc-faces-p (car position)))
+  (origami-doc-faces-p (car position) t))
 
 (defun origami-filter-code-face (position)
   "Filter POSITIONS for code face."
