@@ -70,6 +70,7 @@
 
 (defun origami-util-ov-string (ov)
   "Return string from OV."
+  (message "start: %s" (overlay-start ov))
   (substring (buffer-string) (1- (overlay-start ov)) (1- (overlay-end ov))))
 
 ;;

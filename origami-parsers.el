@@ -219,7 +219,7 @@ length position."
       (setq pos-beg (nth index positions)
             pos-end (nth (1+ index) positions)
             beg (cdr pos-beg) end (cdr pos-end)
-            offset (+ (length (car pos-beg)) extra-offset)
+            offset extra-offset
             ov (ignore-errors (funcall create beg end offset nil)))
       (when ov (push ov ovs))
       (cl-incf index 2))
@@ -617,8 +617,8 @@ This happens only when summary length is larger than `origami-max-summary-length
   :type 'string
   :group 'origami)
 
-(defcustom origami-summary-format " <S> %s "
-  "Prefix string added before summary overlay."
+(defcustom origami-summary-header " <S> "
+  "Prefix string added before summary text."
   :type 'string
   :group 'origami)
 
@@ -637,8 +637,12 @@ type of content by checking the word boundary's existence."
           line (string-trim line)))
   line)
 
-(defun origami-extract-doc (doc-str sym)
-  "Extract only document content from DOC-STR using SYM"
+(defun origami-extract-doc-starting (doc-str)
+  "Extract the comment part of the starting DOC-STR."
+  (nth 0 (split-string doc-str "\n")))
+
+(defun origami-extract-summary (doc-str sym)
+  "Extract only document content from DOC-STR using SYM."
   (let ((lines (split-string doc-str "\n")) new-lines)
     (dolist (line lines)
       (setq line (string-trim line))
@@ -650,9 +654,13 @@ type of content by checking the word boundary's existence."
 
 (defun origami-doc-extract-summary (doc-str sym)
   "Default way to extract the doc summary from DOC-STR."
-  (let* ((lines (origami-extract-doc doc-str sym)) (summary (nth 0 lines)))
+  (let* ((doc-start (origami-extract-doc-starting doc-str))
+         (lines (origami-extract-summary doc-str sym)) (summary (nth 0 lines)))
     (when summary (setq summary (string-trim summary)))
-    (if (string-empty-p summary) nil summary)))
+    (concat
+     (if (string-empty-p doc-str) "" (string-trim doc-start))
+     origami-summary-header
+     (if (string-empty-p summary) "" (string-trim summary)))))
 
 (defun origami--generic-summary (doc-str sym)
   "Generic DOC-STR extraction using SYM."
@@ -716,10 +724,6 @@ type of content by checking the word boundary's existence."
             summary (concat summary origami-summary-exceeded-string))))
   summary)
 
-(defun origami-summary-apply-format (summary)
-  "Return the SUMMARY that has added the summary prefix."
-  (format origami-summary-format summary))
-
 (defun origami-get-summary (doc-str)
   "Extract summary from DOC-STR in order to display ontop of the overlay."
   (let ((parser (cdr (origami-get-summary-parser))) summary)
@@ -728,8 +732,7 @@ type of content by checking the word boundary's existence."
       (when (integerp origami-max-summary-length)
         (setq summary (origami--keep-summary-length summary)))
       (when summary
-        (setq summary (origami-summary-apply-format summary)
-              summary (propertize summary 'face 'origami-fold-replacement-face))))
+        (setq summary (propertize summary 'face 'origami-fold-replacement-face))))
     summary))
 
 (defcustom origami-parser-summary-alist
