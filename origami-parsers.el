@@ -283,6 +283,8 @@ function can be use for any kind of syntax like `//`, `;`, `#`."
   '(font-lock-doc-face
     font-lock-comment-face
     font-lock-comment-delimiter-face
+    tree-sitter-hl-face:comment
+    tree-sitter-hl-face:doc
     hl-todo)
   "List of face that apply for docstring.")
 
