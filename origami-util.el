@@ -2,7 +2,7 @@
 
 ;; Author: Shen, Jen-Chieh <jcs090218@gmail.com>
 ;; Maintainer: Shen, Jen-Chieh <jcs090218@gmail.com>
-;; Version: 2.8
+;; Version: 3.0
 ;; Keywords: utility tool
 ;; URL: https://github.com/emacs-origami/origami.el
 

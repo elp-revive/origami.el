@@ -2,7 +2,7 @@
 
 ;; Author: Greg Sexton <gregsexton@gmail.com>
 ;; Maintainer: Shen, Jen-Chieh <jcs090218@gmail.com>
-;; Version: 2.8
+;; Version: 3.0
 ;; Keywords: folding
 ;; URL: https://github.com/emacs-origami/origami.el
 ;; Package-Requires: ((emacs "24.4") (s "1.9.0") (dash "2.5.0"))
