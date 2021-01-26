@@ -90,6 +90,44 @@
   :type '(repeat string)
   :group 'origami)
 
+;;
+;; (@* "Entry" )
+;;
+
+(defun origami--enable ()
+  "Enable `origami' mode."
+  (add-hook 'occur-mode-find-occurrence-hook 'origami-find-occurrence-show-node nil t)
+  (setq next-error-move-function (lambda (ignored pos)
+                                   (goto-char pos)
+                                   (call-interactively 'origami-show-node)))
+  (add-hook 'clone-indirect-buffer-hook (lambda () (origami-reset (current-buffer)))))
+
+(defun origami--disable ()
+  "Disable `origami' mode."
+  (remove-hook 'occur-mode-find-occurrence-hook 'origami-find-occurrence-show-node t)
+  (setq next-error-move-function nil))
+
+;;;###autoload
+(define-minor-mode origami-mode
+  "Minor mode to selectively hide/show text in the current buffer.
+With a prefix argument ARG, enable the mode if ARG is positive, and disable
+it otherwise.  If called from Lisp, enable the mode if ARG is omitted or nil.
+
+Lastly, the normal hook `origami-mode-hook' is run using `run-hooks'.
+
+Key bindings:
+\\{origami-mode-map}"
+  :group 'origami
+  :lighter nil
+  :keymap origami-mode-map
+  :init-value nil
+  (if origami-mode (origami--enable) (origami--disable))
+  (origami-reset (current-buffer)))
+
+;;;###autoload
+(define-global-minor-mode global-origami-mode origami-mode
+  (lambda () (origami-mode 1)))
+
 ;;; overlay manipulation
 
 (defun origami--header-overlay-begin (fold-overlay)
@@ -927,44 +965,6 @@ and `origami-auto--hide-element-next-line'"
   (remove-hook 'find-file-hook #'origami-auto-apply t)
   (when origami-auto-global-mode
     (add-hook 'find-file-hook #'origami-auto-apply t)))
-
-;;
-;; (@* "Entry" )
-;;
-
-(defun origami--enable ()
-  "Enable `origami' mode."
-  (add-hook 'occur-mode-find-occurrence-hook 'origami-find-occurrence-show-node nil t)
-  (setq next-error-move-function (lambda (ignored pos)
-                                   (goto-char pos)
-                                   (call-interactively 'origami-show-node)))
-  (add-hook 'clone-indirect-buffer-hook (lambda () (origami-reset (current-buffer)))))
-
-(defun origami--disable ()
-  "Disable `origami' mode."
-  (remove-hook 'occur-mode-find-occurrence-hook 'origami-find-occurrence-show-node t)
-  (setq next-error-move-function nil))
-
-;;;###autoload
-(define-minor-mode origami-mode
-  "Minor mode to selectively hide/show text in the current buffer.
-With a prefix argument ARG, enable the mode if ARG is positive, and disable
-it otherwise.  If called from Lisp, enable the mode if ARG is omitted or nil.
-
-Lastly, the normal hook `origami-mode-hook' is run using `run-hooks'.
-
-Key bindings:
-\\{origami-mode-map}"
-  :group 'origami
-  :lighter nil
-  :keymap origami-mode-map
-  :init-value nil
-  (if origami-mode (origami--enable) (origami--disable))
-  (origami-reset (current-buffer)))
-
-;;;###autoload
-(define-global-minor-mode global-origami-mode origami-mode
-  (lambda () (origami-mode 1)))
 
 (provide 'origami)
 ;;; origami.el ends here
