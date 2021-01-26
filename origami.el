@@ -90,6 +90,21 @@
   :type '(repeat string)
   :group 'origami)
 
+;;; minor mode
+
+(defvar origami-mode-map
+  (let ((map (make-sparse-keymap)))
+    map)
+  "Keymap for `origami-mode'.")
+
+(defcustom origami-mode-hook nil
+  "Hook called when origami minor mode is activated or deactivated."
+  :type 'hook
+  :group 'origami)
+
+(defun origami-find-occurrence-show-node ()
+  (call-interactively 'origami-show-node))
+
 ;;
 ;; (@* "Entry" )
 ;;
@@ -900,21 +915,6 @@ this buffer. Useful during development or if you uncover any bugs."
   (interactive (list (current-buffer)))
   (origami-setup-local-vars buffer)
   (origami-remove-all-overlays buffer))
-
-;;; minor mode
-
-(defvar origami-mode-map
-  (let ((map (make-sparse-keymap)))
-    map)
-  "Keymap for `origami-mode'.")
-
-(defcustom origami-mode-hook nil
-  "Hook called when origami minor mode is activated or deactivated."
-  :type 'hook
-  :group 'origami)
-
-(defun origami-find-occurrence-show-node ()
-  (call-interactively 'origami-show-node))
 
 
 ;;; See origami-hide-overlay
