@@ -4,7 +4,7 @@ If you are using [melpa](), please use that version instead of this version!**
 [![Build Status](https://travis-ci.com/emacs-origami/origami.el.svg?branch=master)](https://travis-ci.com/emacs-origami/origami.el)
 [![Release Tag](https://img.shields.io/github/tag/emacs-origami/origami.el.svg?label=release)](https://github.com/emacs-origami/origami.el/releases/latest)
 [![Emacs Ver.](https://img.shields.io/badge/Emacs-24.4+-blue.svg)](https://www.gnu.org/software/emacs/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 
 # What is Origami?
 > A text folding minor mode for Emacs.
