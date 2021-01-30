@@ -15,7 +15,7 @@ build:
 	EMACS=$(EMACS) cask clean-elc
 
 ci: CASK=
-ci: compile clean
+ci: clean compile show
 
 compile:
 	@echo "Compiling..."
