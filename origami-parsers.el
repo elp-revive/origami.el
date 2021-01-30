@@ -628,7 +628,9 @@ See function `origami-python-parser' description for argument CREATE."
 
 (defcustom origami-summary-exceeded-string "..."
   "String that added after display summary.
-This happens only when summary length is larger than `origami-max-summary-length'."
+
+This happens only when summary length is larger than variable
+`origami-max-summary-length'."
   :type 'string
   :group 'origami)
 
