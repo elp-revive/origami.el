@@ -1,7 +1,7 @@
 **This is a further development fork from original project [origami](https://github.com/gregsexton/origami.el).
 If you are using [melpa](), please use that version instead of this version!**
 
-[![Build Status](https://travis-ci.com/emacs-origami/origami.el.svg?branch=master)](https://travis-ci.com/emacs-origami/origami.el)
+![CI](https://github.com/emacs-origami/origami.el/workflows/CI/badge.svg)
 [![Release Tag](https://img.shields.io/github/tag/emacs-origami/origami.el.svg?label=release)](https://github.com/emacs-origami/origami.el/releases/latest)
 [![Emacs Ver.](https://img.shields.io/badge/Emacs-24.4+-blue.svg)](https://www.gnu.org/software/emacs/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
