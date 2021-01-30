@@ -15,7 +15,7 @@ build:
 	EMACS=$(EMACS) cask clean-elc
 
 ci: CASK=
-ci: clean compile show
+ci: clean compile
 
 compile:
 	@echo "Compiling..."
@@ -25,10 +25,7 @@ compile:
 		--eval '(setq byte-compile-error-on-warn t)' \
 		-f batch-byte-compile $(ORIGAMI-FILES)
 
-show:
-	la
-
 clean:
 	rm -rf .cask *.elc
 
-.PHONY: clean build ci compile show
+.PHONY: clean build ci compile
