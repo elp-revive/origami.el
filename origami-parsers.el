@@ -576,6 +576,10 @@ See function `origami-python-parser' description for argument CREATE."
   "Parser for Shell script."
   (origami-parser-single-sharp create))
 
+(defun origami-swift-parser (create)
+  "Parser for Swift."
+  (origami-c-parser create))
+
 (defun origami-markers-parser (start-marker end-marker)
   "Create a parser for simple start and end markers."
   (let ((regex (rx-to-string `(or ,start-marker ,end-marker))))
@@ -635,6 +639,7 @@ See function `origami-python-parser' description for argument CREATE."
     (rust-mode             . origami-rust-parser)
     (scala-mode            . origami-scala-parser)
     (sh-mode               . origami-sh-parser)
+    (swift-mode            . origami-swift-parser)
     (triple-braces         . ,(origami-markers-parser "{{{" "}}}"))
     (typescript-mode       . origami-js-parser))
   "alist mapping major-mode to parser function."
@@ -811,6 +816,7 @@ type of content by checking the word boundary's existence."
     (rust-mode         . origami-rust-doc-summary)
     (scala-mode        . origami-javadoc-summary)
     (sh-mode           . origami-javadoc-summary)
+    (swift-mode        . origami-c-summary)
     (typescript-mode   . origami-javadoc-summary))
   "Alist mapping major-mode to doc parser function."
   :type 'hook
