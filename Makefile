@@ -49,4 +49,4 @@ lint:
 clean:
 	rm -rf .cask *.elc
 
-.PHONY: clean build ci compile lint
+.PHONY: clean build ci lint compile
