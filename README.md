@@ -107,7 +107,7 @@ To some degree, yes. Currently out of the box support is provided for:
 * Objective-C / Org
 * PHP / Perl / Python
 * Ruby / Rust
-* Scala / Shell script
+* Scala / Shell script / Swift
 * TypeScript
 
 Anything not in this list will be folded using indentation. This works
