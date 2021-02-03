@@ -2,15 +2,15 @@
 
 ;; Author: Greg Sexton <gregsexton@gmail.com>
 ;; Maintainer: Shen, Jen-Chieh <jcs090218@gmail.com>
-;; Version: 2.1
+;; Version: 3.1
 ;; Keywords: folding
-;; URL: https://github.com/jcs-elpa/origami.el
+;; URL: https://github.com/emacs-origami/origami.el
 ;; Package-Requires: ((emacs "24.4") (s "1.9.0") (dash "2.5.0"))
 
 ;; The MIT License (MIT)
 
 ;; Copyright (c) 2014 Greg Sexton
-;; Copyright (c) 2019-2020 Jen-Chieh Shen
+;; Copyright (c) 2019-2021 Jen-Chieh Shen
 
 ;; Permission is hereby granted, free of charge, to any person obtaining a copy
 ;; of this software and associated documentation files (the "Software"), to deal
@@ -89,6 +89,59 @@
   "When found, `origami-close-node' will be invoked on the next line."
   :type '(repeat string)
   :group 'origami)
+
+;;; minor mode
+
+(defvar origami-mode-map
+  (let ((map (make-sparse-keymap)))
+    map)
+  "Keymap for `origami-mode'.")
+
+(defcustom origami-mode-hook nil
+  "Hook called when origami minor mode is activated or deactivated."
+  :type 'hook
+  :group 'origami)
+
+(defun origami-find-occurrence-show-node ()
+  (call-interactively 'origami-show-node))
+
+;;
+;; (@* "Entry" )
+;;
+
+(defun origami--enable ()
+  "Enable `origami' mode."
+  (add-hook 'occur-mode-find-occurrence-hook 'origami-find-occurrence-show-node nil t)
+  (setq next-error-move-function (lambda (ignored pos)
+                                   (goto-char pos)
+                                   (call-interactively 'origami-show-node)))
+  (add-hook 'clone-indirect-buffer-hook (lambda () (origami-reset (current-buffer)))))
+
+(defun origami--disable ()
+  "Disable `origami' mode."
+  (remove-hook 'occur-mode-find-occurrence-hook 'origami-find-occurrence-show-node t)
+  (setq next-error-move-function nil))
+
+;;;###autoload
+(define-minor-mode origami-mode
+  "Minor mode to selectively hide/show text in the current buffer.
+With a prefix argument ARG, enable the mode if ARG is positive, and disable
+it otherwise.  If called from Lisp, enable the mode if ARG is omitted or nil.
+
+Lastly, the normal hook `origami-mode-hook' is run using `run-hooks'.
+
+Key bindings:
+\\{origami-mode-map}"
+  :group 'origami
+  :lighter nil
+  :keymap origami-mode-map
+  :init-value nil
+  (if origami-mode (origami--enable) (origami--disable))
+  (origami-reset (current-buffer)))
+
+;;;###autoload
+(define-global-minor-mode global-origami-mode origami-mode
+  (lambda () (origami-mode 1)))
 
 ;;; overlay manipulation
 
@@ -629,9 +682,8 @@ The fold node opened will be the deepest nested at POINT."
 
 ;;;###autoload
 (defun origami-show-node (buffer point)
-  "Like `origami-open-node' but also opens parent fold nodes
-recursively so as to ensure the position where POINT is is
-visible."
+  "Like `origami-open-node' but also opens parent fold nodes recursively \
+so as to ensure the position where POINT is is visible."
   (interactive (list (current-buffer) (point)))
   (-when-let (tree (origami-get-fold-tree buffer))
     (-when-let (path (origami-fold-find-path-containing tree point))
@@ -644,8 +696,8 @@ visible."
 
 ;;;###autoload
 (defun origami-close-node (buffer point)
-  "Close the fold node at POINT in BUFFER. The fold node closed
-will be the deepest nested at POINT."
+  "Close the fold node at POINT in BUFFER.
+The fold node closed will be the deepest nested at POINT."
   (interactive (list (current-buffer) (point)))
   (-when-let (tree (origami-get-fold-tree buffer))
     (-when-let (path (origami-fold-find-path-containing tree point))
@@ -864,21 +916,6 @@ this buffer. Useful during development or if you uncover any bugs."
   (origami-setup-local-vars buffer)
   (origami-remove-all-overlays buffer))
 
-;;; minor mode
-
-(defvar origami-mode-map
-  (let ((map (make-sparse-keymap)))
-    map)
-  "Keymap for `origami-mode'.")
-
-(defcustom origami-mode-hook nil
-  "Hook called when origami minor mode is activated or deactivated."
-  :type 'hook
-  :group 'origami)
-
-(defun origami-find-occurrence-show-node ()
-  (call-interactively 'origami-show-node))
-
 
 ;;; See origami-hide-overlay
 (defun origami--point-in-folded-overlay ()
@@ -928,44 +965,6 @@ and `origami-auto--hide-element-next-line'"
   (remove-hook 'find-file-hook #'origami-auto-apply t)
   (when origami-auto-global-mode
     (add-hook 'find-file-hook #'origami-auto-apply t)))
-
-;;
-;; (@* "Entry" )
-;;
-
-(defun origami--enable ()
-  "Enable `origami' mode."
-  (add-hook 'occur-mode-find-occurrence-hook 'origami-find-occurrence-show-node nil t)
-  (setq next-error-move-function (lambda (ignored pos)
-                                   (goto-char pos)
-                                   (call-interactively 'origami-show-node)))
-  (add-hook 'clone-indirect-buffer-hook (lambda () (origami-reset (current-buffer)))))
-
-(defun origami--disable ()
-  "Disable `origami' mode."
-  (remove-hook 'occur-mode-find-occurrence-hook 'origami-find-occurrence-show-node t)
-  (setq next-error-move-function nil))
-
-;;;###autoload
-(define-minor-mode origami-mode
-  "Minor mode to selectively hide/show text in the current buffer.
-With a prefix argument ARG, enable the mode if ARG is positive, and disable
-it otherwise.  If called from Lisp, enable the mode if ARG is omitted or nil.
-
-Lastly, the normal hook `origami-mode-hook' is run using `run-hooks'.
-
-Key bindings:
-\\{origami-mode-map}"
-  :group 'origami
-  :lighter nil
-  :keymap origami-mode-map
-  :init-value nil
-  (if origami-mode (origami--enable) (origami--disable))
-  (origami-reset (current-buffer)))
-
-;;;###autoload
-(define-global-minor-mode global-origami-mode origami-mode
-  (lambda () (origami-mode 1)))
 
 (provide 'origami)
 ;;; origami.el ends here

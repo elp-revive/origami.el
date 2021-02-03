@@ -1,8 +1,10 @@
-[![Build Status](https://travis-ci.com/jcs-elpa/origami.el.svg?branch=master)](https://travis-ci.com/jcs-elpa/origami.el)
-[![MELPA](https://melpa.org/packages/origami-badge.svg)](https://melpa.org/#/origami)
-[![MELPA Stable](https://stable.melpa.org/packages/origami-badge.svg)](https://stable.melpa.org/#/origami)
-[![Release Tag](https://img.shields.io/github/tag/jcs-elpa/origami.el.svg?label=release)](https://github.com/jcs-elpa/origami.el/releases/latest)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+**This is a further development fork from original project [origami](https://github.com/gregsexton/origami.el).
+If you are using [melpa](), please use that version instead of this version!**
+
+![CI](https://github.com/emacs-origami/origami.el/workflows/CI/badge.svg)
+[![Release Tag](https://img.shields.io/github/tag/emacs-origami/origami.el.svg?label=release)](https://github.com/emacs-origami/origami.el/releases/latest)
+[![Emacs Ver.](https://img.shields.io/badge/Emacs-24.4+-blue.svg)](https://www.gnu.org/software/emacs/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 
 # What is Origami?
 > A text folding minor mode for Emacs.
@@ -94,25 +96,18 @@ To some degree, yes. Currently out of the box support is provided for:
 
 * ActionScript
 * Batch
-* C/C++
-* C#
-* Clojure
+* C / C++ / C# / Clojure
 * Dart
 * Emacs Lisp
 * Go
-* Java
-* Javascript
-* JSX
+* Java / JavaScript / JSX
 * Kotlin
-* Lisp
-* Lua (WIP)
-* Objective-C
-* PHP
-* Perl
-* Python
-* Rust
-* Scala
-* Shell script
+* Lisp / Lua
+* Markdown
+* Objective-C / Org
+* PHP / Perl / Python
+* Ruby / Rust
+* Scala / Shell script
 * TypeScript
 
 Anything not in this list will be folded using indentation. This works

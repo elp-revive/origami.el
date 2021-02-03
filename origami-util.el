@@ -1,14 +1,14 @@
-;;; origami-util.el --- Flexible text folding  -*- lexical-binding: t -*-
+;;; origami-util.el --- Utility module  -*- lexical-binding: t -*-
 
 ;; Author: Shen, Jen-Chieh <jcs090218@gmail.com>
 ;; Maintainer: Shen, Jen-Chieh <jcs090218@gmail.com>
-;; Version: 2.1
+;; Version: 3.1
 ;; Keywords: utility tool
-;; URL: https://github.com/jcs-elpa/origami.el
+;; URL: https://github.com/emacs-origami/origami.el
 
 ;; The MIT License (MIT)
 
-;; Copyright (c) 2020 Jen-Chieh Shen
+;; Copyright (c) 2020-2021 Jen-Chieh Shen
 
 ;; Permission is hereby granted, free of charge, to any person obtaining a copy
 ;; of this software and associated documentation files (the "Software"), to deal
@@ -29,6 +29,9 @@
 ;; THE SOFTWARE.
 
 ;;; Commentary:
+;;
+;; Utility module.
+;;
 
 ;;; Code:
 
@@ -46,16 +49,19 @@
   "Return the line end position after moved to POS."
   (save-excursion (goto-char pos) (line-end-position)))
 
-(defun origami-util-comment-block-p (pos)
+(defun origami-util-comment-block-p (&optional pos)
   "Return non-nil if POS is inside a comment block."
+  (unless pos (setq pos (point)))
   (save-excursion (goto-char pos) (nth 4 (syntax-ppss))))
 
-(defun origami-util-string-block-p (pos)
+(defun origami-util-string-block-p (&optional pos)
   "Return non-nil if POS is inside a string."
+  (unless pos (setq pos (point)))
   (save-excursion (goto-char pos) (nth 8 (syntax-ppss))))
 
-(defun origami-util-comment-or-string-p (pos)
+(defun origami-util-comment-or-string-p (&optional pos)
   "Return non-nil if POS is inside a comment or string."
+  (unless pos (setq pos (point)))
   (or (origami-util-comment-block-p pos) (origami-util-string-block-p pos)))
 
 ;;
@@ -70,14 +76,18 @@
 ;; (@* "Face" )
 ;;
 
-(defun origami-util-get-face (obj)
-  "Return face name from OBJ."
-  (get-text-property 0 'face obj))
+(defun origami-util-get-face (obj trim)
+  "Return face name from OBJ.
 
-(defun origami-util-is-face (obj lst-face)
-  "Return non-nil if OBJ's face is define inside list LST-FACE."
+If argument TRIM is non-nil, trim the OBJ."
+  (get-text-property 0 'face (if trim (string-trim obj) obj)))
+
+(defun origami-util-is-face (obj lst-face &optional trim)
+  "Return non-nil if OBJ's face is define inside list LST-FACE.
+
+Optional argument TRIM, see function `origami-util-get-face'."
   (unless (listp lst-face) (setq lst-face (list lst-face)))
-  (let ((faces (origami-util-get-face obj)))
+  (let ((faces (origami-util-get-face obj trim)))
     (cond ((listp faces)
            (cl-some (lambda (face) (memq face lst-face)) faces))
           (t (memq faces lst-face)))))
@@ -86,7 +96,7 @@
 ;; (@* "String" )
 ;;
 
-(defun origami-seq-omit-string (seq &optional trim)
+(defun origami-util-seq-omit-string (seq &optional trim)
   "Return a list of omitted empty string and nil from SEQ.
 If optional argument TRIM is non-nil; then trim all string in SEQ."
   (let (lst)
@@ -95,6 +105,27 @@ If optional argument TRIM is non-nil; then trim all string in SEQ."
       (unless (string-empty-p item)
         (push item lst)))
     (reverse lst)))
+
+(defun origami-util-contain-list-string-regexp (in-list in-str)
+  "Check if IN-STR contain in any string in the IN-LIST."
+  (cl-some (lambda (lb-sub-str) (string-match-p lb-sub-str in-str)) in-list))
+
+(defun origami-util-contain-list-string (in-list in-str)
+  "Check if IN-STR contain in any string in the IN-LIST."
+  (cl-some (lambda (lb-sub-str) (string-match-p (regexp-quote lb-sub-str) in-str)) in-list))
+
+;;
+;; (@* "Regular Expression" )
+;;
+
+(defun origami-util-keywords-regex (keywords)
+  "Turn a list of KEYWORDS to a keyword regular expression."
+  (let ((key-str "") (len (length keywords)) keyword (index 0))
+    (while (< index len)
+      (setq keyword (nth index keywords)
+            key-str (concat key-str keyword (if (= index (1- len)) "" "\\|")))
+      (cl-incf index))
+    (format "\\<\\(%s\\)" key-str)))
 
 ;;
 ;; (@* "Math" )
