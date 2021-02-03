@@ -53,7 +53,7 @@
 ;; (@* "Utility" )
 ;;
 
-(defun origami-get-positions (content regex &optional predicate fnc-pos)
+(defun origami-get-positions (_content regex &optional predicate fnc-pos)
   "Return a list of positions where REGEX matche in CONTENT.
 A position is a cons cell of the character and the numerical position
 in the CONTENT.
@@ -62,13 +62,12 @@ Optional argument PREDICATE is for filtering.
 
 Optional argument FNC-POS, is function that returns the mark position
 from the matching string."
-  (with-temp-buffer
-    (insert content)
+  (save-excursion
     (goto-char (point-min))
     (let (acc)
       (while (re-search-forward regex nil t)
         (let ((match (match-string 0)))
-          (when (or (null predicate) (funcall predicate match))
+          (when (or (null predicate) (funcall predicate (cons match (point))))
             (push (cons match
                         (or (ignore-errors (funcall fnc-pos match))
                             (- (point) (length (string-trim match)))))
@@ -294,7 +293,7 @@ function can be use for any kind of syntax like `//`, `;`, `#`."
     tree-sitter-hl-face:comment
     tree-sitter-hl-face:doc
     hl-todo)
-  "List of face that apply for docstring.")
+  "List of face that apply for document string.")
 
 (defun origami-doc-faces-p (obj &optional trim)
   "Return non-nil if face at OBJ is within `origami-doc-faces' list.
@@ -308,7 +307,7 @@ Optional argument TRIM, see function `origami-util-get-face'."
 
 (defun origami-filter-code-face (position)
   "Filter POSITIONS for code face."
-  (not (origami-util-comment-block-p (cdr position))))
+  (not (origami-util-comment-or-string-p (cdr position))))
 
 (defun origami-parser-triple-slash (create)
   "Parser for single line syntax triple slash."
@@ -376,14 +375,13 @@ Optional argument TRIM, see function `origami-util-get-face'."
 (defun origami-c-macro-parser (create)
   "Parser for C style macro."
   (lambda (content)
-    (let ((positions (origami-get-positions
-                      content "#if[n]*[d]*[e]*[f]*\\|#endif"
-                      (lambda (_match)
-                        (not (origami-util-comment-block-p)))
-                      (lambda (match)
-                        (unless (origami-util-is-contain-list-string
-                                 '("#if" "#ifdef" "#ifndef") match)
-                          (1- (line-beginning-position)))))))
+    (let ((positions
+           (origami-get-positions
+            content "#if[n]*[d]*[e]*[f]*\\|#endif"
+            (lambda (pos) (origami-filter-code-face pos))
+            (lambda (match)
+              (unless (origami-util-contain-list-string '("#if" "#ifdef" "#ifndef") match)
+                (1- (line-beginning-position)))))))
       (origami-build-pair-tree create "#if[n]*[d]*[e]*[f]*" "#endif" positions))))
 
 (defun origami-c-parser (create)
@@ -500,29 +498,62 @@ See function `origami-python-parser' description for argument CREATE."
 (defun origami-lua-core-parser (create)
   "Core parser for Lua."
   (lambda (content)
-    (let ((positions
-           (->> (origami-get-positions
-                 content "\\<\\(function\\|then\\|do\\|end\\)" nil
-                 (lambda (match)
-                   (cond ((origami-util-is-contain-list-string '("function") match)
-                          (save-excursion
-                            (re-search-forward ")" nil t)
-                            (- (point) (length match))))
-                         ((origami-util-is-contain-list-string '("end") match)
-                          (1- (line-beginning-position))))))
-                (-filter 'origami-filter-code-face))))
-      (origami-build-pair-tree create "\\<\\(function\\|then\\|do\\)" "\\<\\(end\\)" positions))))
+    (let* ((beg '("function" "then" "do"))
+           (end '("end"))
+           (beg-regex (origami-util-keywords-regex beg))
+           (end-regex (origami-util-keywords-regex end))
+           (all-regex (origami-util-keywords-regex (append beg end)))
+           (positions
+            (origami-get-positions
+             content all-regex
+             (lambda (pos) (origami-filter-code-face pos))
+             (lambda (match)
+               (cond ((origami-util-contain-list-string '("function") match)
+                      (save-excursion
+                        (re-search-forward ")" nil t)
+                        (- (point) (length match) 1)))
+                     ((origami-util-contain-list-string end match)
+                      (1- (line-beginning-position))))))))
+      (origami-build-pair-tree create beg-regex end-regex positions))))
 
 (defun origami-lua-parser (create)
   "Parser for Lua."
-  (let ((c-style (origami-c-style-parser create))
-        (p-lua (origami-lua-core-parser create))
+  (let ((p-lua (origami-lua-core-parser create))
         (p-dd (origami-parser-double-dash create)))
     (lambda (content)
       (origami-fold-children
-       (origami-fold-shallow-merge  (origami-fold-root-node (funcall c-style content))
-                                    (origami-fold-root-node (funcall p-lua content))
-                                    (origami-fold-root-node (funcall p-dd content)))))))
+       (origami-fold-shallow-merge (origami-fold-root-node (funcall p-lua content))
+                                   (origami-fold-root-node (funcall p-dd content)))))))
+
+(defun origami-ruby-core-parser (create)
+  "Core parser for Ruby."
+  (lambda (content)
+    (let* ((beg '("def" "class" "module" "if" "unless" "while" "until" "case" "for" "begin"))
+           (end '("end"))
+           (beg-regex (origami-util-keywords-regex beg))
+           (end-regex (origami-util-keywords-regex end))
+           (all-regex (origami-util-keywords-regex (append beg end)))
+           (positions
+            (origami-get-positions
+             content all-regex
+             (lambda (pos) (origami-filter-code-face pos))
+             (lambda (match)
+               (cond ((origami-util-contain-list-string beg match)
+                      (save-excursion
+                        (re-search-forward "\n" nil t)
+                        (- (point) (length match) 1)))
+                     ((origami-util-contain-list-string '("end") match)
+                      (1- (line-beginning-position))))))))
+      (origami-build-pair-tree create beg-regex end-regex positions))))
+
+(defun origami-ruby-parser (create)
+  "Parser for Ruby."
+  (let ((p-ruby (origami-ruby-core-parser create))
+        (p-ss (origami-parser-single-sharp create)))
+    (lambda (content)
+      (origami-fold-children
+       (origami-fold-shallow-merge (origami-fold-root-node (funcall p-ruby content))
+                                   (origami-fold-root-node (funcall p-ss content)))))))
 
 (defun origami-rust-parser (create)
   "Parser for Rust."
@@ -557,8 +588,7 @@ See function `origami-python-parser' description for argument CREATE."
   "Parser for Markdown."
   (lambda (content)
     (let ((positions (origami-get-positions
-                      content "```"
-                      nil
+                      content "```" nil
                       (lambda (_match)
                         (1- (line-beginning-position))))))
       (origami-build-pair-tree-2 create positions 1))))
@@ -567,10 +597,9 @@ See function `origami-python-parser' description for argument CREATE."
   "Parser for Org."
   (lambda (content)
     (let ((positions (origami-get-positions
-                      content "#[+]BEGIN_SRC\\|#[+]END_SRC"
-                      nil
+                      content "#[+]BEGIN_SRC\\|#[+]END_SRC" nil
                       (lambda (match)
-                        (when (origami-util-is-contain-list-string
+                        (when (origami-util-contain-list-string
                                '("#+END_SRC") match)
                           (1- (line-beginning-position)))))))
       (origami-build-pair-tree create "#[+]BEGIN_SRC" "#[+]END_SRC" positions))))
@@ -602,6 +631,7 @@ See function `origami-python-parser' description for argument CREATE."
     (php-mode              . origami-java-parser)
     (python-mode           . origami-python-parser)
     (rjsx-mode             . origami-js-parser)
+    (ruby-mode             . origami-ruby-parser)
     (rust-mode             . origami-rust-parser)
     (scala-mode            . origami-scala-parser)
     (sh-mode               . origami-sh-parser)
@@ -701,6 +731,10 @@ type of content by checking the word boundary's existence."
   "Extract Python document string from DOC-STR."
   (origami--generic-summary doc-str "\"\"\""))
 
+(defun origami-ruby-doc-summary (doc-str)
+  "Extract Ruby document string from DOC-STR."
+  (origami--generic-summary doc-str "#"))
+
 (defun origami-rust-doc-summary (doc-str)
   "Extract Rust document summary from DOC-STR."
   (origami--generic-summary doc-str "///"))
@@ -773,6 +807,7 @@ type of content by checking the word boundary's existence."
     (php-mode          . origami-javadoc-summary)
     (python-mode       . origami-python-doc-summary)
     (rjsx-mode         . origami-javadoc-summary)
+    (ruby-mode         . origami-ruby-doc-summary)
     (rust-mode         . origami-rust-doc-summary)
     (scala-mode        . origami-javadoc-summary)
     (sh-mode           . origami-javadoc-summary)
