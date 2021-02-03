@@ -511,7 +511,7 @@ See function `origami-python-parser' description for argument CREATE."
                (cond ((origami-util-contain-list-string '("function") match)
                       (save-excursion
                         (re-search-forward ")" nil t)
-                        (- (point) (length match) 1)))
+                        (- (point) (length match))))
                      ((origami-util-contain-list-string end match)
                       (1- (line-beginning-position))))))))
       (origami-build-pair-tree create beg-regex end-regex positions))))
@@ -541,7 +541,7 @@ See function `origami-python-parser' description for argument CREATE."
                (cond ((origami-util-contain-list-string beg match)
                       (save-excursion
                         (re-search-forward "\n" nil t)
-                        (- (point) (length match) 1)))
+                        (- (point) (length match))))
                      ((origami-util-contain-list-string end match)
                       (1- (line-beginning-position))))))))
       (origami-build-pair-tree create beg-regex end-regex positions))))
