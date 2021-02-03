@@ -27,7 +27,7 @@ build:
 	EMACS=$(EMACS) cask clean-elc
 
 ci: CASK=
-ci: clean compile
+ci: clean compile lint
 
 compile:
 	@echo "Compiling..."
@@ -48,4 +48,4 @@ lint:
 clean:
 	rm -rf .cask *.elc
 
-.PHONY: clean build ci compile
+.PHONY: clean build ci compile lint
