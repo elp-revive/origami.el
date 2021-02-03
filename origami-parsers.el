@@ -2,7 +2,7 @@
 
 ;; Author: Greg Sexton <gregsexton@gmail.com>
 ;; Maintainer: Shen, Jen-Chieh <jcs090218@gmail.com>
-;; Version: 3.0
+;; Version: 3.1
 ;; Keywords: parsers
 ;; URL: https://github.com/emacs-origami/origami.el
 
@@ -542,7 +542,7 @@ See function `origami-python-parser' description for argument CREATE."
                       (save-excursion
                         (re-search-forward "\n" nil t)
                         (- (point) (length match) 1)))
-                     ((origami-util-contain-list-string '("end") match)
+                     ((origami-util-contain-list-string end match)
                       (1- (line-beginning-position))))))))
       (origami-build-pair-tree create beg-regex end-regex positions))))
 
