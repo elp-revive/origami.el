@@ -106,13 +106,26 @@ If optional argument TRIM is non-nil; then trim all string in SEQ."
         (push item lst)))
     (reverse lst)))
 
-(defun origami-util-is-contain-list-string-regexp (in-list in-str)
+(defun origami-util-contain-list-string-regexp (in-list in-str)
   "Check if IN-STR contain in any string in the IN-LIST."
   (cl-some (lambda (lb-sub-str) (string-match-p lb-sub-str in-str)) in-list))
 
-(defun origami-util-is-contain-list-string (in-list in-str)
+(defun origami-util-contain-list-string (in-list in-str)
   "Check if IN-STR contain in any string in the IN-LIST."
   (cl-some (lambda (lb-sub-str) (string-match-p (regexp-quote lb-sub-str) in-str)) in-list))
+
+;;
+;; (@* "Regular Expression" )
+;;
+
+(defun origami-util-keywords-regex (keywords)
+  "Turn a list of KEYWORDS to a keyword regular expression."
+  (let ((key-str "") (len (length keywords)) keyword (index 0))
+    (while (< index len)
+      (setq keyword (nth index keywords)
+            key-str (concat key-str keyword (if (= index (1- len)) "" "\\|")))
+      (cl-incf index))
+    (format "\\<\\(%s\\)" key-str)))
 
 ;;
 ;; (@* "Math" )
