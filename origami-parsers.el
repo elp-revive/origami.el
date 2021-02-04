@@ -692,13 +692,20 @@ See function `origami-python-parser' description for argument CREATE."
 (defun origami-org-parser (create)
   "Parser for Org."
   (lambda (content)
-    (let ((positions (origami-get-positions
-                      content "#[+]BEGIN_SRC\\|#[+]END_SRC" nil
-                      (lambda (match &rest _)
-                        (when (origami-util-contain-list-string '("#+END_SRC") match)
-                          (1- (line-beginning-position)))))))
-      (origami-build-pair-tree create "#[+]BEGIN_SRC" "#[+]END_SRC" nil
-                               positions))))
+    (let* ((beg '("#[+]BEGIN_SRC" "#[+]BEGIN_EXAMPLE"))
+           (end '("#[+]END_SRC"))
+           (beg-regex (origami-util-keywords-regex beg))
+           (end-regex (origami-util-keywords-regex end))
+           (all-regex (origami-util-keywords-regex (append beg end)))
+           (positions (origami-get-positions
+                       content all-regex nil
+                       (lambda (match &rest _)
+                         (1- (line-beginning-position))))))
+      (origami-build-pair-tree create beg-regex end-regex nil
+                               positions
+                               (lambda (&rest _)
+                                 ;; TODO: ..
+                                 (+ (point) (length "#+END_SRC") 1))))))
 
 (defcustom origami-parser-alist
   `((actionscript-mode     . origami-java-parser)
