@@ -476,7 +476,7 @@ is the ending point to stop the scanning processs."
             (lambda (match &rest _)
               (when (string= match "{")
                 (origami-search-forward "}" #'origami-filter-code-face
-                                        (line-beginning-position) start))))))
+                                        (line-beginning-position) (point)))))))
       (origami-build-pair-tree
        create "{" "}" nil positions
        (lambda (&rest _)
