@@ -165,9 +165,14 @@ the offset."
                       match match-open match-close match-else)
                   (while (and should-continue positions)
                     (setq match (caar positions))
+                    (origami-log "\f")
+                    (origami-log "current match: %s" match)
+                    (origami-log "beg: %s" beg)
                     (cond
+                     ;;; --- ELSE --------------------------------------------
                      ((and (stringp else) (string-match-p else match))
-                      ;; -- Close it ---
+                      (origami-log ">> else: " match)
+                      ;; Close without changing parent node.
                       (setq match-else (nth 0 ml-open))
                       (push (funcall create beg (cdar positions)
                                      (or (origami-util-function-offset fnc-offset beg match)
@@ -177,11 +182,14 @@ the offset."
                       ;; Stays the same, doesn't go up/down a level.
                       (setq beg (1+ (cdar positions))
                             positions (cdr positions)))
+                     ;;; --- OPEN --------------------------------------------
                      ((string-match-p open match)
+                      (origami-log ">> open: " match)
                       (setq match-open match)
                       (push match-open ml-open)
                       (if beg  ; go down a level
                           (progn
+                            (origami-log "dig in...")
                             (pop ml-open)
                             (let* ((res (build positions))
                                    (new-pos (car res)) (children (cdr res)))
@@ -195,7 +203,9 @@ the offset."
                         ;; begin a new pair
                         (setq beg (cdar positions)
                               positions (cdr positions))))
+                     ;;; --- CLOSE --------------------------------------------
                      ((string-match-p close match)
+                      (origami-log ">> close: " match)
                       (if beg  ; close with no children
                           (progn
                             (setq match-close (pop ml-open))
@@ -262,7 +272,7 @@ the offset."
       (cl-incf index 2))
     (reverse ovs)))
 
-(defun origami-build-pair-tree-single (create syntax fn-filter)
+(defun origami-build-pair-tree-single (create syntax &optional predicate fnc-pos fnc-offset)
   "Build pair tree for single line SYNTAX.
 
 This is use for syntax continuous appears repeatedly on each line.
@@ -277,8 +287,7 @@ For instance,
 In the above case, L1 - L3 will be mark; but L5 will be ignored.  This
 function can be use for any kind of syntax like `//`, `;`, `#`."
   (lambda (content)
-    (let* ((positions (->> (origami-get-positions content syntax)
-                           (-filter fn-filter)))
+    (let* ((positions (origami-get-positions content syntax predicate fnc-pos))
            valid-positions)
       (let ((index 0) (len (length positions))
             last-position position
@@ -310,7 +319,7 @@ function can be use for any kind of syntax like `//`, `;`, `#`."
           (setcdr last-position (origami-util-pos-line-end (cdr last-position)))
           (push last-position valid-positions)))
       (setq valid-positions (reverse valid-positions))
-      (origami-build-pair-tree-2 create valid-positions))))
+      (origami-build-pair-tree-2 create valid-positions fnc-offset))))
 
 ;;
 ;; (@* "Token Identification" )
@@ -359,33 +368,40 @@ Argument POSITION can either be cons (match . position); or a integer value."
 ;; (@* "Parsers" )
 ;;
 
+(defun origami-parsers--prefix (create prefix)
+  "Internal single line syntax parser with PREFIX."
+  (origami-build-pair-tree-single
+   create prefix 'origami-filter-doc-face
+   (lambda (&rest _) (line-beginning-position))
+   (lambda (&rest _) (origami-symbol-in-line prefix 'origami-filter-doc-face))))
+
 (defun origami-parser-triple-slash (create)
   "Parser for single line syntax triple slash."
-  (origami-build-pair-tree-single create "^[ \t\r\n]*///" 'origami-filter-doc-face))
+  (origami-parsers--prefix create "^[ \t\r\n]*///"))
 
 (defun origami-parser-double-slash (create)
   "Parser for single line syntax double slash."
-  (origami-build-pair-tree-single create "^[ \t]*//" 'origami-filter-doc-face))
+  (origami-parsers--prefix create "^[ \t]*//"))
 
 (defun origami-parser-single-sharp (create)
   "Parser for single line syntax single sharp."
-  (origami-build-pair-tree-single create "^[ \t]*#" 'origami-filter-doc-face))
+  (origami-parsers--prefix create "^[ \t]*#"))
 
 (defun origami-parser-double-semi-colon (create)
   "Parser for single line syntax double semi-colon."
-  (origami-build-pair-tree-single create "^[ \t]*;;" 'origami-filter-doc-face))
+  (origami-parsers--prefix create "^[ \t]*;;"))
 
 (defun origami-parser-double-dash (create)
   "Parser for single line syntax double dash."
-  (origami-build-pair-tree-single create "^[ \t]*--" 'origami-filter-doc-face))
+  (origami-parsers--prefix create "^[ \t]*--"))
 
 (defun origami-parser-double-colon (create)
   "Parser for single line syntax double colon."
-  (origami-build-pair-tree-single create "^[ \t]*::" 'origami-filter-doc-face))
+  (origami-parsers--prefix create "^[ \t]*::"))
 
 (defun origami-parser-rem (create)
   "Parser for single line syntax REM."
-  (origami-build-pair-tree-single create "^[ \t]*[Rr][Ee][Mm]" 'origami-filter-doc-face))
+  (origami-parsers--prefix create "^[ \t]*[Rr][Ee][Mm]"))
 
 ;; TODO: tag these nodes? have ability to manipulate nodes that are tagged?
 ;; in a scoped fashion?
@@ -568,8 +584,8 @@ See function `origami-python-parser' description for argument CREATE."
   "Core parser for Lua."
   (lambda (content)
     (let* ((beg '("function" "then" "do"))
-           (end '("end"))
-           (else '("elif" "else"))
+           (end '("end" "elseif"))
+           (else '("else"))
            (beg-regex (origami-util-keywords-regex beg))
            (end-regex (origami-util-keywords-regex end))
            (else-regex (origami-util-keywords-regex else))
