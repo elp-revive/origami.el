@@ -437,7 +437,7 @@ Argument POSITION can either be cons (match . position); or a integer value."
   (lambda (content)
     (let* ((beg '("--[[][[]")) (end '("]]"))
            (beg-regex (origami-util-comment-regex beg))
-           (end-regex (origami-util-comment-regex end))
+           (_end-regex (origami-util-comment-regex end))
            (all-regex (origami-util-comment-regex (append beg end)))
            (positions
             (origami-get-positions content all-regex
