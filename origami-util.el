@@ -139,5 +139,13 @@ If optional argument TRIM is non-nil; then trim all string in SEQ."
   "Check IN-VAL an even number."
   (not (origami-util-is-odd in-val)))
 
+;;
+;; (@* "Functions" )
+;;
+
+(defun origami-util-function-offset (fnc beg match)
+  "Call FNC starting from BEG."
+  (ignore-errors (save-excursion (goto-char beg) (- (funcall fnc match) beg))))
+
 (provide 'origami-util)
 ;;; origami-util.el ends here
