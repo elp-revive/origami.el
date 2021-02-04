@@ -136,7 +136,7 @@ If optional argument TRIM is non-nil; then trim all string in SEQ."
       (setq keyword (nth index keywords)
             key-str (concat key-str keyword (if (= index (1- len)) "" "\\|")))
       (cl-incf index))
-    (format "\\<\\(%s\\)\\_>" key-str)))
+    (format "\\(s*%s\\)\\_>" key-str)))
 
 ;;
 ;; (@* "Math" )
