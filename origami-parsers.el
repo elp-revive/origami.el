@@ -436,7 +436,7 @@ Argument POSITION can either be cons (match . position); or a integer value."
   "Parser for Lua document string."
   (lambda (content)
     (let* ((beg '("--[[][[]")) (end '("]]"))
-           (beg-regex (origami-util-comment-regex beg))
+           (_beg-regex (origami-util-comment-regex beg))
            (_end-regex (origami-util-comment-regex end))
            (all-regex (origami-util-comment-regex (append beg end)))
            (positions
@@ -639,9 +639,11 @@ See function `origami-python-parser' description for argument CREATE."
   (lambda (content)
     (let* ((beg '("def" "class" "module" "if" "unless" "while" "until" "case" "for" "begin"))
            (end '("end"))
+           (else '("else"))
            (beg-regex (origami-util-keywords-regex beg))
            (end-regex (origami-util-keywords-regex end))
-           (all-regex (origami-util-keywords-regex (append beg end)))
+           (else-regex (origami-util-keywords-regex else))
+           (all-regex (origami-util-keywords-regex (append beg end else)))
            (positions
             (origami-get-positions
              content all-regex
