@@ -38,6 +38,17 @@
 (require 'cl-lib)
 
 ;;
+;; (@* "Log" )
+;;
+
+(defvar origami-show-log nil
+  "If non-nil, show debug message.")
+
+(defun origami-log (fmt &rest args)
+  "Debug message like function `message' with same argument FMT and ARGS."
+  (when origami-show-log (apply 'message fmt args)))
+
+;;
 ;; (@* "Point" )
 ;;
 
@@ -125,7 +136,7 @@ If optional argument TRIM is non-nil; then trim all string in SEQ."
       (setq keyword (nth index keywords)
             key-str (concat key-str keyword (if (= index (1- len)) "" "\\|")))
       (cl-incf index))
-    (format "\\<\\(%s\\)" key-str)))
+    (format "\\<\\(%s\\)\\_>" key-str)))
 
 ;;
 ;; (@* "Math" )
