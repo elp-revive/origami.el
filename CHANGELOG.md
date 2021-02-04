@@ -9,3 +9,4 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 * Fixed filtering error if previous line is comment/string block.
 * Add Ruby support.
+* Expand `c-style` parser to the beginning of line.
