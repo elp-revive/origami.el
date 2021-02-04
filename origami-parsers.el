@@ -161,24 +161,22 @@ the offset."
     (cl-labels
         ((build (positions)
                 ;; this is so horrible, but fast
-                (let (acc beg (should-continue t) match match-open match-close)
+                (let ((should-continue t) acc beg
+                      match match-open match-close match-else)
                   (while (and should-continue positions)
                     (setq match (caar positions))
                     (cond
                      ((and (stringp else) (string-match-p else match))
                       ;; -- Close it ---
-                      (setq match-close (pop ml-open))
+                      (setq match-else (nth 0 ml-open))
                       (push (funcall create beg (cdar positions)
                                      (or (origami-util-function-offset fnc-offset beg match)
-                                         (length match-close))
+                                         (length match-else))
                                      nil)
                             acc)
-                      (setq positions (cdr positions)
-                            beg nil)
-
-                      ;; -- Open it ---
-                      ;; TODO: ..
-                      )
+                      ;; Stays the same, doesn't go up/down a level.
+                      (setq beg (1+ (cdar positions))
+                            positions (cdr positions)))
                      ((string-match-p open match)
                       (setq match-open match)
                       (push match-open ml-open)
@@ -189,7 +187,7 @@ the offset."
                                    (new-pos (car res)) (children (cdr res)))
                               (setq positions (cdr new-pos))
                               (push (funcall create beg (cdar new-pos)
-                                             (or (origami-util-function-offset fnc-offset beg match)
+                                             (or (origami-util-function-offset fnc-offset beg match-open)
                                                  (length (nth 0 ml-open)))
                                              children)
                                     acc)
@@ -202,7 +200,7 @@ the offset."
                           (progn
                             (setq match-close (pop ml-open))
                             (push (funcall create beg (cdar positions)
-                                           (or (origami-util-function-offset fnc-offset beg match)
+                                           (or (origami-util-function-offset fnc-offset beg match-close)
                                                (length match-close))
                                            nil)
                                   acc)
@@ -587,8 +585,8 @@ See function `origami-python-parser' description for argument CREATE."
                       (1- (line-beginning-position))))))))
       (origami-build-pair-tree create beg-regex end-regex else-regex
                                positions
-                               (lambda (&rest _)
-                                 (if (string-match-p "function" (thing-at-point 'line))
+                               (lambda (match &rest _)
+                                 (if (string= "function" match)
                                      (origami-symbol-in-line ")" #'origami-filter-code-face)
                                    (line-end-position)))))))
 
