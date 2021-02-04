@@ -145,11 +145,12 @@ from the matching string."
           build-nodes
           cdr))))
 
-(defun origami-build-pair-tree (create open close positions)
+(defun origami-build-pair-tree (create open close positions &optional fnc-offset)
   "Build the pair tree from CREATE.
-Argument OPEN is the open symbol in type of string.  Argument CLOSE is
-the close symbol in type of string.  POSITIONS is a list of cons cell
-form by (syntax . point)."
+
+Argument OPEN and CLOSE is the open/close symbol in type of string.
+
+Argument POSITIONS is a list of cons cell form by (syntax . point)."
   (let (ml-open)
     (cl-labels
         ((build (positions)
@@ -166,7 +167,14 @@ form by (syntax . point)."
                                  (let* ((res (build positions))
                                         (new-pos (car res)) (children (cdr res)))
                                    (setq positions (cdr new-pos))
-                                   (push (funcall create beg (cdar new-pos) (length (nth 0 ml-open)) children) acc)
+                                   (push (funcall create beg (cdar new-pos)
+                                                  (or (ignore-errors
+                                                        (save-excursion
+                                                          (goto-char beg)
+                                                          (- (funcall fnc-offset) beg)))
+                                                      (length (nth 0 ml-open)))
+                                                  children)
+                                         acc)
                                    (setq beg nil)))
                              ;; begin a new pair
                              (setq beg (cdar positions)
@@ -175,7 +183,14 @@ form by (syntax . point)."
                            (if beg  ; close with no children
                                (progn
                                  (setq match-close (pop ml-open))
-                                 (push (funcall create beg (cdar positions) (length match-close) nil) acc)
+                                 (push (funcall create beg (cdar positions)
+                                                (or (ignore-errors
+                                                      (save-excursion
+                                                        (goto-char beg)
+                                                        (- (funcall fnc-offset) beg)))
+                                                    (length match-close))
+                                                nil)
+                                       acc)
                                  (setq positions (cdr positions)
                                        beg nil))
                              (setq should-continue nil)))))
@@ -368,9 +383,14 @@ Optional argument TRIM, see function `origami-util-get-face'."
   "Parser for C style programming language."
   (lambda (content)
     (let ((positions
-           (->> (origami-get-positions content "[{}]")
+           (->> (origami-get-positions content "[{}]" nil
+                                       (lambda (match)
+                                         (if (string= match "{")
+                                             (line-beginning-position)
+                                           nil)))
                 (-filter 'origami-filter-code-face))))
-      (origami-build-pair-tree create "{" "}" positions))))
+      (origami-build-pair-tree create "{" "}" positions
+                               (lambda () (line-end-position))))))
 
 (defun origami-c-macro-parser (create)
   "Parser for C style macro."
@@ -380,9 +400,11 @@ Optional argument TRIM, see function `origami-util-get-face'."
             content "#if[n]*[d]*[e]*[f]*\\|#endif"
             (lambda (pos) (origami-filter-code-face pos))
             (lambda (match)
-              (unless (origami-util-contain-list-string '("#if" "#ifdef" "#ifndef") match)
-                (1- (line-beginning-position)))))))
-      (origami-build-pair-tree create "#if[n]*[d]*[e]*[f]*" "#endif" positions))))
+              (if (origami-util-contain-list-string '("#endif") match)
+                  (1- (line-beginning-position))
+                (line-beginning-position))))))
+      (origami-build-pair-tree create "#if[n]*[d]*[e]*[f]*" "#endif" positions
+                               (lambda () (line-end-position))))))
 
 (defun origami-c-parser (create)
   "Parser for C."
@@ -508,13 +530,12 @@ See function `origami-python-parser' description for argument CREATE."
              content all-regex
              (lambda (pos) (origami-filter-code-face pos))
              (lambda (match)
-               (cond ((origami-util-contain-list-string '("function") match)
-                      (save-excursion
-                        (re-search-forward ")" nil t)
-                        (- (point) (length match))))
+               (cond ((origami-util-contain-list-string beg match)
+                      (line-beginning-position))
                      ((origami-util-contain-list-string end match)
                       (1- (line-beginning-position))))))))
-      (origami-build-pair-tree create beg-regex end-regex positions))))
+      (origami-build-pair-tree create beg-regex end-regex positions
+                               (lambda () (line-end-position))))))
 
 (defun origami-lua-parser (create)
   "Parser for Lua."
@@ -539,12 +560,11 @@ See function `origami-python-parser' description for argument CREATE."
              (lambda (pos) (origami-filter-code-face pos))
              (lambda (match)
                (cond ((origami-util-contain-list-string beg match)
-                      (save-excursion
-                        (re-search-forward "\n" nil t)
-                        (- (point) (length match))))
+                      (line-beginning-position))
                      ((origami-util-contain-list-string end match)
                       (1- (line-beginning-position))))))))
-      (origami-build-pair-tree create beg-regex end-regex positions))))
+      (origami-build-pair-tree create beg-regex end-regex positions
+                               (lambda () (line-end-position))))))
 
 (defun origami-ruby-parser (create)
   "Parser for Ruby."
