@@ -244,7 +244,7 @@ be even number (if count starting from 0 and not 1).
 Optional argument FNC-OFFSET is a function that return's the position of
 the offset."
   (let ((index 0) (len (length positions))
-        beg end offset pos-beg pos-end
+        beg end offset pos-beg pos-end match
         ov ovs)
     (when (origami-util-is-odd len)
       (if origami--strict-pair
@@ -255,8 +255,9 @@ the offset."
             pos-end (nth (1+ index) positions)
             beg (cdr pos-beg) end (cdr pos-end)
             offset (length (string-trim (car pos-beg)))
+            match (car pos-beg)
             ov (ignore-errors (funcall create beg end
-                                       (or (origami-util-function-offset fnc-offset beg (car pos-beg))
+                                       (or (origami-util-function-offset fnc-offset beg match)
                                            offset)
                                        nil)))
       (when ov (push ov ovs))
