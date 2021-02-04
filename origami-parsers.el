@@ -639,7 +639,7 @@ See function `origami-python-parser' description for argument CREATE."
   (lambda (content)
     (let* ((beg '("def" "class" "module" "if" "unless" "while" "until" "case" "for" "begin"))
            (end '("end"))
-           (else '("else"))
+           (else '("else" "when"))
            (beg-regex (origami-util-keywords-regex beg))
            (end-regex (origami-util-keywords-regex end))
            (else-regex (origami-util-keywords-regex else))
