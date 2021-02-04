@@ -426,8 +426,9 @@ Argument POSITION can either be cons (match . position); or a integer value."
            (positions
             (origami-get-positions content sec
                                    (lambda (pos &rest _) (origami-filter-doc-face pos))
-                                   (lambda (&rest _)
-                                     (when open (line-beginning-position))))))
+                                   (lambda (_match open &rest _)
+                                     (when open
+                                       (line-beginning-position))))))
       (origami-build-pair-tree-2 create positions
                                  (lambda (&rest _)
                                    (origami-symbol-in-line sec #'origami-filter-doc-face))))))
