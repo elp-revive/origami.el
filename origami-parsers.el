@@ -64,12 +64,15 @@ Optional argument FNC-POS, is function that returns the mark position
 from the matching string."
   (save-excursion
     (goto-char (point-min))
-    (let (acc)
+    (let (acc open)
       (while (re-search-forward regex nil t)
         (let ((match (match-string 0)))
           (when (or (null predicate) (funcall predicate (cons match (point))))
+            ;; NOTE: Variable `open' is only accurate when `regex' is exactly
+            ;; the same. This is only used for symmetric token.
+            (setq open (not open))
             (push (cons match
-                        (or (ignore-errors (funcall fnc-pos match))
+                        (or (ignore-errors (funcall fnc-pos match open))
                             (- (point) (length (string-trim match)))))
                   acc))))
       (reverse acc))))
@@ -150,7 +153,10 @@ from the matching string."
 
 Argument OPEN and CLOSE is the open/close symbol in type of string.
 
-Argument POSITIONS is a list of cons cell form by (syntax . point)."
+Argument POSITIONS is a list of cons cell form by (syntax . point).
+
+Optional argument FNC-OFFSET is a function that return's the position of
+the offset."
   (let (ml-open)
     (cl-labels
         ((build (positions)
@@ -158,42 +164,37 @@ Argument POSITIONS is a list of cons cell form by (syntax . point)."
                 (let (acc beg (should-continue t) match match-open match-close)
                   (while (and should-continue positions)
                     (setq match (caar positions))
-                    (cond ((string-match-p open match)
-                           (setq match-open match)
-                           (push match-open ml-open)
-                           (if beg  ; go down a level
-                               (progn
-                                 (pop ml-open)
-                                 (let* ((res (build positions))
-                                        (new-pos (car res)) (children (cdr res)))
-                                   (setq positions (cdr new-pos))
-                                   (push (funcall create beg (cdar new-pos)
-                                                  (or (ignore-errors
-                                                        (save-excursion
-                                                          (goto-char beg)
-                                                          (- (funcall fnc-offset) beg)))
-                                                      (length (nth 0 ml-open)))
-                                                  children)
-                                         acc)
-                                   (setq beg nil)))
-                             ;; begin a new pair
-                             (setq beg (cdar positions)
-                                   positions (cdr positions))))
-                          ((string-match-p close match)
-                           (if beg  ; close with no children
-                               (progn
-                                 (setq match-close (pop ml-open))
-                                 (push (funcall create beg (cdar positions)
-                                                (or (ignore-errors
-                                                      (save-excursion
-                                                        (goto-char beg)
-                                                        (- (funcall fnc-offset) beg)))
-                                                    (length match-close))
-                                                nil)
-                                       acc)
-                                 (setq positions (cdr positions)
-                                       beg nil))
-                             (setq should-continue nil)))))
+                    (cond
+                     ((string-match-p open match)
+                      (setq match-open match)
+                      (push match-open ml-open)
+                      (if beg  ; go down a level
+                          (progn
+                            (pop ml-open)
+                            (let* ((res (build positions))
+                                   (new-pos (car res)) (children (cdr res)))
+                              (setq positions (cdr new-pos))
+                              (push (funcall create beg (cdar new-pos)
+                                             (or (origami-util-function-offset fnc-offset beg match)
+                                                 (length (nth 0 ml-open)))
+                                             children)
+                                    acc)
+                              (setq beg nil)))
+                        ;; begin a new pair
+                        (setq beg (cdar positions)
+                              positions (cdr positions))))
+                     ((string-match-p close match)
+                      (if beg  ; close with no children
+                          (progn
+                            (setq match-close (pop ml-open))
+                            (push (funcall create beg (cdar positions)
+                                           (or (origami-util-function-offset fnc-offset beg match)
+                                               (length match-close))
+                                           nil)
+                                  acc)
+                            (setq positions (cdr positions)
+                                  beg nil))
+                        (setq should-continue nil)))))
                   (cons positions (reverse acc)))))
       (cdr (build positions)))))
 
@@ -211,7 +212,7 @@ Argument POSITIONS is a list of cons cell form by (syntax . point)."
 
 This flag is use to debug function `origami-build-pair-tree-2'.")
 
-(defun origami-build-pair-tree-2 (create positions &optional extra-offset)
+(defun origami-build-pair-tree-2 (create positions &optional fnc-offset)
   "Build pair list tree.
 
 POSITIONS is from by a list of cons cell form by (syntax . point).
@@ -226,10 +227,8 @@ pair up.  For instance,
 Item N and the next item (N + 1) should be a pair; hence, N should always
 be even number (if count starting from 0 and not 1).
 
-Optional argument EXTRA-OFFSET must be an integer, the default is 0 if the
-value is not set.  EXTRA-OFFSET will be add on to the offset of the render
-length position."
-  (unless extra-offset (setq extra-offset 0))
+Optional argument FNC-OFFSET is a function that return's the position of
+the offset."
   (let ((index 0) (len (length positions))
         beg end offset pos-beg pos-end
         ov ovs)
@@ -241,8 +240,11 @@ length position."
       (setq pos-beg (nth index positions)
             pos-end (nth (1+ index) positions)
             beg (cdr pos-beg) end (cdr pos-end)
-            offset (+ extra-offset (length (string-trim (car pos-beg))))
-            ov (ignore-errors (funcall create beg end offset nil)))
+            offset (length (string-trim (car pos-beg)))
+            ov (ignore-errors (funcall create beg end
+                                       (or (origami-util-function-offset fnc-offset beg match)
+                                           offset)
+                                       nil)))
       (when ov (push ov ovs))
       (cl-incf index 2))
     (reverse ovs)))
@@ -298,7 +300,7 @@ function can be use for any kind of syntax like `//`, `;`, `#`."
       (origami-build-pair-tree-2 create valid-positions))))
 
 ;;
-;; (@* "Util" )
+;; (@* "Token Identification" )
 ;;
 
 (defvar origami-doc-faces
@@ -320,8 +322,9 @@ Optional argument TRIM, see function `origami-util-get-face'."
   "Filter POSITION for document face.
 
 Argument POSITION can either be cons (match . position); or a string value."
-  (when (consp position) (setq position (car position)))
-  (origami-doc-faces-p position t))
+  (if (consp position)
+      (origami-doc-faces-p (car position) t)
+    (not (origami-filter-code-face position))))
 
 (defun origami-filter-code-face (position)
   "Filter POSITION for code face.
@@ -330,12 +333,12 @@ Argument POSITION can either be cons (match . position); or a integer value."
   (when (consp position) (setq position (cdr position)))
   (not (origami-util-comment-or-string-p position)))
 
-(defun origami-code-symbol-in-line (sym)
-  "Find SYM position as code in current line."
+(defun origami-symbol-in-line (sym predicate)
+  "Find SYM position as PREDICATE in current line."
   (let ((pt (point)))
     (save-excursion
       (while (and (re-search-forward sym (line-end-position) t)
-                  (origami-filter-code-face (point)))
+                  (ignore-errors (funcall predicate (point))))
         (setq pt (point)))
       pt)))
 
@@ -376,18 +379,29 @@ Argument POSITION can either be cons (match . position); or a integer value."
 (defun origami-javadoc-parser (create)
   "Parser for Javadoc."
   (lambda (content)
-    (let ((positions
-           (->> (origami-get-positions content "/\\*\\|\\*/")
-                (-filter 'origami-filter-doc-face))))
-      (origami-build-pair-tree-2 create positions))))
+    (let* ((beg "/[*]")
+           (positions
+            (origami-get-positions content "/\\*\\|\\*/"
+                                   (lambda (pos &rest _) (origami-filter-doc-face pos))
+                                   (lambda (match &rest _)
+                                     (when (string-match-p beg match)
+                                       (line-beginning-position))))))
+      (origami-build-pair-tree-2 create positions
+                                 (lambda (&rest _)
+                                   (origami-symbol-in-line beg #'origami-filter-doc-face))))))
 
 (defun origami-python-doc-parser (create)
   "Parser for Python document string."
   (lambda (content)
-    (let ((positions
-           (->> (origami-get-positions content "\"\"\"")
-                (-filter 'origami-filter-doc-face))))
-      (origami-build-pair-tree-2 create positions))))
+    (let* ((sec "\"\"\"")
+           (positions
+            (origami-get-positions content sec
+                                   (lambda (pos &rest _) (origami-filter-doc-face pos))
+                                   (lambda (match open &rest _)
+                                     (when open (line-beginning-position))))))
+      (origami-build-pair-tree-2 create positions
+                                 (lambda (&rest _)
+                                   (origami-symbol-in-line sec #'origami-filter-doc-face))))))
 
 (defun origami-batch-parser (create)
   "Parser for Batch."
@@ -403,13 +417,13 @@ Argument POSITION can either be cons (match . position); or a integer value."
   (lambda (content)
     (let ((positions
            (origami-get-positions content "[{}]"
-                                  (lambda (pos) (origami-filter-code-face pos))
-                                  (lambda (match)
+                                  (lambda (pos &rest _) (origami-filter-code-face pos))
+                                  (lambda (match &rest _)
                                     (when (string= match "{")
                                       (line-beginning-position))))))
       (origami-build-pair-tree create "{" "}" positions
-                               (lambda ()
-                                 (origami-code-symbol-in-line "{"))))))
+                               (lambda (&rest _)
+                                 (origami-symbol-in-line "{" #'origami-filter-code-face))))))
 
 (defun origami-c-macro-parser (create)
   "Parser for C style macro."
@@ -417,13 +431,13 @@ Argument POSITION can either be cons (match . position); or a integer value."
     (let ((positions
            (origami-get-positions
             content "#if[n]*[d]*[e]*[f]*\\|#endif"
-            (lambda (pos) (origami-filter-code-face pos))
-            (lambda (match)
+            (lambda (pos &rest _) (origami-filter-code-face pos))
+            (lambda (match &rest _)
               (if (origami-util-contain-list-string '("#endif") match)
                   (1- (line-beginning-position))
                 (line-beginning-position))))))
       (origami-build-pair-tree create "#if[n]*[d]*[e]*[f]*" "#endif" positions
-                               (lambda () (line-end-position))))))
+                               (lambda (&rest _) (line-end-position))))))
 
 (defun origami-c-parser (create)
   "Parser for C."
@@ -547,14 +561,17 @@ See function `origami-python-parser' description for argument CREATE."
            (positions
             (origami-get-positions
              content all-regex
-             (lambda (pos) (origami-filter-code-face pos))
-             (lambda (match)
+             (lambda (pos &rest _) (origami-filter-code-face pos))
+             (lambda (match &rest _)
                (cond ((origami-util-contain-list-string beg match)
                       (line-beginning-position))
                      ((origami-util-contain-list-string end match)
                       (1- (line-beginning-position))))))))
       (origami-build-pair-tree create beg-regex end-regex positions
-                               (lambda () (line-end-position))))))
+                               (lambda (&rest _)
+                                 (if (string-match-p "function" (thing-at-point 'line))
+                                     (origami-symbol-in-line ")" #'origami-filter-code-face)
+                                   (line-end-position)))))))
 
 (defun origami-lua-parser (create)
   "Parser for Lua."
@@ -576,14 +593,14 @@ See function `origami-python-parser' description for argument CREATE."
            (positions
             (origami-get-positions
              content all-regex
-             (lambda (pos) (origami-filter-code-face pos))
-             (lambda (match)
+             (lambda (pos &rest _) (origami-filter-code-face pos))
+             (lambda (match &rest _)
                (cond ((origami-util-contain-list-string beg match)
                       (line-beginning-position))
                      ((origami-util-contain-list-string end match)
                       (1- (line-beginning-position))))))))
       (origami-build-pair-tree create beg-regex end-regex positions
-                               (lambda () (line-end-position))))))
+                               (lambda (&rest _) (line-end-position))))))
 
 (defun origami-ruby-parser (create)
   "Parser for Ruby."
@@ -630,18 +647,20 @@ See function `origami-python-parser' description for argument CREATE."
 (defun origami-markdown-parser (create)
   "Parser for Markdown."
   (lambda (content)
-    (let ((positions (origami-get-positions
-                      content "```" nil
-                      (lambda (_match)
-                        (1- (line-beginning-position))))))
-      (origami-build-pair-tree-2 create positions 1))))
+    (let* ((sec "```")
+           (positions (origami-get-positions
+                       content sec nil
+                       (lambda (&rest _)
+                         (1- (line-beginning-position))))))
+      (origami-build-pair-tree-2 create positions
+                                 (lambda (&rest _) (+ (point) (length sec) 1))))))
 
 (defun origami-org-parser (create)
   "Parser for Org."
   (lambda (content)
     (let ((positions (origami-get-positions
                       content "#[+]BEGIN_SRC\\|#[+]END_SRC" nil
-                      (lambda (match)
+                      (lambda (match &rest _)
                         (when (origami-util-contain-list-string
                                '("#+END_SRC") match)
                           (1- (line-beginning-position)))))))
