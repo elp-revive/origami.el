@@ -427,8 +427,7 @@ Argument POSITION can either be cons (match . position); or a integer value."
             (origami-get-positions content sec
                                    (lambda (pos &rest _) (origami-filter-doc-face pos))
                                    (lambda (_match open &rest _)
-                                     (when open
-                                       (line-beginning-position))))))
+                                     (when open (line-beginning-position))))))
       (origami-build-pair-tree-2 create positions
                                  (lambda (&rest _)
                                    (origami-symbol-in-line sec #'origami-filter-doc-face))))))
@@ -688,25 +687,23 @@ See function `origami-python-parser' description for argument CREATE."
                        (lambda (&rest _)
                          (1- (line-beginning-position))))))
       (origami-build-pair-tree-2 create positions
-                                 (lambda (&rest _) (+ (point) (length sec) 1))))))
+                                 (lambda (match &rest _) (+ (point) (length match) 1))))))
 
 (defun origami-org-parser (create)
   "Parser for Org."
   (lambda (content)
     (let* ((beg '("#[+]BEGIN_SRC" "#[+]BEGIN_EXAMPLE"))
-           (end '("#[+]END_SRC"))
+           (end '("#[+]END_SRC" "#[+]END_EXAMPLE"))
            (beg-regex (origami-util-keywords-regex beg))
            (end-regex (origami-util-keywords-regex end))
            (all-regex (origami-util-keywords-regex (append beg end)))
            (positions (origami-get-positions
                        content all-regex nil
-                       (lambda (match &rest _)
-                         (1- (line-beginning-position))))))
+                       (lambda (&rest _) (1- (line-beginning-position))))))
       (origami-build-pair-tree create beg-regex end-regex nil
                                positions
-                               (lambda (&rest _)
-                                 ;; TODO: ..
-                                 (+ (point) (length "#+END_SRC") 1))))))
+                               (lambda (match &rest _)
+                                 (+ (point) (length match) 1))))))
 
 (defcustom origami-parser-alist
   `((actionscript-mode     . origami-java-parser)
