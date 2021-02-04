@@ -107,6 +107,24 @@ Optional argument TRIM, see function `origami-util-get-face'."
 ;; (@* "String" )
 ;;
 
+(defun origami-util-string-compare-p (regexp str type &optional ignore-case)
+  "Compare STR with REGEXP by TYPE.
+
+Argument TYPE can be on of the following symbol.
+
+  * regex - uses function `string-match-p'.  (default)
+  * strict - uses function `string='.
+  * prefix - uses function `string-prefix-p'.
+  * suffix - uses function `string-suffix-p'.
+
+Optional argument IGNORE-CASE is only uses when TYPE is either symbol `prefix'
+or `suffix'."
+  (cl-case type
+    (strict (string= regexp str))
+    (prefix (string-prefix-p regexp str ignore-case))
+    (suffix (string-suffix-p regexp str ignore-case))
+    (t (string-match-p regexp str))))
+
 (defun origami-util-seq-omit-string (seq &optional trim)
   "Return a list of omitted empty string and nil from SEQ.
 If optional argument TRIM is non-nil; then trim all string in SEQ."
@@ -118,12 +136,23 @@ If optional argument TRIM is non-nil; then trim all string in SEQ."
     (reverse lst)))
 
 (defun origami-util-contain-list-string-regexp (in-list in-str)
-  "Check if IN-STR contain in any string in the IN-LIST."
-  (cl-some (lambda (lb-sub-str) (string-match-p lb-sub-str in-str)) in-list))
+  "Return non-nil if IN-STR is listed in IN-LIST.
+
+This function uses `string-match-p'."
+  (cl-some (lambda (elm) (string-match-p elm in-str)) in-list))
 
 (defun origami-util-contain-list-string (in-list in-str)
-  "Check if IN-STR contain in any string in the IN-LIST."
-  (cl-some (lambda (lb-sub-str) (string-match-p (regexp-quote lb-sub-str) in-str)) in-list))
+  "Return non-nil if IN-STR is listed in IN-LIST.
+
+This function uses `string-match-p'.
+This function wrapped IN-STR with function `regexp-quote'."
+  (cl-some (lambda (elm) (string-match-p (regexp-quote elm) in-str)) in-list))
+
+(defun origami-util-contain-list-type-str (in-list in-str type)
+  "Return non-nil if IN-STR is listed in IN-LIST.
+
+Argument TYPE see function `origami-util-string-compare-p' for more information."
+  (cl-some (lambda (elm) (origami-util-string-compare-p elm in-str type)) in-list))
 
 ;;
 ;; (@* "Regular Expression" )
