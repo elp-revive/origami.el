@@ -298,7 +298,7 @@ function can be use for any kind of syntax like `//`, `;`, `#`."
       (origami-build-pair-tree-2 create valid-positions))))
 
 ;;
-;; (@* "Parsers" )
+;; (@* "Util" )
 ;;
 
 (defvar origami-doc-faces
@@ -317,12 +317,31 @@ Optional argument TRIM, see function `origami-util-get-face'."
   (origami-util-is-face obj origami-doc-faces trim))
 
 (defun origami-filter-doc-face (position)
-  "Filter POSITIONS for document face."
-  (origami-doc-faces-p (car position) t))
+  "Filter POSITION for document face.
+
+Argument POSITION can either be cons (match . position); or a string value."
+  (when (consp position) (setq position (car position)))
+  (origami-doc-faces-p position t))
 
 (defun origami-filter-code-face (position)
-  "Filter POSITIONS for code face."
-  (not (origami-util-comment-or-string-p (cdr position))))
+  "Filter POSITION for code face.
+
+Argument POSITION can either be cons (match . position); or a integer value."
+  (when (consp position) (setq position (cdr position)))
+  (not (origami-util-comment-or-string-p position)))
+
+(defun origami-code-symbol-in-line (sym)
+  "Find SYM position as code in current line."
+  (let ((pt (point)))
+    (save-excursion
+      (while (and (re-search-forward sym (line-end-position) t)
+                  (origami-filter-code-face (point)))
+        (setq pt (point)))
+      pt)))
+
+;;
+;; (@* "Parsers" )
+;;
 
 (defun origami-parser-triple-slash (create)
   "Parser for single line syntax triple slash."
@@ -383,14 +402,14 @@ Optional argument TRIM, see function `origami-util-get-face'."
   "Parser for C style programming language."
   (lambda (content)
     (let ((positions
-           (->> (origami-get-positions content "[{}]" nil
-                                       (lambda (match)
-                                         (if (string= match "{")
-                                             (line-beginning-position)
-                                           nil)))
-                (-filter 'origami-filter-code-face))))
+           (origami-get-positions content "[{}]"
+                                  (lambda (pos) (origami-filter-code-face pos))
+                                  (lambda (match)
+                                    (when (string= match "{")
+                                      (line-beginning-position))))))
       (origami-build-pair-tree create "{" "}" positions
-                               (lambda () (line-end-position))))))
+                               (lambda ()
+                                 (origami-code-symbol-in-line "{"))))))
 
 (defun origami-c-macro-parser (create)
   "Parser for C style macro."
