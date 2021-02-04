@@ -256,7 +256,7 @@ the offset."
             beg (cdr pos-beg) end (cdr pos-end)
             offset (length (string-trim (car pos-beg)))
             ov (ignore-errors (funcall create beg end
-                                       (or (origami-util-function-offset fnc-offset beg match)
+                                       (or (origami-util-function-offset fnc-offset beg (car pos-beg))
                                            offset)
                                        nil)))
       (when ov (push ov ovs))
