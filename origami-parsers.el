@@ -355,11 +355,17 @@ Argument POSITION can either be cons (match . position); or a integer value."
   (when (consp position) (setq position (cdr position)))
   (not (origami-util-comment-or-string-p position)))
 
-(defun origami-symbol-in-line (sym predicate)
-  "Find SYM position as PREDICATE in current line."
-  (let ((pt (point)))
-    (save-excursion
-      (while (and (re-search-forward sym (line-end-position) t)
+(defun origami-search-forward (sym predicate &optional start bound)
+  "Find SYM and return it's position.
+
+Argument PREDICATE is use to test for valid condition.  Optional argument
+START is the starting point to scan the symbol.  Optional argument BOUND
+is the ending point to stop the scanning processs."
+  (unless bound (setq bound (line-end-position)))
+  (save-excursion
+    (when start (goto-char start))
+    (let ((pt (point)))
+      (while (and (re-search-forward sym bound t)
                   (ignore-errors (funcall predicate (point))))
         (setq pt (point)))
       pt)))
@@ -373,7 +379,7 @@ Argument POSITION can either be cons (match . position); or a integer value."
   (origami-build-pair-tree-single
    create prefix 'origami-filter-doc-face
    (lambda (&rest _) (line-beginning-position))
-   (lambda (&rest _) (origami-symbol-in-line prefix 'origami-filter-doc-face))))
+   (lambda (&rest _) (origami-search-forward prefix 'origami-filter-doc-face))))
 
 (defun origami-parser-triple-slash (create)
   "Parser for single line syntax triple slash."
@@ -410,27 +416,28 @@ Argument POSITION can either be cons (match . position); or a integer value."
   (lambda (content)
     (let* ((beg "/[*]")
            (positions
-            (origami-get-positions content "/\\*\\|\\*/"
-                                   (lambda (pos &rest _) (origami-filter-doc-face pos))
-                                   (lambda (match &rest _)
-                                     (when (string-match-p beg match)
-                                       (line-beginning-position))))))
-      (origami-build-pair-tree-2 create positions
-                                 (lambda (&rest _)
-                                   (origami-symbol-in-line beg #'origami-filter-doc-face))))))
+            (origami-get-positions
+             content "/\\*\\|\\*/"
+             (lambda (pos &rest _) (origami-filter-doc-face pos))
+             (lambda (match &rest _)
+               (when (string-match-p beg match) (line-beginning-position))))))
+      (origami-build-pair-tree-2
+       create positions
+       (lambda (&rest _) (origami-search-forward beg #'origami-filter-doc-face))))))
 
 (defun origami-python-doc-parser (create)
   "Parser for Python document string."
   (lambda (content)
     (let* ((sec "\"\"\"")
            (positions
-            (origami-get-positions content sec
-                                   (lambda (pos &rest _) (origami-filter-doc-face pos))
-                                   (lambda (_match open &rest _)
-                                     (when open (line-beginning-position))))))
-      (origami-build-pair-tree-2 create positions
-                                 (lambda (&rest _)
-                                   (origami-symbol-in-line sec #'origami-filter-doc-face))))))
+            (origami-get-positions
+             content sec
+             (lambda (pos &rest _) (origami-filter-doc-face pos))
+             (lambda (_match open &rest _) (when open (line-beginning-position))))))
+      (origami-build-pair-tree-2
+       create positions
+       (lambda (&rest _)
+         (origami-search-forward sec #'origami-filter-doc-face))))))
 
 (defun origami-lua-doc-parser (create)
   "Parser for Lua document string."
@@ -440,14 +447,15 @@ Argument POSITION can either be cons (match . position); or a integer value."
            (_end-regex (origami-util-comment-regex end))
            (all-regex (origami-util-comment-regex (append beg end)))
            (positions
-            (origami-get-positions content all-regex
-                                   (lambda (pos &rest _) (origami-filter-doc-face pos))
-                                   (lambda (match &rest _)
-                                     (when (string-match-p beg match)
-                                       (line-beginning-position))))))
-      (origami-build-pair-tree-2 create positions
-                                 (lambda (&rest _)
-                                   (origami-symbol-in-line beg #'origami-filter-doc-face))))))
+            (origami-get-positions
+             content all-regex
+             (lambda (pos &rest _) (origami-filter-doc-face pos))
+             (lambda (match &rest _)
+               (when (string-match-p beg match) (line-beginning-position))))))
+      (origami-build-pair-tree-2
+       create positions
+       (lambda (&rest _)
+         (origami-search-forward beg #'origami-filter-doc-face))))))
 
 (defun origami-batch-parser (create)
   "Parser for Batch."
@@ -462,14 +470,17 @@ Argument POSITION can either be cons (match . position); or a integer value."
   "Parser for C style programming language."
   (lambda (content)
     (let ((positions
-           (origami-get-positions content "[{}]"
-                                  (lambda (pos &rest _) (origami-filter-code-face pos))
-                                  (lambda (match &rest _)
-                                    (when (string= match "{")
-                                      (line-beginning-position))))))
-      (origami-build-pair-tree create "{" "}" nil positions
-                               (lambda (&rest _)
-                                 (origami-symbol-in-line "{" #'origami-filter-code-face))))))
+           (origami-get-positions
+            content "[{}]"
+            (lambda (pos &rest _) (origami-filter-code-face pos))
+            (lambda (match &rest _)
+              (when (string= match "{")
+                (origami-search-forward "}" #'origami-filter-code-face
+                                        (line-beginning-position) start))))))
+      (origami-build-pair-tree
+       create "{" "}" nil positions
+       (lambda (&rest _)
+         (origami-search-forward "{" #'origami-filter-code-face))))))
 
 (defun origami-c-macro-parser (create)
   "Parser for C style macro."
@@ -627,7 +638,7 @@ See function `origami-python-parser' description for argument CREATE."
                                positions
                                (lambda (match &rest _)
                                  (if (string= "function" match)
-                                     (origami-symbol-in-line ")" #'origami-filter-code-face)
+                                     (origami-search-forward ")" #'origami-filter-code-face)
                                    (line-end-position)))))))
 
 (defun origami-lua-parser (create)
@@ -714,8 +725,9 @@ See function `origami-python-parser' description for argument CREATE."
                        content sec nil
                        (lambda (&rest _)
                          (1- (line-beginning-position))))))
-      (origami-build-pair-tree-2 create positions
-                                 (lambda (match &rest _) (+ (point) (length match) 1))))))
+      (origami-build-pair-tree-2
+       create positions
+       (lambda (match &rest _) (+ (point) (length match) 1))))))
 
 (defun origami-org-parser (create)
   "Parser for Org."
