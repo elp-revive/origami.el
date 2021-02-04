@@ -651,9 +651,9 @@ See function `origami-python-parser' description for argument CREATE."
              (lambda (match &rest _)
                (cond ((origami-util-contain-list-string beg match)
                       (line-beginning-position))
-                     ((origami-util-contain-list-string end match)
+                     ((origami-util-contain-list-string (append end else) match)
                       (1- (line-beginning-position))))))))
-      (origami-build-pair-tree create beg-regex end-regex nil
+      (origami-build-pair-tree create beg-regex end-regex else-regex
                                positions
                                (lambda (&rest _) (line-end-position))))))
 
