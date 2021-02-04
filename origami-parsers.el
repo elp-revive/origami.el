@@ -474,15 +474,22 @@ Argument POSITION can either be cons (match . position); or a integer value."
 (defun origami-c-macro-parser (create)
   "Parser for C style macro."
   (lambda (content)
-    (let ((positions
-           (origami-get-positions
-            content "#if[n]*[d]*[e]*[f]*\\|#endif"
-            (lambda (pos &rest _) (origami-filter-code-face pos))
-            (lambda (match &rest _)
-              (if (origami-util-contain-list-type-str '("#endif") match 'strict)
-                  (1- (line-beginning-position))
-                (line-beginning-position))))))
-      (origami-build-pair-tree create "#if[n]*[d]*[e]*[f]*" "#endif" nil
+    (let* ((beg '("#[ \t]*if[n]*[d]*[e]*[f]*"))
+           (end '("#[ \t]*endif"))
+           (else '("#[ \t]*else" "#[ \t]*elif"))
+           (beg-regex (origami-util-keywords-regex beg))
+           (end-regex (origami-util-keywords-regex end))
+           (else-regex (origami-util-keywords-regex else))
+           (all-regex (origami-util-keywords-regex (append beg end else)))
+           (positions
+            (origami-get-positions
+             content all-regex
+             (lambda (pos &rest _) (origami-filter-code-face pos))
+             (lambda (match &rest _)
+               (if (origami-util-contain-list-type-str (append end else) match 'regex)
+                   (1- (line-beginning-position))
+                 (line-beginning-position))))))
+      (origami-build-pair-tree create beg-regex end-regex else-regex
                                positions
                                (lambda (&rest _) (line-end-position))))))
 
