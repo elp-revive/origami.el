@@ -7,6 +7,10 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ### 2021-02-04
 
+* Expand `c-style` parser to the beginning of line.
+* Add support for multiline comment in Lua.
+
+### 2021-02-03
+
 * Fixed filtering error if previous line is comment/string block.
 * Add Ruby support.
-* Expand `c-style` parser to the beginning of line.
