@@ -138,6 +138,15 @@ If optional argument TRIM is non-nil; then trim all string in SEQ."
       (cl-incf index))
     (format "\\(s*%s\\)\\_>" key-str)))
 
+(defun origami-util-comment-regex (symbols)
+  "Turn a list of KEYWORDS to a keyword regular expression."
+  (let ((key-str "") (len (length symbols)) keyword (index 0))
+    (while (< index len)
+      (setq keyword (nth index symbols)
+            key-str (concat key-str keyword (if (= index (1- len)) "" "\\|")))
+      (cl-incf index))
+    (format "\\(s*%s\\)" key-str)))
+
 ;;
 ;; (@* "Math" )
 ;;
