@@ -9,6 +9,7 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 * Expand `c-style` parser to the beginning of line.
 * Add support for multiline comment in Lua.
+* Add `else` region folding.
 
 ### 2021-02-03
 
