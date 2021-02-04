@@ -479,7 +479,7 @@ Argument POSITION can either be cons (match . position); or a integer value."
             content "#if[n]*[d]*[e]*[f]*\\|#endif"
             (lambda (pos &rest _) (origami-filter-code-face pos))
             (lambda (match &rest _)
-              (if (origami-util-contain-list-string '("#endif") match)
+              (if (origami-util-contain-list-type-str '("#endif") match 'strict)
                   (1- (line-beginning-position))
                 (line-beginning-position))))))
       (origami-build-pair-tree create "#if[n]*[d]*[e]*[f]*" "#endif" nil
@@ -612,9 +612,9 @@ See function `origami-python-parser' description for argument CREATE."
              content all-regex
              (lambda (pos &rest _) (origami-filter-code-face pos))
              (lambda (match &rest _)
-               (cond ((origami-util-contain-list-string beg match)
+               (cond ((origami-util-contain-list-type-str beg match 'strict)
                       (line-beginning-position))
-                     ((origami-util-contain-list-string (append end else) match)
+                     ((origami-util-contain-list-type-str (append end else) match 'strict)
                       (1- (line-beginning-position))))))))
       (origami-build-pair-tree create beg-regex end-regex else-regex
                                positions
@@ -639,7 +639,7 @@ See function `origami-python-parser' description for argument CREATE."
   (lambda (content)
     (let* ((beg '("def" "class" "module" "if" "unless" "while" "until" "case" "for" "begin"))
            (end '("end"))
-           (else '("else" "when"))
+           (else '("else" "when" "elsif"))
            (beg-regex (origami-util-keywords-regex beg))
            (end-regex (origami-util-keywords-regex end))
            (else-regex (origami-util-keywords-regex else))
@@ -649,9 +649,9 @@ See function `origami-python-parser' description for argument CREATE."
              content all-regex
              (lambda (pos &rest _) (origami-filter-code-face pos))
              (lambda (match &rest _)
-               (cond ((origami-util-contain-list-string beg match)
+               (cond ((origami-util-contain-list-type-str beg match 'strict)
                       (line-beginning-position))
-                     ((origami-util-contain-list-string (append end else) match)
+                     ((origami-util-contain-list-type-str (append end else) match 'strict)
                       (1- (line-beginning-position))))))))
       (origami-build-pair-tree create beg-regex end-regex else-regex
                                positions
