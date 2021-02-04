@@ -511,9 +511,9 @@ is the ending point to stop the scanning processs."
         (javadoc (origami-javadoc-parser create)))
     (lambda (content)
       (origami-fold-children
-       (origami-fold-shallow-merge (origami-fold-root-node (funcall javadoc content))
-                                   (origami-fold-root-node (funcall c-style content))
-                                   (origami-fold-root-node (funcall macros content)))))))
+       (origami-fold-shallow-merge (origami-fold-root-node (funcall c-style content))
+                                   (origami-fold-root-node (funcall macros content))
+                                   (origami-fold-root-node (funcall javadoc content)))))))
 
 (defun origami-c++-parser (create)
   "Parser for C++."
@@ -698,8 +698,8 @@ See function `origami-python-parser' description for argument CREATE."
         (javadoc (origami-javadoc-parser create)))
     (lambda (content)
       (origami-fold-children
-       (origami-fold-shallow-merge (origami-fold-root-node (funcall javadoc content))
-                                   (origami-fold-root-node (funcall c-style content)))))))
+       (origami-fold-shallow-merge (origami-fold-root-node (funcall c-style content))
+                                   (origami-fold-root-node (funcall javadoc content)))))))
 
 (defun origami-sh-parser (create)
   "Parser for Shell script."
