@@ -426,7 +426,7 @@ Argument POSITION can either be cons (match . position); or a integer value."
            (positions
             (origami-get-positions content sec
                                    (lambda (pos &rest _) (origami-filter-doc-face pos))
-                                   (lambda (match open &rest _)
+                                   (lambda (&rest _)
                                      (when open (line-beginning-position))))))
       (origami-build-pair-tree-2 create positions
                                  (lambda (&rest _)
@@ -695,8 +695,7 @@ See function `origami-python-parser' description for argument CREATE."
     (let ((positions (origami-get-positions
                       content "#[+]BEGIN_SRC\\|#[+]END_SRC" nil
                       (lambda (match &rest _)
-                        (when (origami-util-contain-list-string
-                               '("#+END_SRC") match)
+                        (when (origami-util-contain-list-string '("#+END_SRC") match)
                           (1- (line-beginning-position)))))))
       (origami-build-pair-tree create "#[+]BEGIN_SRC" "#[+]END_SRC" nil
                                positions))))
