@@ -432,6 +432,23 @@ Argument POSITION can either be cons (match . position); or a integer value."
                                  (lambda (&rest _)
                                    (origami-symbol-in-line sec #'origami-filter-doc-face))))))
 
+(defun origami-lua-doc-parser (create)
+  "Parser for Lua document string."
+  (lambda (content)
+    (let* ((beg '("--[[][[]")) (end '("]]"))
+           (beg-regex (origami-util-comment-regex beg))
+           (end-regex (origami-util-comment-regex end))
+           (all-regex (origami-util-comment-regex (append beg end)))
+           (positions
+            (origami-get-positions content all-regex
+                                   (lambda (pos &rest _) (origami-filter-doc-face pos))
+                                   (lambda (match &rest _)
+                                     (when (string-match-p beg match)
+                                       (line-beginning-position))))))
+      (origami-build-pair-tree-2 create positions
+                                 (lambda (&rest _)
+                                   (origami-symbol-in-line beg #'origami-filter-doc-face))))))
+
 (defun origami-batch-parser (create)
   "Parser for Batch."
   (let ((p-rem (origami-parser-rem create))
@@ -609,10 +626,12 @@ See function `origami-python-parser' description for argument CREATE."
 (defun origami-lua-parser (create)
   "Parser for Lua."
   (let ((p-lua (origami-lua-core-parser create))
+        (p-lua-doc (origami-lua-doc-parser create))
         (p-dd (origami-parser-double-dash create)))
     (lambda (content)
       (origami-fold-children
        (origami-fold-shallow-merge (origami-fold-root-node (funcall p-lua content))
+                                   (origami-fold-root-node (funcall p-lua-doc content))
                                    (origami-fold-root-node (funcall p-dd content)))))))
 
 (defun origami-ruby-core-parser (create)
