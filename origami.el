@@ -681,6 +681,55 @@ The fold node opened will be the deepest nested at POINT."
                                                             node))))))))
 
 ;;;###autoload
+(defun origami-open-node-recursively-till-depth (buffer point depth &optional include-siblings)
+  "Opens childs from the node at point up to the given depth, and collapses all other.
+
+`depth' is relative to the node at point. It can be passed
+interactively as a numeric prefix argument.
+
+`include-siblings' will also open the siblings of the node at
+point up to the given depth. This can be useful if there is no
+single root in the document folding structure. To set it
+interactively, use a negative prefix arg."
+  (interactive (let* ((numeric-prefix-arg (prefix-numeric-value current-prefix-arg))
+                      (include-siblings (< numeric-prefix-arg 0))
+                      (depth (if include-siblings
+                                 ;; need to start one level further up, keep depth relative to node
+                                 ;; at point
+                                 (1+ (abs numeric-prefix-arg))
+                               numeric-prefix-arg)))
+                 (list (current-buffer) (point) depth include-siblings)))
+  (-when-let (old-tree (origami-get-fold-tree buffer))
+    (cl-labels ((open-node (node) (origami-fold-open-set node t))
+                (close-node (node) (origami-fold-open-set node nil))
+                (open-recursively-till-depth (current-node current-depth)
+                                             (if (< current-depth depth)
+                                                 (origami-fold-children-set
+                                                  (open-node current-node)
+                                                  (-map (lambda (child-node)
+                                                          (open-recursively-till-depth child-node (1+ current-depth)))
+                                                        (origami-fold-children current-node)))
+                                               (open-node current-node)))
+                (close-all (tree) (origami-fold-map #'close-node tree))
+                (open-point-till-depth (tree)
+                                       (-when-let (base-level-path (origami-fold-find-path-containing tree point))
+                                         ;; start one level further up
+                                         (when include-siblings (setq base-level-path (-butlast base-level-path)))
+                                         (let ((base-level-node (-last-item base-level-path)))
+                                           (origami-fold-path-map
+                                            (lambda (node)
+                                              (if (eq node base-level-node)
+                                                  (open-recursively-till-depth node 1)
+                                                ;; open parent nodes, as we closed everything before
+                                                (open-node node)))
+                                            base-level-path)))))
+      (-> old-tree
+          close-all
+          open-point-till-depth
+          (-some->> (origami-store-cached-tree buffer)
+            (origami-apply-new-tree buffer old-tree))))))
+
+;;;###autoload
 (defun origami-show-node (buffer point)
   "Like `origami-open-node' but also opens parent fold nodes recursively \
 so as to ensure the position where POINT is is visible."
