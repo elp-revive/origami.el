@@ -80,7 +80,11 @@ non-whitespace character of the match."
 (defun origami-indent-parser (create)
   "Not documented, CREATE."
   (cl-labels
-      ((lines (string) (origami-get-positions string ".*?\r?\n"))
+      ((lines (string) (origami-get-positions
+                        string
+                        ".*?\r?\n"
+                        nil
+                        (lambda (match &rest _) (- (point) (length match)))))
        (annotate-levels (lines)
                         (-map (lambda (line)
                                 ;; TODO: support tabs
