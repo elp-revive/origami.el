@@ -60,7 +60,8 @@ in the CONTENT.
 Optional argument PREDICATE is for filtering.
 
 Optional argument FNC-POS, is function that returns the mark position
-from the matching string."
+from the matching string. If omitted, the mark will be the first
+non-whitespace character of the match."
   (save-excursion
     (goto-char (point-min))
     (let (acc open)
@@ -72,7 +73,7 @@ from the matching string."
             (setq open (not open))
             (push (cons match
                         (or (ignore-errors (funcall fnc-pos match open))
-                            (- (point) (length (string-trim match)))))
+                            (- (point) (length (string-trim-left match)))))
                   acc))))
       (reverse acc))))
 
