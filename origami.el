@@ -620,6 +620,7 @@ with the current state and the current node at each iteration."
                                       (buffer-local-value 'major-mode buffer))
                                     origami-parser-alist))
                         'origami-indent-parser))
+      (origami-log "Selected parser %s" parser-gen)
       (funcall parser-gen create))))
 
 (defun origami-get-fold-tree (buffer)
