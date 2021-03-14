@@ -682,24 +682,23 @@ The fold node opened will be the deepest nested at POINT."
 
 ;;;###autoload
 (defun origami-open-node-recursively-till-depth (buffer point depth &optional include-siblings)
-  "Opens childs from the node at point up to the given depth, and collapses all other.
+  "Opens childs from the node at POINT up to the given DEPTH, and collapses all other.
 
-`depth' is relative to the node at point. It can be passed
+DEPTH is relative to the node at point. It can be passed
 interactively as a numeric prefix argument.
 
-`include-siblings' will also open the siblings of the node at
+INCLUDE-SIBLINGS will also open the siblings of the node at
 point up to the given depth. This can be useful if there is no
 single root in the document folding structure. To set it
 interactively, use a negative prefix arg."
   (interactive (let* ((numeric-prefix-arg (prefix-numeric-value current-prefix-arg))
-                      (include-siblings (< numeric-prefix-arg 0))
-                      (depth (if include-siblings
-                                 ;; need to start one level further up, keep depth relative to node
-                                 ;; at point
-                                 (1+ (abs numeric-prefix-arg))
-                               numeric-prefix-arg)))
-                 (list (current-buffer) (point) depth include-siblings)))
+                      (include-siblings (< numeric-prefix-arg 0)))
+                 (list (current-buffer) (point) (abs numeric-prefix-arg) include-siblings)))
   (-when-let (old-tree (origami-get-fold-tree buffer))
+    ;; need to start one level further up, keep depth relative to node
+    ;; at point
+    (when include-siblings
+      (setq depth (1+ depth)))
     (cl-labels ((open-node (node) (origami-fold-open-set node t))
                 (close-node (node) (origami-fold-open-set node nil))
                 (open-recursively-till-depth (current-node current-depth)
