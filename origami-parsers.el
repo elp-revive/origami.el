@@ -767,6 +767,88 @@ See function `origami-python-parser' description for argument CREATE."
                                (lambda (match &rest _)
                                  (+ (point) (length match) 1))))))
 
+(defun origami-xml-base-parser (create &optional remove-leaves ignored-tags-regex)
+  "Base parser for xml style markup."
+  (cl-labels
+      ((valid-pos-p (pos)
+                    (and  (origami-filter-code-face pos)
+                          (or (null ignored-tags-regex)
+                              (not (string-match-p ignored-tags-regex (car pos))))))
+       (build-nodes (content)
+                    (rx-let
+                        ((beg-tag
+                          (seq "<"
+                               ;; elements start with letter or _, don't match preamble
+                               (any word "_")
+                               (zero-or-more
+                                (or
+                                 ;; anything but closing tag or attribute
+                                 (not (any ">"
+                                           ;; ignore self-closing tags
+                                           "/"
+                                           ;; attribute values require their own matching
+                                           "\""))
+                                 ;; attribute value
+                                 (seq "\""
+                                      (zero-or-more (not "\""))
+                                      "\"")))
+                               ">"))
+                         (end-tag
+                          (seq "</" (any word "_") (zero-or-more (not ">")) ">")))
+                      ;; no need to care for comments/CDATA, these pos are filtered by face
+                      ;; in valid-pos-p
+                      (let* ((rx-beg-tag (rx beg-tag))
+                             (rx-end-tag (rx end-tag))
+                             (rx-all (rx (or beg-tag end-tag)))
+                             (positions (origami-get-positions content rx-all #'valid-pos-p)))
+                        (origami-build-pair-tree create rx-beg-tag rx-end-tag nil positions))))
+       (trim (nodes)
+             ;; trims leaves, if required
+             ;; no artificial root node yet, so base level is a list of nodes
+             (if (not remove-leaves)
+                 nodes
+               (let ((trimmed-nodes
+                      ;; remove base level leaves
+                      (seq-remove (lambda (node) (null (origami-fold-children node)))
+                                  nodes)))
+                 (if (seq-empty-p trimmed-nodes)
+                     trimmed-nodes
+                   ;; recurse to remove deeper level leaves
+                   (-map #'trim-recurse trimmed-nodes)))))
+       (trim-recurse (tree)
+                     (if (origami-fold-children tree)
+                         ;; has children - recurse for children, and don't remove this node
+                         (let ((trimmed-childs
+                                (-map #'trim-recurse (origami-fold-children tree))))
+                           ;; return copy of node with filtered childs
+                           (origami-fold-children-set tree
+                                                      (seq-remove #'null trimmed-childs)))
+                       ;; no childrens, remove this node
+                       nil)))
+    (lambda (content)
+      (-some-> content
+        build-nodes
+        trim))))
+
+(defcustom origami-xml-skip-leaf-nodes t
+  "In xml files, only elements with child elements will be
+foldable, not if they contain text only."
+  :type 'boolean
+  :group 'origami)
+
+(defun origami-xml-parser (create)
+  "Parser for xml."
+  (origami-xml-base-parser create origami-xml-skip-leaf-nodes))
+
+(defun origami-html-parser (create)
+  "Parser for html."
+  (rx-let ((ignore-tags (&rest tags) (seq "<" (or tags) word-end)))
+    ;; Self-closing tags (void elements) without closing slash would throw off parser, ignore
+    (let ((ignore-tags-rx
+           (rx (ignore-tags "area" "base" "br" "col" "command" "embed" "hr" "img" "input"
+                            "keygen" "link" "menuitem" "meta" "param" "source" "track" "wbr"))))
+      (origami-xml-base-parser create nil ignore-tags-rx))))
+
 (defcustom origami-parser-alist
   `((actionscript-mode     . origami-java-parser)
     (bat-mode              . origami-batch-parser)
@@ -778,6 +860,7 @@ See function `origami-python-parser' description for argument CREATE."
     (dart-mode             . origami-c-style-parser)
     (emacs-lisp-mode       . origami-elisp-parser)
     (go-mode               . origami-go-parser)
+    (html-mode             . origami-html-parser)
     (java-mode             . origami-java-parser)
     (javascript-mode       . origami-js-parser)
     (js-mode               . origami-js-parser)
@@ -788,6 +871,7 @@ See function `origami-python-parser' description for argument CREATE."
     (lisp-interaction-mode . origami-elisp-parser)
     (lua-mode              . origami-lua-parser)
     (markdown-mode         . origami-markdown-parser)
+    (nxml-mode             . origami-xml-parser)
     (objc-mode             . origami-objc-parser)
     (org-mode              . origami-org-parser)
     (perl-mode             . origami-c-style-parser)
@@ -800,7 +884,8 @@ See function `origami-python-parser' description for argument CREATE."
     (sh-mode               . origami-sh-parser)
     (swift-mode            . origami-swift-parser)
     (triple-braces         . ,(origami-markers-parser "{{{" "}}}"))
-    (typescript-mode       . origami-js-parser))
+    (typescript-mode       . origami-js-parser)
+    (web-mode              . origami-html-parser))
   "alist mapping major-mode to parser function."
   :type 'hook
   :group 'origami)

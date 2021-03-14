@@ -334,7 +334,7 @@ Optional argument CHILDREN can be add to the created node."
   (when node (aref node 3)))
 
 (defun origami-fold-open-set (node value)
-  "Set NODE with VALUE."
+  "Return a copy of NODE with open set to VALUE."
   (when node
     (if (origami-fold-is-root-node? node)
         node
@@ -350,7 +350,7 @@ Optional argument CHILDREN can be add to the created node."
   (when node (aref node 4)))
 
 (defun origami-fold-children-set (node children)
-  "Set CHILDREN to NODE."
+  "Return a copy of NODE with children set to CHILDREN."
   (when node
     (origami-fold-node (origami-fold-beg node)
                        (origami-fold-end node)
