@@ -81,9 +81,7 @@ non-whitespace character of the match."
   "Not documented, CREATE."
   (cl-labels
       ((lines (string) (origami-get-positions
-                        string
-                        ".*?\r?\n"
-                        nil
+                        string ".*?\r?\n" nil
                         (lambda (match &rest _) (- (point) (length match)))))
        (annotate-levels (lines)
                         (-map (lambda (line)
@@ -92,7 +90,7 @@ non-whitespace character of the match."
                                       (beg (cdr line))
                                       (end (+ (cdr line) (length (car line)) -1)))
                                   (if (s-blank? (s-trim (car line)))
-                                      'newline ;sentinel representing line break
+                                      'newline  ; sentinel representing line break
                                     (vector indent beg end (- end beg)))))
                               lines))
        (indent (line) (if (eq line 'newline) -1 (aref line 0)))
@@ -101,31 +99,31 @@ non-whitespace character of the match."
        (offset (line) (aref line 3))
        (collapse-same-level (lines)
                             (->>
-                             (cdr lines)
-                             (-reduce-from (lambda (acc line)
-                                             (cond ((and (eq line 'newline) (eq (car acc) 'newline)) acc)
-                                                   ((= (indent line) (indent (car acc)))
-                                                    (cons (vector (indent (car acc))
-                                                                  (beg (car acc))
-                                                                  (end line)
-                                                                  (offset (car acc)))
-                                                          (cdr acc)))
-                                                   (t (cons line acc))))
-                                           (list (car lines)))
-                             (remove 'newline)
-                             reverse))
+                                (cdr lines)
+                              (-reduce-from (lambda (acc line)
+                                              (cond ((and (eq line 'newline) (eq (car acc) 'newline)) acc)
+                                                    ((= (indent line) (indent (car acc)))
+                                                     (cons (vector (indent (car acc))
+                                                                   (beg (car acc))
+                                                                   (end line)
+                                                                   (offset (car acc)))
+                                                           (cdr acc)))
+                                                    (t (cons line acc))))
+                                            (list (car lines)))
+                              (remove 'newline)
+                              reverse))
        (create-tree (levels)
                     (if (null levels)
                         levels
                       (let ((curr-indent (indent (car levels))))
                         (->> levels
-                             (-partition-by (lambda (l) (= (indent l) curr-indent)))
-                             (-partition-all 2)
-                             (-mapcat (lambda (x)
+                          (-partition-by (lambda (l) (= (indent l) curr-indent)))
+                          (-partition-all 2)
+                          (-mapcat (lambda (x)
                                         ;takes care of multiple identical levels, introduced when there are newlines
-                                        (-concat
-                                         (-map 'list (butlast (car x)))
-                                         (list (cons (-last-item (car x)) (create-tree (cadr x)))))))))))
+                                     (-concat
+                                      (-map 'list (butlast (car x)))
+                                      (list (cons (-last-item (car x)) (create-tree (cadr x)))))))))))
        (build-nodes (tree)
                     (if (null tree) (cons 0 nil)
                       ;; complexity here is due to having to find the end of the children so that the
@@ -145,12 +143,12 @@ non-whitespace character of the match."
                        tree))))
     (lambda (content)
       (-> content
-          lines
-          annotate-levels
-          collapse-same-level
-          create-tree
-          build-nodes
-          cdr))))
+        lines
+        annotate-levels
+        collapse-same-level
+        create-tree
+        build-nodes
+        cdr))))
 
 (defun origami-build-pair-tree (create open close else positions &optional fnc-offset)
   "Build the pair tree from CREATE.
