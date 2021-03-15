@@ -519,8 +519,8 @@ is the ending point to stop the scanning processs."
              (lambda (pos &rest _) (origami-filter-code-face pos))
              (lambda (match &rest _)
                (if (origami-util-contain-list-type-str end match 'strict)
-                   ;; keep end pos at match start, not line-beginning, to fold leading whitespace
-                   (- (point) (length match))
+                   ;; keep end pos on separate line on folding
+                   (1- (line-beginning-position))
                  (line-beginning-position))))))
       (origami-build-pair-tree create beg-regex end-regex else-regex
                                positions
@@ -653,8 +653,8 @@ See function `origami-python-parser' description for argument CREATE."
              (lambda (pos &rest _) (origami-filter-code-face pos))
              (lambda (match &rest _)
                (if (origami-util-contain-list-type-str end match 'strict)
-                   ;; keep end pos at match start, not line-beginning, to fold leading whitespace
-                   (- (point) (length match))
+                   ;; keep end pos on separate line on folding
+                   (1- (line-beginning-position))
                  (line-beginning-position))))))
       (origami-build-pair-tree create beg-regex end-regex else-regex
                                positions
@@ -690,8 +690,8 @@ See function `origami-python-parser' description for argument CREATE."
              (lambda (pos &rest _) (origami-filter-code-face pos))
              (lambda (match &rest _)
                (if (origami-util-contain-list-type-str end match 'strict)
-                   ;; keep end pos at match start, not line-beginning, to fold leading whitespace
-                   (- (point) (length match))
+                   ;; keep end pos on separate line on folding
+                   (1- (line-beginning-position))
                  (line-beginning-position))))))
       (origami-build-pair-tree create beg-regex end-regex else-regex
                                positions
