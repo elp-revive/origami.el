@@ -60,7 +60,7 @@ in the CONTENT.
 Optional argument PREDICATE is for filtering.
 
 Optional argument FNC-POS, is function that returns the mark position
-from the matching string. If omitted, the mark will be the first
+from the matching string.  If omitted, the mark will be the first
 non-whitespace character of the match."
   (save-excursion
     (goto-char (point-min))
@@ -156,7 +156,7 @@ non-whitespace character of the match."
 Argument CREATE is the parser function to create the nodes.
 
 Arguments OPEN, CLOSE and ELSE are regular expressions used to
-determine the type of a position. An OPEN match will start a new
+determine the type of a position.  An OPEN match will start a new
 pending node, a CLOSE match will finish a started pending node,
 an ELSE match works like CLOSE + OPEN - it will finish a started
 pending node, then immediately start a new one.
