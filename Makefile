@@ -36,6 +36,7 @@ compile:
 		-l test/bootstrap.el \
 		-L . \
 		--eval '(setq byte-compile-error-on-warn t)' \
+		--eval '(setq emacs-lsp-ci t)' \
 		-f batch-byte-compile $(ORIGAMI-FILES)
 
 lint:
