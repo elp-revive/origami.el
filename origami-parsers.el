@@ -151,76 +151,95 @@ non-whitespace character of the match."
         cdr))))
 
 (defun origami-build-pair-tree (create open close else positions &optional fnc-offset)
-  "Build the pair tree from CREATE.
+  "Build the node tree from POSITIONS.
 
-Argument OPEN and CLOSE is the open/close symbol in type of string.
+Argument CREATE is the parser function to create the nodes.
 
-Argument POSITIONS is a list of cons cell form by (syntax . point).
+Arguments OPEN, CLOSE and ELSE are regular expressions used to
+determine the type of a position. An OPEN match will start a new
+pending node, a CLOSE match will finish a started pending node,
+an ELSE match works like CLOSE + OPEN - it will finish a started
+pending node, then immediately start a new one.
+
+Argument POSITIONS is a list of cons cell form by (match . point).
 
 Optional argument FNC-OFFSET is a function that return's the position of
-the offset."
-  (let (ml-open)
-    (cl-labels
-        ((build (positions)
-                ;; this is so horrible, but fast
-                (let ((should-continue t) acc beg
-                      match match-open match-close match-else)
-                  (while (and should-continue positions)
-                    (setq match (caar positions))
-                    (origami-log "\f")
-                    (origami-log "current match: %s" match)
-                    (origami-log "beg: %s" beg)
-                    (cond
+the node offset."
+  (cl-labels
+      ((build (positions)
+              ;; recursive function to build nodes from positions, returns cons cell with
+              ;; (remaining-positions . created-nodes)
+              (let ((tree-level-unfinished t) ; nil indicates the current tree level was finished by
+                                              ; a closing match, and we need to ascend back to upper
+                                              ; level from recursion
+                    acc ; accumulates created nodes
+                    beg-pos ; beginning pos of started, but unfinished (not created) node
+                    beg-match ; beginning match of started, but unfinished node
+                    cur-pos ; pos of current position
+                    cur-match)
+                (while (and tree-level-unfinished positions)
+                  (setq cur-match (caar positions)
+                        cur-pos (cdar positions))
+                  (origami-log "\f")
+                  (origami-log "current match: %s" cur-match)
+                  (origami-log "beg (pos, cur-match): %s, %s" beg-pos beg-match)
+                  (cond
                      ;;; --- ELSE --------------------------------------------
-                     ((and (stringp else) (string-match-p else match))
-                      (origami-log ">> else: " match)
-                      ;; Close without changing parent node.
-                      (setq match-else (nth 0 ml-open))
-                      (push (funcall create beg (cdar positions)
-                                     (or (origami-util-function-offset fnc-offset beg match)
-                                         (length match-else))
-                                     nil)
-                            acc)
-                      ;; Stays the same, doesn't go up/down a level.
-                      (setq beg (1+ (cdar positions))
-                            positions (cdr positions)))
+                   ((and (stringp else) (string-match-p else cur-match))
+                    (origami-log ">> else: " cur-match)
+                    ;; Stay on same level - finish beg node & start new one. As we are starting a
+                    ;; new node at cur-pos, make the beg node end at one char before that.
+                    (push (funcall create beg-pos (1- cur-pos)
+                                   (or (origami-util-function-offset fnc-offset beg-pos beg-match)
+                                       (length beg-match))
+                                   nil)
+                          acc)
+                    ;; begin a new pair
+                    (setq beg-pos cur-pos
+                          beg-match cur-match
+                          positions (cdr positions)))
                      ;;; --- OPEN --------------------------------------------
-                     ((string-match-p open match)
-                      (origami-log ">> open: " match)
-                      (setq match-open match)
-                      (push match-open ml-open)
-                      (if beg  ; go down a level
-                          (progn
-                            (origami-log "dig in...")
-                            (pop ml-open)
-                            (let* ((res (build positions))
-                                   (new-pos (car res)) (children (cdr res)))
-                              (setq positions (cdr new-pos))
-                              (push (funcall create beg (cdar new-pos)
-                                             (or (origami-util-function-offset fnc-offset beg match-open)
-                                                 (length (nth 0 ml-open)))
-                                             children)
-                                    acc)
-                              (setq beg nil)))
-                        ;; begin a new pair
-                        (setq beg (cdar positions)
-                              positions (cdr positions))))
-                     ;;; --- CLOSE --------------------------------------------
-                     ((string-match-p close match)
-                      (origami-log ">> close: " match)
-                      (if beg  ; close with no children
-                          (progn
-                            (setq match-close (pop ml-open))
-                            (push (funcall create beg (cdar positions)
-                                           (or (origami-util-function-offset fnc-offset beg match-close)
-                                               (length match-close))
-                                           nil)
+                   ((string-match-p open cur-match)
+                    (origami-log ">> open: " cur-match)
+                    (if beg-pos  ; go down a level
+                        (progn
+                          (origami-log "dig in...")
+                          (let* ((res (build positions)) ; recurse
+                                 (new-pos (car res))
+                                 (children (cdr res))
+                                 (close-pos (cdar new-pos)))
+                            ;; close with children
+                            (push (funcall create beg-pos close-pos
+                                           (or (origami-util-function-offset fnc-offset beg-pos beg-match)
+                                               (length beg-match))
+                                           children)
                                   acc)
-                            (setq positions (cdr positions)
-                                  beg nil))
-                        (setq should-continue nil)))))
-                  (cons positions (reverse acc)))))
-      (cdr (build positions)))))
+                            (setq beg-pos nil
+                                  beg-match nil
+                                  positions (cdr new-pos))))
+                      ;; begin a new pair
+                      (setq beg-pos cur-pos
+                            beg-match cur-match
+                            positions (cdr positions))))
+                     ;;; --- CLOSE --------------------------------------------
+                   ((string-match-p close cur-match)
+                    (origami-log ">> close: " cur-match)
+                    (if beg-pos  ; close with no children
+                        (progn
+                          (push (funcall create beg-pos cur-pos
+                                         (or (origami-util-function-offset fnc-offset beg-pos beg-match)
+                                             (length beg-match))
+                                         nil)
+                                acc)
+                          (setq beg-pos nil
+                                beg-match nil
+                                positions (cdr positions)))
+                      ;; stop loop to reascend to upper tree level
+                      (setq tree-level-unfinished nil)))))
+                (origami-log "dig out...")
+                ;; Pass remaining positions and accumulated nodes up the recursion stack
+                (cons positions (reverse acc)))))
+    (cdr (build positions))))
 
 (defun origami--force-pair-positions (positions)
   "Force POSITIONS pair into a length of even number."
@@ -499,7 +518,8 @@ is the ending point to stop the scanning processs."
              content all-regex
              (lambda (pos &rest _) (origami-filter-code-face pos))
              (lambda (match &rest _)
-               (if (origami-util-contain-list-type-str (append end else) match 'regex)
+               (if (origami-util-contain-list-type-str end match 'regex)
+                   ;; keep end pos on separate line on folding
                    (1- (line-beginning-position))
                  (line-beginning-position))))))
       (origami-build-pair-tree create beg-regex end-regex else-regex
@@ -632,10 +652,10 @@ See function `origami-python-parser' description for argument CREATE."
              content all-regex
              (lambda (pos &rest _) (origami-filter-code-face pos))
              (lambda (match &rest _)
-               (cond ((origami-util-contain-list-type-str beg match 'strict)
-                      (line-beginning-position))
-                     ((origami-util-contain-list-type-str (append end else) match 'strict)
-                      (1- (line-beginning-position))))))))
+               (if (origami-util-contain-list-type-str end match 'strict)
+                   ;; keep end pos on separate line on folding
+                   (1- (line-beginning-position))
+                 (line-beginning-position))))))
       (origami-build-pair-tree create beg-regex end-regex else-regex
                                positions
                                (lambda (match &rest _)
@@ -669,10 +689,10 @@ See function `origami-python-parser' description for argument CREATE."
              content all-regex
              (lambda (pos &rest _) (origami-filter-code-face pos))
              (lambda (match &rest _)
-               (cond ((origami-util-contain-list-type-str beg match 'strict)
-                      (line-beginning-position))
-                     ((origami-util-contain-list-type-str (append end else) match 'strict)
-                      (1- (line-beginning-position))))))))
+               (if (origami-util-contain-list-type-str end match 'strict)
+                   ;; keep end pos on separate line on folding
+                   (1- (line-beginning-position))
+                 (line-beginning-position))))))
       (origami-build-pair-tree create beg-regex end-regex else-regex
                                positions
                                (lambda (&rest _) (line-end-position))))))
