@@ -518,7 +518,7 @@ is the ending point to stop the scanning processs."
              content all-regex
              (lambda (pos &rest _) (origami-filter-code-face pos))
              (lambda (match &rest _)
-               (if (origami-util-contain-list-type-str end match 'strict)
+               (if (origami-util-contain-list-type-str end match 'regex)
                    ;; keep end pos on separate line on folding
                    (1- (line-beginning-position))
                  (line-beginning-position))))))
