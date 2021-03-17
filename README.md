@@ -1,5 +1,5 @@
 **This is a further development fork from original project [origami](https://github.com/gregsexton/origami.el).
-If you are using [melpa](), please use that version instead of this version!**
+If you are using [melpa](https://melpa.org/#/), please use that version instead of this version!**
 
 ![CI](https://github.com/emacs-origami/origami.el/workflows/CI/badge.svg)
 [![CELPA](https://celpa.conao3.com/packages/origami-badge.svg)](https://celpa.conao3.com/#/origami)
