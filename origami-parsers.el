@@ -46,6 +46,7 @@
 
 (declare-function origami-fold-root-node "ext:origami.el")
 (declare-function origami-fold-children "ext:origami.el")
+(declare-function origami-fold-children-set "ext:origami.el")
 (declare-function origami-fold-shallow-merge "ext:origami.el")
 
 ;;
