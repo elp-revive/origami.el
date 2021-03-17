@@ -102,7 +102,7 @@ To some degree, yes. Currently out of the box support is provided for:
 * Dart
 * Emacs Lisp
 * Go
-* Html
+* HTML
 * Java / JavaScript / JSX
 * Kotlin
 * Lisp / Lua
@@ -112,7 +112,7 @@ To some degree, yes. Currently out of the box support is provided for:
 * Ruby / Rust
 * Scala / Shell script / Swift
 * TypeScript
-* Xml
+* XML
 
 Anything not in this list will be folded using indentation. This works
 surprisingly well for most major-modes and is great for folding text.
