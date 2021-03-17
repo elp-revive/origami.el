@@ -104,6 +104,7 @@ To some degree, yes. Currently out of the box support is provided for:
 * Go
 * HTML
 * Java / JavaScript / JSX
+* JSON
 * Kotlin
 * Lisp / Lua
 * Markdown
