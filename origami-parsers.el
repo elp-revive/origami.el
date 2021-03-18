@@ -732,13 +732,23 @@ See function `origami-python-parser' description for argument CREATE."
   "Parser for Swift."
   (origami-c-parser create))
 
-(defun origami-markers-parser (start-marker end-marker)
-  "Create a parser for simple start and end markers."
-  (let ((regex (rx-to-string `(or ,start-marker ,end-marker))))
+(defun origami-markers-parser (start-marker end-marker &optional is-regex)
+  "Create a parser for simple start and end markers.
+
+If IS-REGEX is t, the markers will be interpreted as regular
+expressions."
+  (let ((rx-beg (if is-regex start-marker
+                  (regexp-quote start-marker)))
+        (rx-end (if is-regex end-marker
+                  (regexp-quote end-marker)))
+        (rx-all (rx-to-string
+                 (if is-regex
+                     `(or (regexp ,start-marker) (regexp ,end-marker))
+                   `(or ,start-marker ,end-marker)))))
     (lambda (create)
       (lambda (content)
-        (let ((positions (origami-get-positions content regex)))
-          (origami-build-pair-tree create start-marker end-marker nil positions))))))
+        (let ((positions (origami-get-positions content rx-all)))
+          (origami-build-pair-tree create rx-beg rx-end nil positions))))))
 
 (defun origami-markdown-parser (create)
   "Parser for Markdown."
@@ -867,6 +877,7 @@ foldable, not if they contain text only."
     (js-mode               . origami-js-parser)
     (js2-mode              . origami-js-parser)
     (js3-mode              . origami-js-parser)
+    (json-mode             . ,(origami-markers-parser "[[{]" "[]}]" t))
     (kotlin-mode           . origami-java-parser)
     (lisp-mode             . origami-elisp-parser)
     (lisp-interaction-mode . origami-elisp-parser)
