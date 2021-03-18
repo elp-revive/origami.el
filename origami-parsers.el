@@ -170,13 +170,14 @@ the node offset."
       ((build (positions)
               ;; recursive function to build nodes from positions, returns cons cell with
               ;; (remaining-positions . created-nodes)
-              (let ((tree-level-unfinished t) ; nil indicates the current tree level was finished by
-                                              ; a closing match, and we need to ascend back to upper
-                                              ; level from recursion
-                    acc ; accumulates created nodes
-                    beg-pos ; beginning pos of started, but unfinished (not created) node
-                    beg-match ; beginning match of started, but unfinished node
-                    cur-pos ; pos of current position
+              (let (;; nil indicates the current tree level was finished by
+                    ;; a closing match, and we need to ascend back to upper
+                    ;; level from recursion
+                    (tree-level-unfinished t)
+                    acc  ; accumulates created nodes
+                    beg-pos  ; beginning pos of started, but unfinished (not created) node
+                    beg-match  ; beginning match of started, but unfinished node
+                    cur-pos  ; pos of current position
                     cur-match)
                 (while (and tree-level-unfinished positions)
                   (setq cur-match (caar positions)
