@@ -103,8 +103,7 @@ To some degree, yes. Currently out of the box support is provided for:
 * Emacs Lisp
 * Go
 * HTML
-* Java / JavaScript / JSX
-* JSON
+* Java / JavaScript / JSON / JSX
 * Kotlin
 * Lisp / Lua
 * Markdown
