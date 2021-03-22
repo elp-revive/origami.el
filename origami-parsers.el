@@ -861,6 +861,17 @@ foldable, not if they contain text only."
                             "keygen" "link" "menuitem" "meta" "param" "source" "track" "wbr"))))
       (origami-xml-base-parser create nil ignore-tags-rx))))
 
+(defun origami-json-parser (create)
+  "Parser for JSON."
+  (lambda (content)
+    (let* ((rx-beg "[[{]")
+           (rx-end "[]}]")
+           (rx-all "[][{}]")
+           (positions
+            (origami-get-positions content rx-all
+                                   (lambda (pos &rest _) (origami-filter-code-face pos)))))
+      (origami-build-pair-tree create rx-beg rx-end nil positions))))
+
 (defcustom origami-parser-alist
   `((actionscript-mode     . origami-java-parser)
     (bat-mode              . origami-batch-parser)
@@ -878,7 +889,7 @@ foldable, not if they contain text only."
     (js-mode               . origami-js-parser)
     (js2-mode              . origami-js-parser)
     (js3-mode              . origami-js-parser)
-    (json-mode             . ,(origami-markers-parser "[[{]" "[]}]" t))
+    (json-mode             . origami-json-parser)
     (kotlin-mode           . origami-java-parser)
     (lisp-mode             . origami-elisp-parser)
     (lisp-interaction-mode . origami-elisp-parser)
