@@ -789,7 +789,23 @@ expressions."
                               (not (string-match-p ignored-tags-regex (car pos))))))
        (build-nodes (content)
                     (rx-let
-                        ((beg-tag "<")
+                        ((beg-tag-2
+                          (seq "<"
+                               ;; elements start with letter or _, don't match preamble
+                               (any word "_")
+                               (zero-or-more
+                                (or
+                                 ;; anything but closing tag or attribute
+                                 (not (any ">"
+                                           ;; ignore self-closing tags
+                                           "/"
+                                           ;; attribute values require their own matching
+                                           "\""))
+                                 ;; attribute value
+                                 (seq "\""
+                                      (zero-or-more (not "\""))
+                                      "\"")))
+                               ">"))
                          (end-tag
                           (seq "</" (any word "_") (zero-or-more (not ">")) ">")))
                       ;; no need to care for comments/CDATA, these pos are filtered by face
