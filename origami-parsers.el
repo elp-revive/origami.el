@@ -37,6 +37,7 @@
 
 (require 'cl-lib)
 (require 'dash)
+(require 'rx)
 (require 's)
 (require 'subr-x)
 

@@ -5,7 +5,7 @@
 ;; Version: 4.1
 ;; Keywords: folding
 ;; URL: https://github.com/emacs-origami/origami.el
-;; Package-Requires: ((emacs "24.4") (s "1.9.0") (dash "2.5.0"))
+;; Package-Requires: ((emacs "27.1") (s "1.9.0") (dash "2.5.0"))
 
 ;; The MIT License (MIT)
 
