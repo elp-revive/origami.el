@@ -780,9 +780,12 @@ expressions."
                                (lambda (match &rest _)
                                  (+ (point) (length match) 1))))))
 
+(eval-when-compile
+  (dolist (form rx--builtin-forms)
+    (message "> %s" form)))
+
 (defun origami-xml-base-parser (create &optional remove-leaves ignored-tags-regex)
   "Base parser for xml style markup."
-  (message "%s" rx--builtin-forms)
   (cl-labels
       ((valid-pos-p (pos)
                     (and  (origami-filter-code-face pos)
