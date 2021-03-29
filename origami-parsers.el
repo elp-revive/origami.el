@@ -780,11 +780,6 @@ expressions."
                                (lambda (match &rest _)
                                  (+ (point) (length match) 1))))))
 
-(eval-when-compile
-  (require 'rx)
-  (dolist (form rx--builtin-forms)
-    (message "> %s" form)))
-
 (defun origami-xml-base-parser (create &optional remove-leaves ignored-tags-regex)
   "Base parser for xml style markup."
   (cl-labels
@@ -794,7 +789,10 @@ expressions."
                               (not (string-match-p ignored-tags-regex (car pos))))))
        (build-nodes (content)
                     (rx-let
-                        ((beg-tag
+                        ((other-tag-1 (seq "<"))
+                         (other-tag-2 (any word "_"))
+                         (other-tag-3 (zero-or-more "_"))
+                         (beg-tag
                           (seq "<"
                                ;; elements start with letter or _, don't match preamble
                                (any word "_")
