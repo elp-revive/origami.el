@@ -781,6 +781,7 @@ expressions."
                                  (+ (point) (length match) 1))))))
 
 (eval-when-compile
+  (require 'rx)
   (dolist (form rx--builtin-forms)
     (message "> %s" form)))
 
