@@ -38,6 +38,7 @@
 
 (require 'cl-lib)
 (require 'dash)
+(require 'imenu)
 (require 's)
 (require 'subr-x)
 
