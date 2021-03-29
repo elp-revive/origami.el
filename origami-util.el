@@ -2,7 +2,6 @@
 
 ;; Author: Shen, Jen-Chieh <jcs090218@gmail.com>
 ;; Maintainer: Shen, Jen-Chieh <jcs090218@gmail.com>
-;; Version: 3.1
 ;; Keywords: utility tool
 ;; URL: https://github.com/emacs-origami/origami.el
 
@@ -36,6 +35,17 @@
 ;;; Code:
 
 (require 'cl-lib)
+
+;;
+;; (@* "Log" )
+;;
+
+(defvar origami-show-log nil
+  "If non-nil, show debug message.")
+
+(defun origami-log (fmt &rest args)
+  "Debug message like function `message' with same argument FMT and ARGS."
+  (when origami-show-log (apply 'message fmt args)))
 
 ;;
 ;; (@* "Point" )
@@ -96,6 +106,24 @@ Optional argument TRIM, see function `origami-util-get-face'."
 ;; (@* "String" )
 ;;
 
+(defun origami-util-string-compare-p (regexp str type &optional ignore-case)
+  "Compare STR with REGEXP by TYPE.
+
+Argument TYPE can be on of the following symbol.
+
+  * regex - uses function `string-match-p'.  (default)
+  * strict - uses function `string='.
+  * prefix - uses function `string-prefix-p'.
+  * suffix - uses function `string-suffix-p'.
+
+Optional argument IGNORE-CASE is only uses when TYPE is either symbol `prefix'
+or `suffix'."
+  (cl-case type
+    (strict (string= regexp str))
+    (prefix (string-prefix-p regexp str ignore-case))
+    (suffix (string-suffix-p regexp str ignore-case))
+    (t (string-match-p regexp str))))
+
 (defun origami-util-seq-omit-string (seq &optional trim)
   "Return a list of omitted empty string and nil from SEQ.
 If optional argument TRIM is non-nil; then trim all string in SEQ."
@@ -107,12 +135,23 @@ If optional argument TRIM is non-nil; then trim all string in SEQ."
     (reverse lst)))
 
 (defun origami-util-contain-list-string-regexp (in-list in-str)
-  "Check if IN-STR contain in any string in the IN-LIST."
-  (cl-some (lambda (lb-sub-str) (string-match-p lb-sub-str in-str)) in-list))
+  "Return non-nil if IN-STR is listed in IN-LIST.
+
+This function uses `string-match-p'."
+  (cl-some (lambda (elm) (string-match-p elm in-str)) in-list))
 
 (defun origami-util-contain-list-string (in-list in-str)
-  "Check if IN-STR contain in any string in the IN-LIST."
-  (cl-some (lambda (lb-sub-str) (string-match-p (regexp-quote lb-sub-str) in-str)) in-list))
+  "Return non-nil if IN-STR is listed in IN-LIST.
+
+This function uses `string-match-p'.
+This function wrapped IN-STR with function `regexp-quote'."
+  (cl-some (lambda (elm) (string-match-p (regexp-quote elm) in-str)) in-list))
+
+(defun origami-util-contain-list-type-str (in-list in-str type)
+  "Return non-nil if IN-STR is listed in IN-LIST.
+
+Argument TYPE see function `origami-util-string-compare-p' for more information."
+  (cl-some (lambda (elm) (origami-util-string-compare-p elm in-str type)) in-list))
 
 ;;
 ;; (@* "Regular Expression" )
@@ -125,7 +164,16 @@ If optional argument TRIM is non-nil; then trim all string in SEQ."
       (setq keyword (nth index keywords)
             key-str (concat key-str keyword (if (= index (1- len)) "" "\\|")))
       (cl-incf index))
-    (format "\\<\\(%s\\)" key-str)))
+    (format "\\(s*%s\\)\\_>" key-str)))
+
+(defun origami-util-comment-regex (symbols)
+  "Turn a list of KEYWORDS to a keyword regular expression."
+  (let ((key-str "") (len (length symbols)) keyword (index 0))
+    (while (< index len)
+      (setq keyword (nth index symbols)
+            key-str (concat key-str keyword (if (= index (1- len)) "" "\\|")))
+      (cl-incf index))
+    (format "\\(s*%s\\)" key-str)))
 
 ;;
 ;; (@* "Math" )
@@ -138,6 +186,14 @@ If optional argument TRIM is non-nil; then trim all string in SEQ."
 (defun origami-util-is-even (in-val)
   "Check IN-VAL an even number."
   (not (origami-util-is-odd in-val)))
+
+;;
+;; (@* "Functions" )
+;;
+
+(defun origami-util-function-offset (fnc beg match)
+  "Call FNC starting from BEG."
+  (ignore-errors (save-excursion (goto-char beg) (- (funcall fnc match) beg))))
 
 (provide 'origami-util)
 ;;; origami-util.el ends here

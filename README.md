@@ -1,7 +1,8 @@
 **This is a further development fork from original project [origami](https://github.com/gregsexton/origami.el).
-If you are using [melpa](), please use that version instead of this version!**
+If you are using [melpa](https://melpa.org/#/), please use that version instead of this version!**
 
-![CI](https://github.com/emacs-origami/origami.el/workflows/CI/badge.svg)
+[![CI](https://github.com/emacs-origami/origami.el/actions/workflows/test.yml/badge.svg)](https://github.com/emacs-origami/origami.el/actions/workflows/test.yml)
+[![CELPA](https://celpa.conao3.com/packages/origami-badge.svg)](https://celpa.conao3.com/#/origami)
 [![Release Tag](https://img.shields.io/github/tag/emacs-origami/origami.el.svg?label=release)](https://github.com/emacs-origami/origami.el/releases/latest)
 [![Emacs Ver.](https://img.shields.io/badge/Emacs-24.4+-blue.svg)](https://www.gnu.org/software/emacs/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
@@ -67,28 +68,29 @@ The following commands are supplied to move between and manipulate
 folds. Those in bold are particularly useful. Many primitives are
 provided so that you may compose your own custom functions.
 
-| Commands                            | Description                                                                                                                 |
-|:------------------------------------|:----------------------------------------------------------------------------------------------------------------------------|
-| origami-open-node                   | Open a fold node.                                                                                                           |
-| origami-open-node-recursively       | Open a fold node and all of its children.                                                                                   |
-| origami-show-node                   | Like origami-open-node but also opens parent fold nodes recursively so as to ensure the position where point is is visible. |
-| origami-close-node                  | Close a fold node.                                                                                                          |
-| origami-close-node-recursively      | Close a fold node and all of its children.                                                                                  |
-| origami-toggle-node                 | Toggle open or closed a fold node.                                                                                          |
-| origami-forward-toggle-node         | Search forward on this line for a node and toggle it open or closed. This makes toggling nodes much more convenient.        |
-| **origami-recursively-toggle-node** | Acts like org-mode header collapsing. Cycle a fold between open, recursively open, closed.                                  |
-| origami-open-all-nodes              | Open every fold in the buffer.                                                                                              |
-| origami-close-all-nodes             | Close every fold in the buffer.                                                                                             |
-| origami-toggle-all-nodes            | Toggle open/closed every fold node in the buffer.                                                                           |
-| **origami-show-only-node**          | Close everything but the folds necessary to see the point. Very useful for concentrating on an area of code.                |
-| origami-previous-fold               | Move to the previous fold.                                                                                                  |
-| origami-next-fold                   | Move to the end of the next fold.                                                                                           |
-| origami-forward-fold                | Move to the start of the next fold.                                                                                         |
-| origami-forward-fold-same-level     | Move to the start of the next fold that is a sibling of the current fold.                                                   |
-| origami-backward-fold-same-level    | Move to the start of the previous fold that is a sibling of the current fold.                                               |
-| **origami-undo**                    | Undo the last folding operation.                                                                                            |
-| origami-redo                        | Redo the last undone folding operation.                                                                                     |
-| origami-reset                       | Remove all folds from the buffer and reset all origami state. Useful if origami messes up!                                  |
+| Commands                                 | Description                                                                                                                 |
+|:-----------------------------------------|:----------------------------------------------------------------------------------------------------------------------------|
+| origami-open-node                        | Open a fold node.                                                                                                           |
+| origami-open-node-recursively            | Open a fold node and all of its children.                                                                                   |
+| origami-open-node-recursively-till-depth | Open a fold node and all of its children up to a certain depth.                                                             |
+| origami-show-node                        | Like origami-open-node but also opens parent fold nodes recursively so as to ensure the position where point is is visible. |
+| origami-close-node                       | Close a fold node.                                                                                                          |
+| origami-close-node-recursively           | Close a fold node and all of its children.                                                                                  |
+| origami-toggle-node                      | Toggle open or closed a fold node.                                                                                          |
+| origami-forward-toggle-node              | Search forward on this line for a node and toggle it open or closed. This makes toggling nodes much more convenient.        |
+| **origami-recursively-toggle-node**      | Acts like org-mode header collapsing. Cycle a fold between open, recursively open, closed.                                  |
+| origami-open-all-nodes                   | Open every fold in the buffer.                                                                                              |
+| origami-close-all-nodes                  | Close every fold in the buffer.                                                                                             |
+| origami-toggle-all-nodes                 | Toggle open/closed every fold node in the buffer.                                                                           |
+| **origami-show-only-node**               | Close everything but the folds necessary to see the point. Very useful for concentrating on an area of code.                |
+| origami-previous-fold                    | Move to the previous fold.                                                                                                  |
+| origami-next-fold                        | Move to the end of the next fold.                                                                                           |
+| origami-forward-fold                     | Move to the start of the next fold.                                                                                         |
+| origami-forward-fold-same-level          | Move to the start of the next fold that is a sibling of the current fold.                                                   |
+| origami-backward-fold-same-level         | Move to the start of the previous fold that is a sibling of the current fold.                                               |
+| **origami-undo**                         | Undo the last folding operation.                                                                                            |
+| origami-redo                             | Redo the last undone folding operation.                                                                                     |
+| origami-reset                            | Remove all folds from the buffer and reset all origami state. Useful if origami messes up!                                  |
 
 # Does it support my favourite major-mode?
 
@@ -100,15 +102,17 @@ To some degree, yes. Currently out of the box support is provided for:
 * Dart
 * Emacs Lisp
 * Go
-* Java / JavaScript / JSX
+* HTML
+* Java / JavaScript / JSON / JSX
 * Kotlin
 * Lisp / Lua
 * Markdown
 * Objective-C / Org
 * PHP / Perl / Python
 * Ruby / Rust
-* Scala / Shell script
+* Scala / Shell script / Swift
 * TypeScript
+* XML
 
 Anything not in this list will be folded using indentation. This works
 surprisingly well for most major-modes and is great for folding text.
