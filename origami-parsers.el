@@ -790,15 +790,6 @@ foldable, not if they contain text only."
   "Parser for xml."
   (origami-xml-base-parser create origami-xml-skip-leaf-nodes))
 
-(defun origami-html-parser (create)
-  "Parser for html."
-  (rx-let ((ignore-tags (&rest tags) (seq "<" (or tags) word-end)))
-    ;; Self-closing tags (void elements) without closing slash would throw off parser, ignore
-    (let ((ignore-tags-rx
-           (rx (ignore-tags "area" "base" "br" "col" "command" "embed" "hr" "img" "input"
-                            "keygen" "link" "menuitem" "meta" "param" "source" "track" "wbr"))))
-      (origami-xml-base-parser create nil ignore-tags-rx))))
-
 (defun origami-json-parser (create)
   "Parser for JSON."
   (lambda (content)
