@@ -1,8 +1,10 @@
 # ignore these directories.
 /.git
 /recipes
-/src
-origami-pkg.el
+
+# cask packages
+.cask/
+dist/
 
 # ignore generated files.
 *.elc
