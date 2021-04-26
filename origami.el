@@ -1070,6 +1070,7 @@ and `origami-auto--hide-element-next-line'"
 
 (fringe-helper-define 'origami-fr-minus-tail nil
   "......." "......." "......." "......." "......."
+  "......." "......." "......." "......." "......."
   "XXXXXXX"
   "X.....X"
   "X.....X"
@@ -1077,6 +1078,7 @@ and `origami-auto--hide-element-next-line'"
   "X.....X"
   "X.....X"
   "XXXXXXX"
+  "...X..." "...X..." "...X..." "...X..." "...X..."
   "...X..." "...X..." "...X..." "...X..." "...X...")
 
 (fringe-helper-define 'origami-fr-center nil
