@@ -1070,7 +1070,6 @@ and `origami-auto--hide-element-next-line'"
 
 (fringe-helper-define 'origami-fr-minus-tail nil
   "......." "......." "......." "......." "......."
-  "......." "......." "......." "......." "......."
   "XXXXXXX"
   "X.....X"
   "X.....X"
@@ -1078,7 +1077,6 @@ and `origami-auto--hide-element-next-line'"
   "X.....X"
   "X.....X"
   "XXXXXXX"
-  "...X..." "...X..." "...X..." "...X..." "...X..."
   "...X..." "...X..." "...X..." "...X..." "...X...")
 
 (fringe-helper-define 'origami-fr-center nil
@@ -1091,7 +1089,7 @@ and `origami-auto--hide-element-next-line'"
 (fringe-helper-define 'origami-fr-end nil
   "...X..." "...X..." "...X..." "...X..." "...X..."
   "...X..." "...X..." "...X..." "...X..." "...X..."
-  "...XXXX"
+  "...X..." "...XXXX" "......."
   "......." "......." "......." "......." "......."
   "......." "......." "......." "......." ".......")
 
@@ -1140,7 +1138,7 @@ and `origami-auto--hide-element-next-line'"
          (index 1))
     (origami--active-ind-ov show first-ov
                             (if show
-                                (if (> len 1) 'origami-fr-plus-tail 'origami-fr-plus)
+                                (if (> len 1) 'origami-fr-minus-tail 'origami-fr-plus)
                               'origami-fr-minus))
     (when (> len 1)
       (origami--active-ind-ov show last-ov 'origami-fr-end))
