@@ -1140,8 +1140,9 @@ and `origami-auto--hide-element-next-line'"
          (index 1))
     (origami--active-ind-ov show first-ov
                             (if show
-                                (if (> len 1) 'origami-fr-minus-tail 'origami-fr-plus)
-                              'origami-fr-minus))
+                                (if (> len 1)
+                                    'origami-fr-minus-tail 'origami-fr-minus)
+                              'origami-fr-plus))
     (when (> len 1)
       (origami--active-ind-ov show last-ov 'origami-fr-end))
     (while (< index len-1)
