@@ -1124,12 +1124,13 @@ and `origami-auto--hide-element-next-line'"
 
 (defun origami--active-ind-ov (show ov bitmap)
   "Set active the indicator OV with BITMAP."
-  (overlay-put ov 'origami-indicators-active show)
-  (overlay-put ov 'before-string
-               (propertize
-                "…"
-                'display
-                `(,origami-indicators ,bitmap origami-fold-fringe-face))))
+  (when origami-indicators
+    (overlay-put ov 'origami-indicators-active show)
+    (overlay-put ov 'before-string
+                 (propertize
+                  "…"
+                  'display
+                  `(,origami-indicators ,bitmap origami-fold-fringe-face)))))
 
 (defun origami--update-ind-overlays (ov-lst show)
   "Update indicators overlays OV-LST."
