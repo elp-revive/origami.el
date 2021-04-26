@@ -5,7 +5,7 @@
 ;; Version: 4.1
 ;; Keywords: folding
 ;; URL: https://github.com/emacs-origami/origami.el
-;; Package-Requires: ((emacs "27.1") (s "1.9.0") (dash "2.5.0"))
+;; Package-Requires: ((emacs "27.1") (s "1.9.0") (dash "2.5.0") (fringe-helper "1.0.1"))
 
 ;; The MIT License (MIT)
 
@@ -40,6 +40,7 @@
 (require 'dash)
 (require 's)
 (require 'cl-lib)
+(require 'fringe-helper)
 
 (require 'origami-util)
 (require 'origami-parsers)
@@ -94,6 +95,8 @@
 
 (defvar origami-mode-map
   (let ((map (make-sparse-keymap)))
+    (define-key map [left-fringe mouse-1] #'origami-click-fringe)
+    (define-key map [right-fringe mouse-1] #'origami-click-fringe)
     map)
   "Keymap for `origami-mode'.")
 
@@ -203,6 +206,9 @@ Argument BUFFER is the buffer we are concerning."
         (overlay-put header-ov 'fold-overlay ov)
         (overlay-put header-ov 'modification-hooks '(origami-header-modify-hook))
         (overlay-put ov 'header-ov header-ov))
+      ;; We create fringe overlay.
+      (let ((ind-ovs (origami--create-ind-overlays beg end)))
+        (overlay-put ov 'ind-ovs ind-ovs))
       ov)))
 
 (defun origami-hide-overlay (ov)
@@ -213,14 +219,17 @@ Argument BUFFER is the buffer we are concerning."
                                origami-fold-replacement))
   (overlay-put ov 'face 'origami-fold-replacement-face)
   (when origami-show-fold-header
-    (origami-activate-header (overlay-get ov 'header-ov))))
+    (origami-activate-header (overlay-get ov 'header-ov)))
+  (when origami-indicators
+    (origami-activate-indicators (overlay-get ov 'ind-ovs))))
 
 (defun origami-show-overlay (ov)
   "Hide overlay (OV) and cancel folding."
   (overlay-put ov 'invisible nil)
   (overlay-put ov 'display nil)
   (overlay-put ov 'face nil)
-  (origami-deactivate-header (overlay-get ov 'header-ov)))
+  (origami-deactivate-header (overlay-get ov 'header-ov))
+  (origami-deactivate-indicators (overlay-get ov 'ind-ovs)))
 
 (defun origami-hide-node-overlay (node)
   (-when-let (ov (origami-fold-data node))
@@ -231,6 +240,7 @@ Argument BUFFER is the buffer we are concerning."
     (origami-show-overlay ov)))
 
 (defun origami-activate-header (ov)
+  "Show header OV."
   ;; Reposition the header overlay. Since it extends before the folded area, it
   ;; may no longer cover the appropriate locations.
   (origami-header-overlay-reset-position ov)
@@ -243,10 +253,19 @@ Argument BUFFER is the buffer we are concerning."
                 '(left-fringe empty-line origami-fold-fringe-face))))
 
 (defun origami-deactivate-header (ov)
+  "Hide header OV."
   (overlay-put ov 'origami-header-active nil)
   (overlay-put ov 'face nil)
   (overlay-put ov 'before-string nil)
   (overlay-put ov 'after-string nil))
+
+(defun origami-activate-indicators (ov-lst)
+  "Show indicators OV-LST."
+  (origami--update-ind-overlays ov-lst nil))
+
+(defun origami-deactivate-indicators (ov-lst)
+  "Hide indicators OV-LST."
+  (origami--update-ind-overlays ov-lst t))
 
 (defun origami-isearch-show (_ov)
   "Show overlay."
@@ -692,7 +711,7 @@ INCLUDE-SIBLINGS will also open the siblings of the node at
 point up to the given depth. This can be useful if there is no
 single root in the document folding structure. To set it
 interactively, use a negative prefix arg."
-    (interactive (let* ((numeric-prefix-arg (prefix-numeric-value current-prefix-arg))
+  (interactive (let* ((numeric-prefix-arg (prefix-numeric-value current-prefix-arg))
                       (include-siblings (< numeric-prefix-arg 0)))
                  (list (current-buffer) (point) (abs numeric-prefix-arg) include-siblings)))
   (-when-let (old-tree (origami-get-fold-tree buffer))
@@ -1014,6 +1033,121 @@ and `origami-auto--hide-element-next-line'"
   (remove-hook 'find-file-hook #'origami-auto-apply t)
   (when origami-auto-global-mode
     (add-hook 'find-file-hook #'origami-auto-apply t)))
+
+;;
+;; (@* "Indicators" )
+;;
+
+(defcustom origami-indicators nil
+  "Display indicators on the left/right fringe, if nil don't render.k"
+  :type '(choice (const :tag "none" nil)
+                 (const :tag "On the right fringe" right-fringe)
+                 (const :tag "On the left fringe" left-fringe))
+  :group 'origami)
+
+(defcustom origami-indicators-priority 30
+  "Indicators fringe priority."
+  :type 'integer
+  :group 'origami)
+
+(fringe-helper-define 'origami-fr-plus nil
+  "XXXXXXX"
+  "X.....X"
+  "X..X..X"
+  "X.XXX.X"
+  "X..X..X"
+  "X.....X"
+  "XXXXXXX")
+
+(fringe-helper-define 'origami-fr-minus nil
+  "XXXXXXX"
+  "X.....X"
+  "X.....X"
+  "X.XXX.X"
+  "X.....X"
+  "X.....X"
+  "XXXXXXX")
+
+(fringe-helper-define 'origami-fr-minus-tail nil
+  "......." "......." "......." "......." "......."
+  "......." "......." "......." "......." "......."
+  "XXXXXXX"
+  "X.....X"
+  "X.....X"
+  "X.XXX.X"
+  "X.....X"
+  "X.....X"
+  "XXXXXXX"
+  "...X..." "...X..." "...X..." "...X..." "...X..."
+  "...X..." "...X..." "...X..." "...X..." "...X...")
+
+(fringe-helper-define 'origami-fr-center nil
+  "...X..." "...X..." "...X..." "...X..." "...X..."
+  "...X..." "...X..." "...X..." "...X..." "...X..."
+  "...X..." "...X..." "...X..." "...X..." "...X..."
+  "...X..." "...X..." "...X..." "...X..." "...X..."
+  "...X..." "...X..." "...X...")
+
+(fringe-helper-define 'origami-fr-end nil
+  "...X..." "...X..." "...X..." "...X..." "...X..."
+  "...X..." "...X..." "...X..." "...X..." "...X..."
+  "...XXXX"
+  "......." "......." "......." "......." "......."
+  "......." "......." "......." "......." ".......")
+
+(defun origami-click-fringe (event)
+  "EVENT click on fringe."
+  (interactive "e")
+  (let ((current-fringe (nth 1 (car (cdr event)))))
+    (when (eq current-fringe origami-indicators)
+      (mouse-set-point event)
+      (end-of-line)
+      (call-interactively #'origami-toggle-node))))
+
+(defun origami--create-ind-overlay-at-point ()
+  "Create indicator overlay at POS."
+  (let* ((pos (line-beginning-position))
+         (ov (make-overlay pos (1+ pos))))
+    (overlay-put ov 'creator 'origami)
+    (overlay-put ov 'priority origami-indicators-priority)
+    ov))
+
+(defun origami--create-ind-overlays (beg end)
+  "Return a list of indicator overlays."
+  (let ((ov-lst '()))
+    (save-excursion
+      (goto-char beg)
+      (while (< (point) end)
+        (push (origami--create-ind-overlay-at-point) ov-lst)
+        (forward-line 1)))
+    (origami--update-ind-overlays (reverse ov-lst) t)))
+
+(defun origami--active-ind-ov (show ov bitmap)
+  "Set active the indicator OV with BITMAP."
+  (overlay-put ov 'origami-indicators-active show)
+  (overlay-put ov 'before-string
+               (propertize
+                "…"
+                'display
+                `(,origami-indicators ,bitmap origami-fold-fringe-face))))
+
+(defun origami--update-ind-overlays (ov-lst show)
+  "Update indicators overlays OV-LST."
+  (let* ((len (length ov-lst))
+         (len-1 (1- len))
+         (first-ov (nth 0 ov-lst))
+         (last-ov (nth len-1 ov-lst))
+         (index 1))
+    (origami--active-ind-ov show first-ov
+                            (if show
+                                (if (> len 1) 'origami-fr-plus-tail 'origami-fr-plus)
+                              'origami-fr-minus))
+    (when (> len 1)
+      (origami--active-ind-ov show last-ov 'origami-fr-end))
+    (while (< index len-1)
+      (origami--active-ind-ov show (nth index ov-lst) 'origami-fr-center)
+      (cl-incf index)))
+  ov-lst)
 
 (provide 'origami)
 ;;; origami.el ends here
