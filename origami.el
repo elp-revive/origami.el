@@ -176,9 +176,9 @@ Key bindings:
   "Given a FOLD-OVERLAY, return the range that the corresponding \
 header overlay should cover.  Result is a cons cell of (begin . end)."
   (origami-util-with-current-buffer (overlay-buffer fold-overlay)
-    (let ((fold-begin (origami--header-overlay-begin fold-overlay))
-          (fold-end (origami--header-overlay-end fold-overlay)))
-      (cons fold-begin fold-end))))
+                                    (let ((fold-begin (origami--header-overlay-begin fold-overlay))
+                                          (fold-end (origami--header-overlay-end fold-overlay)))
+                                      (cons fold-begin fold-end))))
 
 (defun origami-header-overlay-reset-position (header-overlay)
   (-when-let (fold-ov (overlay-get header-overlay 'fold-overlay))
@@ -417,6 +417,8 @@ Optional argument CHILDREN can be add to the created node."
                    (butlast path))))
 
 (defun origami-fold-diff (old new on-add on-remove on-change)
+  "Not documented."
+  ;; TODO: Here will reach `max-lisp-eval-depth' error...
   (cl-labels ((diff-children (old-children new-children)
                              (let ((old (car old-children))
                                    (new (car new-children)))
