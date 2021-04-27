@@ -183,7 +183,7 @@
   :group 'origami)
 
 (defvar-local origami-ind--timer nil
-  "Timer for update indicators.k")
+  "Timer for update indicators.")
 
 (defvar-local origami-ind-buffer nil
   "Record the current buffer to display indicators.")
