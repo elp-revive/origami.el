@@ -1,10 +1,5 @@
 ;;; origami-util.el --- Utility module  -*- lexical-binding: t -*-
 
-;; Author: Shen, Jen-Chieh <jcs090218@gmail.com>
-;; Maintainer: Shen, Jen-Chieh <jcs090218@gmail.com>
-;; Keywords: utility tool
-;; URL: https://github.com/emacs-origami/origami.el
-
 ;; The MIT License (MIT)
 
 ;; Copyright (c) 2020-2021 Jen-Chieh Shen

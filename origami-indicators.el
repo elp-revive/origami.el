@@ -1,10 +1,5 @@
 ;;; origami-indicators.el --- Display indicators for origami  -*- lexical-binding: t -*-
 
-;; Author: Shen, Jen-Chieh <jcs090218@gmail.com>
-;; Maintainer: Shen, Jen-Chieh <jcs090218@gmail.com>
-;; Keywords: indicatros utility
-;; URL: https://github.com/emacs-origami/origami.el
-
 ;; The MIT License (MIT)
 
 ;; Copyright (c) 2021 Jen-Chieh Shen
