@@ -341,9 +341,7 @@ Optional argument CHILDREN can be add to the created node."
   (when node
     (if (origami-fold-is-root-node? node)
         (aref node 0)
-      (let ((start (overlay-start (origami-fold-data node))))
-        (if start (- start (origami-fold-offset node))
-          (origami-fold-offset node))))))
+      (- (overlay-start (origami-fold-data node)) (origami-fold-offset node)))))
 
 (defun origami-fold-end (node)
   "Return end point from NODE."

@@ -33,8 +33,7 @@
 
 (require 'origami-util)
 
-(declare-function origami-toggle-node "origami.el")
-(declare-function origami-reset "origami.el")
+(declare-function origami-get-fold-tree "origami.el")
 
 (defcustom origami-indicators nil
   "Display indicators on the left/right fringe, if nil don't render."
@@ -191,20 +190,19 @@
 
 (defun origami-ind--refresh (&rest _)
   "Refresh indicator overlays."
-  (when (buffer-live-p origami-ind-buffer)
-    (with-current-buffer origami-ind-buffer
-      (remove-overlays (point-min) (point-max) 'creator 'origami-indicators)
-      (let ((ovs (overlays-in (point-min) (point-max))) start end tmp-ovs)
-        (dolist (ov ovs)
-          (when (eq 'origami (overlay-get ov 'creator))
-            (setq start (overlay-start ov) end (overlay-end ov)
-                  tmp-ovs (overlay-get ov 'ind-ovs))
-            (when start
-              (if (equal start end) (delete-overlay ov)
-                (when (listp tmp-ovs) (mapc #'delete-overlay tmp-ovs))
-                (overlay-put ov 'ind-ovs (origami-ind--create-overlays start end)))))))
-      ;; Rebuild tree
-      (ignore-errors (origami-get-fold-tree origami-ind-buffer)))))
+  (origami-util-with-current-buffer origami-ind-buffer
+    (remove-overlays (point-min) (point-max) 'creator 'origami-indicators)
+    (let ((ovs (overlays-in (point-min) (point-max))) start end tmp-ovs)
+      (dolist (ov ovs)
+        (when (eq 'origami (overlay-get ov 'creator))
+          (setq start (overlay-start ov) end (overlay-end ov)
+                tmp-ovs (overlay-get ov 'ind-ovs))
+          (when start
+            (if (equal start end) (delete-overlay ov)
+              (when (listp tmp-ovs) (mapc #'delete-overlay tmp-ovs))
+              (overlay-put ov 'ind-ovs (origami-ind--create-overlays start end)))))))
+    ;; Rebuild tree
+    (ignore-errors (origami-get-fold-tree origami-ind-buffer))))
 
 (defun origami-ind--start-timer (&rest _)
   "Start refresh timer."
