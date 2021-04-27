@@ -106,7 +106,7 @@
   :group 'origami)
 
 (defun origami-find-occurrence-show-node ()
-  (call-interactively 'origami-show-node))
+  (call-interactively #'origami-show-node))
 
 ;;
 ;; (@* "Entry" )
@@ -982,8 +982,8 @@ performed to BUFFER."
 this buffer. Useful during development or if you uncover any bugs."
   (interactive (list (current-buffer)))
   (origami-setup-local-vars buffer)
-  (origami-remove-all-overlays buffer))
-
+  (origami-remove-all-overlays buffer)
+  (ignore-errors (call-interactively #'origami-show-node)))
 
 ;;; See origami-hide-overlay
 (defun origami--point-in-folded-overlay ()
