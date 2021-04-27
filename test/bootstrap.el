@@ -30,7 +30,7 @@
 
 (let* ((package-archives '(("melpa" . "https://melpa.org/packages/")
                            ("gnu" . "http://elpa.gnu.org/packages/")))
-       (pkgs '(s dash)))
+       (pkgs '(s dash fringe-helper)))
   (package-initialize)
   (package-refresh-contents)
 

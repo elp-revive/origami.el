@@ -5,7 +5,7 @@
 ;; Version: 4.1
 ;; Keywords: folding
 ;; URL: https://github.com/emacs-origami/origami.el
-;; Package-Requires: ((emacs "27.1") (s "1.9.0") (dash "2.5.0"))
+;; Package-Requires: ((emacs "27.1") (s "1.9.0") (dash "2.5.0") (fringe-helper "1.0.1"))
 
 ;; The MIT License (MIT)
 
@@ -43,6 +43,7 @@
 
 (require 'origami-util)
 (require 'origami-parsers)
+(require 'origami-indicators)
 
 ;;; fold display mode and faces
 
@@ -94,6 +95,8 @@
 
 (defvar origami-mode-map
   (let ((map (make-sparse-keymap)))
+    (define-key map [left-fringe mouse-1] #'origami-click-fringe)
+    (define-key map [right-fringe mouse-1] #'origami-click-fringe)
     map)
   "Keymap for `origami-mode'.")
 
@@ -103,7 +106,7 @@
   :group 'origami)
 
 (defun origami-find-occurrence-show-node ()
-  (call-interactively 'origami-show-node))
+  (call-interactively #'origami-show-node))
 
 ;;
 ;; (@* "Entry" )
@@ -115,12 +118,14 @@
   (setq next-error-move-function (lambda (ignored pos)
                                    (goto-char pos)
                                    (call-interactively 'origami-show-node)))
-  (add-hook 'clone-indirect-buffer-hook (lambda () (origami-reset (current-buffer)))))
+  (add-hook 'clone-indirect-buffer-hook (lambda () (origami-reset (current-buffer))))
+  (add-hook 'after-change-functions #'origami-ind--after-change-functions nil t))
 
 (defun origami--disable ()
   "Disable `origami' mode."
   (remove-hook 'occur-mode-find-occurrence-hook 'origami-find-occurrence-show-node t)
-  (setq next-error-move-function nil))
+  (setq next-error-move-function nil)
+  (remove-hook 'after-change-functions #'origami-ind--after-change-functions t))
 
 ;;;###autoload
 (define-minor-mode origami-mode
@@ -203,6 +208,9 @@ Argument BUFFER is the buffer we are concerning."
         (overlay-put header-ov 'fold-overlay ov)
         (overlay-put header-ov 'modification-hooks '(origami-header-modify-hook))
         (overlay-put ov 'header-ov header-ov))
+      ;; We create fringe overlay.
+      (let ((ind-ovs (origami-ind--create-overlays beg end)))
+        (overlay-put ov 'ind-ovs ind-ovs))
       ov)))
 
 (defun origami-hide-overlay (ov)
@@ -213,14 +221,17 @@ Argument BUFFER is the buffer we are concerning."
                                origami-fold-replacement))
   (overlay-put ov 'face 'origami-fold-replacement-face)
   (when origami-show-fold-header
-    (origami-activate-header (overlay-get ov 'header-ov))))
+    (origami-activate-header (overlay-get ov 'header-ov)))
+  (when origami-indicators
+    (origami-activate-indicators (overlay-get ov 'ind-ovs))))
 
 (defun origami-show-overlay (ov)
   "Hide overlay (OV) and cancel folding."
   (overlay-put ov 'invisible nil)
   (overlay-put ov 'display nil)
   (overlay-put ov 'face nil)
-  (origami-deactivate-header (overlay-get ov 'header-ov)))
+  (origami-deactivate-header (overlay-get ov 'header-ov))
+  (origami-deactivate-indicators (overlay-get ov 'ind-ovs)))
 
 (defun origami-hide-node-overlay (node)
   (-when-let (ov (origami-fold-data node))
@@ -231,6 +242,7 @@ Argument BUFFER is the buffer we are concerning."
     (origami-show-overlay ov)))
 
 (defun origami-activate-header (ov)
+  "Show header OV."
   ;; Reposition the header overlay. Since it extends before the folded area, it
   ;; may no longer cover the appropriate locations.
   (origami-header-overlay-reset-position ov)
@@ -243,10 +255,19 @@ Argument BUFFER is the buffer we are concerning."
                 '(left-fringe empty-line origami-fold-fringe-face))))
 
 (defun origami-deactivate-header (ov)
+  "Hide header OV."
   (overlay-put ov 'origami-header-active nil)
   (overlay-put ov 'face nil)
   (overlay-put ov 'before-string nil)
   (overlay-put ov 'after-string nil))
+
+(defun origami-activate-indicators (ov-lst)
+  "Show indicators OV-LST."
+  (origami-ind--update-overlays ov-lst nil))
+
+(defun origami-deactivate-indicators (ov-lst)
+  "Hide indicators OV-LST."
+  (origami-ind--update-overlays ov-lst t))
 
 (defun origami-isearch-show (_ov)
   "Show overlay."
@@ -692,7 +713,7 @@ INCLUDE-SIBLINGS will also open the siblings of the node at
 point up to the given depth. This can be useful if there is no
 single root in the document folding structure. To set it
 interactively, use a negative prefix arg."
-    (interactive (let* ((numeric-prefix-arg (prefix-numeric-value current-prefix-arg))
+  (interactive (let* ((numeric-prefix-arg (prefix-numeric-value current-prefix-arg))
                       (include-siblings (< numeric-prefix-arg 0)))
                  (list (current-buffer) (point) (abs numeric-prefix-arg) include-siblings)))
   (-when-let (old-tree (origami-get-fold-tree buffer))
@@ -963,8 +984,9 @@ performed to BUFFER."
 this buffer. Useful during development or if you uncover any bugs."
   (interactive (list (current-buffer)))
   (origami-setup-local-vars buffer)
-  (origami-remove-all-overlays buffer))
-
+  (origami-remove-all-overlays buffer)
+  (when origami-mode
+    (ignore-errors (call-interactively #'origami-show-node))))
 
 ;;; See origami-hide-overlay
 (defun origami--point-in-folded-overlay ()
