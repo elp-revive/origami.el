@@ -1,10 +1,5 @@
 ;;; origami-parsers.el --- Collection of parsers  -*- lexical-binding: t -*-
 
-;; Author: Greg Sexton <gregsexton@gmail.com>
-;; Maintainer: Shen, Jen-Chieh <jcs090218@gmail.com>
-;; Keywords: parsers
-;; URL: https://github.com/emacs-origami/origami.el
-
 ;; The MIT License (MIT)
 
 ;; Copyright (c) 2014 Greg Sexton
