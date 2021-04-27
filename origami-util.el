@@ -77,6 +77,12 @@
   "Return string from OV."
   (substring (buffer-string) (1- (overlay-start ov)) (1- (overlay-end ov))))
 
+(defmacro origami-util-with-current-buffer (buffer-or-name &rest body)
+  "Safe to use function `with-current-buffer'."
+  (declare (indent 1) (debug t))
+  `(when (buffer-live-p ,buffer-or-name)
+     (with-current-buffer ,buffer-or-name (progn ,@body))))
+
 ;;
 ;; (@* "Face" )
 ;;

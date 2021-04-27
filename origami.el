@@ -119,13 +119,15 @@
                                    (goto-char pos)
                                    (call-interactively 'origami-show-node)))
   (add-hook 'clone-indirect-buffer-hook (lambda () (origami-reset (current-buffer))))
-  (add-hook 'after-change-functions #'origami-ind--after-change-functions nil t))
+  (add-hook 'after-change-functions #'origami-ind--start-timer nil t)
+  (add-hook 'after-save-hook #'origami-ind--start-timer nil t))
 
 (defun origami--disable ()
   "Disable `origami' mode."
   (remove-hook 'occur-mode-find-occurrence-hook 'origami-find-occurrence-show-node t)
   (setq next-error-move-function nil)
-  (remove-hook 'after-change-functions #'origami-ind--after-change-functions t))
+  (remove-hook 'after-change-functions #'origami-ind--start-timer t)
+  (remove-hook 'after-save-hook #'origami-ind--start-timer t))
 
 ;;;###autoload
 (define-minor-mode origami-mode
@@ -141,8 +143,9 @@ Key bindings:
   :lighter nil
   :keymap origami-mode-map
   :init-value nil
-  (if origami-mode (origami--enable) (origami--disable))
-  (origami-reset (current-buffer)))
+  (when (assoc major-mode origami-parser-alist)
+    (if origami-mode (origami--enable) (origami--disable))
+    (origami-reset (current-buffer))))
 
 ;;;###autoload
 (define-global-minor-mode global-origami-mode origami-mode
@@ -172,10 +175,10 @@ Key bindings:
 (defun origami-header-overlay-range (fold-overlay)
   "Given a FOLD-OVERLAY, return the range that the corresponding \
 header overlay should cover.  Result is a cons cell of (begin . end)."
-  (with-current-buffer (overlay-buffer fold-overlay)
-    (let ((fold-begin (origami--header-overlay-begin fold-overlay))
-          (fold-end (origami--header-overlay-end fold-overlay)))
-      (cons fold-begin fold-end))))
+  (origami-util-with-current-buffer (overlay-buffer fold-overlay)
+                                    (let ((fold-begin (origami--header-overlay-begin fold-overlay))
+                                          (fold-end (origami--header-overlay-end fold-overlay)))
+                                      (cons fold-begin fold-end))))
 
 (defun origami-header-overlay-reset-position (header-overlay)
   (-when-let (fold-ov (overlay-get header-overlay 'fold-overlay))
@@ -204,7 +207,7 @@ Argument BUFFER is the buffer we are concerning."
       (let* ((range (origami-header-overlay-range ov))
              (header-ov (make-overlay (car range) (cdr range) buffer
                                       nil)))  ; no front advance
-        (overlay-put header-ov 'creator 'origami)
+        (overlay-put header-ov 'creator 'origami-headers)
         (overlay-put header-ov 'fold-overlay ov)
         (overlay-put header-ov 'modification-hooks '(origami-header-modify-hook))
         (overlay-put ov 'header-ov header-ov))
@@ -286,7 +289,9 @@ Argument BUFFER is the buffer we are concerning."
 
 (defun origami-remove-all-overlays (buffer)
   (with-current-buffer buffer
-    (remove-overlays (point-min) (point-max) 'creator 'origami)))
+    (remove-overlays (point-min) (point-max) 'creator 'origami)
+    (remove-overlays (point-min) (point-max) 'creator 'origami-headers)
+    (remove-overlays (point-min) (point-max) 'creator 'origami-indicators)))
 
 ;;; fold structure
 
@@ -412,6 +417,8 @@ Optional argument CHILDREN can be add to the created node."
                    (butlast path))))
 
 (defun origami-fold-diff (old new on-add on-remove on-change)
+  "Not documented."
+  ;; TODO: Here will reach `max-lisp-eval-depth' error...
   (cl-labels ((diff-children (old-children new-children)
                              (let ((old (car old-children))
                                    (new (car new-children)))
@@ -986,7 +993,7 @@ this buffer. Useful during development or if you uncover any bugs."
   (origami-setup-local-vars buffer)
   (origami-remove-all-overlays buffer)
   (when origami-mode
-    (ignore-errors (call-interactively #'origami-show-node))))
+    (call-interactively #'origami-show-node)))
 
 ;;; See origami-hide-overlay
 (defun origami--point-in-folded-overlay ()

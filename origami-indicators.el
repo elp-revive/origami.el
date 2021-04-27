@@ -34,7 +34,7 @@
 (require 'origami-util)
 
 (declare-function origami-toggle-node "origami.el")
-(declare-function origami-reset "origami.el")
+(declare-function origami-get-fold-tree "origami.el")
 
 (defcustom origami-indicators nil
   "Display indicators on the left/right fringe, if nil don't render."
@@ -72,8 +72,8 @@
   "XXXXXXX")
 
 (fringe-helper-define 'origami-fr-minus-tail nil
-  "......." "......." "......." "......." "......."
-  "......." "......." "......." "......." "......."
+  "........" "........" "........" "........" "........"
+  "........" "........" "........" "........" "........"
   "XXXXXXX"
   "X.....X"
   "X.....X"
@@ -81,22 +81,22 @@
   "X.....X"
   "X.....X"
   "XXXXXXX"
-  "...X..." "...X..." "...X..." "...X..." "...X..."
-  "...X..." "...X..." "...X..." "...X..." "...X...")
+  "...XX..." "...XX..." "...XX..." "...XX..." "...XX..."
+  "...XX..." "...XX..." "...XX..." "...XX..." "...XX...")
 
 (fringe-helper-define 'origami-fr-center nil
-  "...X..." "...X..." "...X..." "...X..." "...X..."
-  "...X..." "...X..." "...X..." "...X..." "...X..."
-  "...X..." "...X..." "...X..." "...X..." "...X..."
-  "...X..." "...X..." "...X..." "...X..." "...X..."
-  "...X..." "...X..." "...X...")
+  "...XX..." "...XX..." "...XX..." "...XX..." "...XX..."
+  "...XX..." "...XX..." "...XX..." "...XX..." "...XX..."
+  "...XX..." "...XX..." "...XX..." "...XX..." "...XX..."
+  "...XX..." "...XX..." "...XX..." "...XX..." "...XX..."
+  "...XX...")
 
 (fringe-helper-define 'origami-fr-end nil
-  "...X..." "...X..." "...X..." "...X..." "...X..."
-  "...X..." "...X..." "...X..." "...X..." "...X..."
-  "...X..." "...XXXX" "......."
-  "......." "......." "......." "......." "......."
-  "......." "......." "......." "......." ".......")
+  "...XX..." "...XX..." "...Xx..." "...Xx..." "...Xx..."
+  "...XX..." "...XX..." "...Xx..." "...Xx..." "...Xx..."
+  "...XX..." "...XXXXX" "...XXXXX"
+  "........" "........" "........" "........" "........"
+  "........" "........" "........" "........" "........")
 
 (defun origami-click-fringe (event)
   "EVENT click on fringe."
@@ -111,7 +111,7 @@
   "Create indicator overlay at current point."
   (let* ((pos (line-beginning-position))
          (ov (make-overlay pos (1+ pos))))
-    (overlay-put ov 'creator 'origami)
+    (overlay-put ov 'creator 'origami-indicators)
     ov))
 
 (defun origami-ind--create-overlays (beg end)
@@ -119,7 +119,7 @@
   (let ((ov-lst '()))
     (save-excursion
       (goto-char beg)
-      (while (<= (line-beginning-position) end)
+      (while (and (<= (line-beginning-position) end) (not (eobp)))
         (push (origami-ind--create-overlay-at-point) ov-lst)
         (forward-line 1)))
     (origami-ind--update-overlays (reverse ov-lst) t)))
@@ -150,7 +150,7 @@
 
 (defun origami--active-ind-ov (show ov bitmap)
   "SHOW the indicator OV with BITMAP."
-  (when origami-indicators
+  (when (and origami-indicators (overlayp ov))
     (overlay-put ov 'origami-indicators-active show)
     (overlay-put ov 'priority (origami-ind--get-priority bitmap))
     (overlay-put ov 'before-string (origami-ind--get-string show ov bitmap))))
@@ -178,28 +178,40 @@
 ;; (@* "Timer" )
 ;;
 
-(defcustom origami-indicators-time 0.8
+(defcustom origami-indicators-time 0.5
   "Indicators refresh rate in time."
   :type 'float
   :group 'origami)
 
-(defvar-local origaim-ind--timer nil
-  "Timer for update indicators.k")
+(defvar-local origami-ind--timer nil
+  "Timer for update indicators.")
 
-(defvar-local origaim-ind--buffer nil
+(defvar-local origami-ind-buffer nil
   "Record the current buffer to display indicators.")
 
-(defun origami-ind--refresh ()
+(defun origami-ind--refresh (&rest _)
   "Refresh indicator overlays."
-  (when (buffer-live-p origaim-ind--buffer)
-    (origami-reset origaim-ind--buffer)))
+  (origami-util-with-current-buffer origami-ind-buffer
+    (remove-overlays (point-min) (point-max) 'creator 'origami-indicators)
+    (let ((ovs (overlays-in (point-min) (point-max))) start end tmp-ovs)
+      (dolist (ov ovs)
+        (when (eq 'origami (overlay-get ov 'creator))
+          (setq start (overlay-start ov) end (overlay-end ov)
+                tmp-ovs (overlay-get ov 'ind-ovs))
+          (when start
+            (if (equal start end) (delete-overlay ov)
+              (when (listp tmp-ovs) (mapc #'delete-overlay tmp-ovs))
+              (overlay-put ov 'ind-ovs (origami-ind--create-overlays start end)))))))
+    ;; Rebuild tree
+    (ignore-errors (origami-get-fold-tree origami-ind-buffer))))
 
-(defun origami-ind--after-change-functions (_beg _end _len)
-  "After change functions."
-  (when (timerp origaim-ind--timer) (cancel-timer origaim-ind--timer))
-  (setq origaim-ind--buffer (current-buffer))
-  (setq origaim-ind--timer (run-with-idle-timer origami-indicators-time nil
-                                                #'origami-ind--refresh)))
+(defun origami-ind--start-timer (&rest _)
+  "Start refresh timer."
+  (when origami-indicators
+    (when (timerp origami-ind--timer) (cancel-timer origami-ind--timer))
+    (setq origami-ind-buffer (current-buffer)
+          origami-ind--timer (run-with-idle-timer origami-indicators-time nil
+                                                  #'origami-ind--refresh))))
 
 (provide 'origami-indicators)
 ;;; origami-indicators.el ends here
