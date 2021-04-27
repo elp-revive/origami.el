@@ -53,6 +53,11 @@
   :type 'integer
   :group 'origami)
 
+(defcustom origami-indicators-face-function nil
+  "Function call when apply to indicators face."
+  :type 'function
+  :group 'origami)
+
 (fringe-helper-define 'origami-fr-plus nil
   "XXXXXXX"
   "X.....X"
@@ -134,9 +139,12 @@
       (origami-fr-end (+ prior 1))
       (t prior))))
 
-(defun origami-ind--get-string (show bitmap)
-  "Return the string properties by SHOW and BITMAP."
-  (let ((str (propertize "…" 'display `(,origami-indicators ,bitmap origami-fold-fringe-face))))
+(defun origami-ind--get-string (show ov bitmap)
+  "Return the string properties for OV by SHOW and BITMAP."
+  (let* ((face (or (and (functionp origami-indicators-face-function)
+                        (funcall origami-indicators-face-function (overlay-start ov)))
+                   'origami-fold-fringe-face))
+         (str (propertize "…" 'display `(,origami-indicators ,bitmap ,face))))
     (if show str
       (cl-case bitmap
         (origami-fr-plus str)
@@ -150,7 +158,7 @@
   (when origami-indicators
     (overlay-put ov 'origami-indicators-active show)
     (overlay-put ov 'priority (origami-ind--get-priority bitmap))
-    (overlay-put ov 'before-string (origami-ind--get-string show bitmap))))
+    (overlay-put ov 'before-string (origami-ind--get-string show ov bitmap))))
 
 (defun origami-ind--update-overlays (ov-lst show)
   "SHOW indicators overlays OV-LST."
@@ -175,19 +183,28 @@
 ;; (@* "Timer" )
 ;;
 
-(defvar-local origaim-ind--timer nil
-  "Timer for update indicators.k")
-
 (defcustom origami-indicators-time 0.8
   "Indicators refresh rate in time."
   :type 'float
   :group 'origami)
 
+(defvar-local origaim-ind--timer nil
+  "Timer for update indicators.k")
+
+(defvar-local origaim-ind--buffer nil
+  "Record the current buffer to display indicators.")
+
+(defun origami-ind--refresh ()
+  "Refresh indicator overlays."
+  (when (buffer-live-p origaim-ind--buffer)
+    (origami-reset origaim-ind--buffer)))
+
 (defun origami-ind--after-change-functions (_beg _end _len)
   "After change functions."
   (when (timerp origaim-ind--timer) (cancel-timer origaim-ind--timer))
+  (setq origaim-ind--buffer (current-buffer))
   (setq origaim-ind--timer (run-with-idle-timer origami-indicators-time nil
-                                                #'origami-reset (current-buffer))))
+                                                #'origami-ind--refresh)))
 
 (provide 'origami-indicators)
 ;;; origami-indicators.el ends here
