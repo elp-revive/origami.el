@@ -33,6 +33,7 @@
 
 (require 'origami-util)
 
+(declare-function origami-toggle-node "origami.el")
 (declare-function origami-get-fold-tree "origami.el")
 
 (defcustom origami-indicators nil
