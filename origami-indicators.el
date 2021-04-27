@@ -206,10 +206,11 @@
 
 (defun origami-ind--start-timer (&rest _)
   "Start refresh timer."
-  (when (timerp origami-ind--timer) (cancel-timer origami-ind--timer))
-  (setq origami-ind-buffer (current-buffer)
-        origami-ind--timer (run-with-idle-timer origami-indicators-time nil
-                                                #'origami-ind--refresh)))
+  (when origami-indicators
+    (when (timerp origami-ind--timer) (cancel-timer origami-ind--timer))
+    (setq origami-ind-buffer (current-buffer)
+          origami-ind--timer (run-with-idle-timer origami-indicators-time nil
+                                                  #'origami-ind--refresh))))
 
 (provide 'origami-indicators)
 ;;; origami-indicators.el ends here
