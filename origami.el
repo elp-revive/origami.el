@@ -175,11 +175,10 @@ Key bindings:
 (defun origami-header-overlay-range (fold-overlay)
   "Given a FOLD-OVERLAY, return the range that the corresponding \
 header overlay should cover.  Result is a cons cell of (begin . end)."
-  (when (buffer-live-p (overlay-buffer fold-overlay))
-    (with-current-buffer (overlay-buffer fold-overlay)
-      (let ((fold-begin (origami--header-overlay-begin fold-overlay))
-            (fold-end (origami--header-overlay-end fold-overlay)))
-        (cons fold-begin fold-end)))))
+  (origami-util-with-current-buffer (overlay-buffer fold-overlay)
+    (let ((fold-begin (origami--header-overlay-begin fold-overlay))
+          (fold-end (origami--header-overlay-end fold-overlay)))
+      (cons fold-begin fold-end))))
 
 (defun origami-header-overlay-reset-position (header-overlay)
   (-when-let (fold-ov (overlay-get header-overlay 'fold-overlay))
@@ -344,7 +343,7 @@ Optional argument CHILDREN can be add to the created node."
         (aref node 0)
       (let ((start (overlay-start (origami-fold-data node))))
         (if start (- start (origami-fold-offset node))
-          (line-beginning-position))))))
+          (origami-fold-offset node))))))
 
 (defun origami-fold-end (node)
   "Return end point from NODE."
