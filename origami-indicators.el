@@ -194,11 +194,11 @@
   (when (buffer-live-p origaim-ind--buffer)
     (origami-reset origaim-ind--buffer)))
 
-(defun origami-ind--after-change-functions (_beg _end _len)
-  "After change functions."
+(defun origami-ind--start-timer (&rest _)
+  "Start refresh timer."
   (when (timerp origaim-ind--timer) (cancel-timer origaim-ind--timer))
-  (setq origaim-ind--buffer (current-buffer))
-  (setq origaim-ind--timer (run-with-idle-timer origami-indicators-time nil
+  (setq origaim-ind--buffer (current-buffer)
+        origaim-ind--timer (run-with-idle-timer origami-indicators-time nil
                                                 #'origami-ind--refresh)))
 
 (provide 'origami-indicators)

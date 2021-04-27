@@ -119,13 +119,15 @@
                                    (goto-char pos)
                                    (call-interactively 'origami-show-node)))
   (add-hook 'clone-indirect-buffer-hook (lambda () (origami-reset (current-buffer))))
-  (add-hook 'after-change-functions #'origami-ind--after-change-functions nil t))
+  (add-hook 'after-change-functions #'origami-ind--start-timer nil t)
+  (add-hook 'after-save-hook #'origami-ind--start-timer nil t))
 
 (defun origami--disable ()
   "Disable `origami' mode."
   (remove-hook 'occur-mode-find-occurrence-hook 'origami-find-occurrence-show-node t)
   (setq next-error-move-function nil)
-  (remove-hook 'after-change-functions #'origami-ind--after-change-functions t))
+  (remove-hook 'after-change-functions #'origami-ind--start-timer t)
+  (remove-hook 'after-save-hook #'origami-ind--start-timer t))
 
 ;;;###autoload
 (define-minor-mode origami-mode
