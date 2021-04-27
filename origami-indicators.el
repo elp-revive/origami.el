@@ -1,8 +1,8 @@
-;;; origami-indicators.el --- Flexible text folding  -*- lexical-binding: t -*-
+;;; origami-indicators.el --- Display indicators for origami  -*- lexical-binding: t -*-
 
 ;; Author: Shen, Jen-Chieh <jcs090218@gmail.com>
 ;; Maintainer: Shen, Jen-Chieh <jcs090218@gmail.com>
-;; Keywords: utility tool
+;; Keywords: indicatros utility
 ;; URL: https://github.com/emacs-origami/origami.el
 
 ;; The MIT License (MIT)
@@ -29,7 +29,7 @@
 
 ;;; Commentary:
 ;;
-;; Display indicators for origami.
+;; Display indicators for origami
 ;;
 
 ;;; Code:
