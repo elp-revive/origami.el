@@ -989,7 +989,7 @@ this buffer. Useful during development or if you uncover any bugs."
   (origami-setup-local-vars buffer)
   (origami-remove-all-overlays buffer)
   (when origami-mode
-    (ignore-errors (call-interactively #'origami-show-node))))
+    (call-interactively #'origami-show-node)))
 
 ;;; See origami-hide-overlay
 (defun origami--point-in-folded-overlay ()

@@ -72,8 +72,8 @@
   "XXXXXXX")
 
 (fringe-helper-define 'origami-fr-minus-tail nil
-  "......." "......." "......." "......." "......."
-  "......." "......." "......." "......." "......."
+  "........" "........" "........" "........" "........"
+  "........" "........" "........" "........" "........"
   "XXXXXXX"
   "X.....X"
   "X.....X"
@@ -81,22 +81,22 @@
   "X.....X"
   "X.....X"
   "XXXXXXX"
-  "...X..." "...X..." "...X..." "...X..." "...X..."
-  "...X..." "...X..." "...X..." "...X..." "...X...")
+  "...XX..." "...XX..." "...XX..." "...XX..." "...XX..."
+  "...XX..." "...XX..." "...XX..." "...XX..." "...XX...")
 
 (fringe-helper-define 'origami-fr-center nil
-  "...X..." "...X..." "...X..." "...X..." "...X..."
-  "...X..." "...X..." "...X..." "...X..." "...X..."
-  "...X..." "...X..." "...X..." "...X..." "...X..."
-  "...X..." "...X..." "...X..." "...X..." "...X..."
-  "...X..." "...X..." "...X...")
+  "...XX..." "...XX..." "...XX..." "...XX..." "...XX..."
+  "...XX..." "...XX..." "...XX..." "...XX..." "...XX..."
+  "...XX..." "...XX..." "...XX..." "...XX..." "...XX..."
+  "...XX..." "...XX..." "...XX..." "...XX..." "...XX..."
+  "...XX...")
 
 (fringe-helper-define 'origami-fr-end nil
-  "...X..." "...X..." "...X..." "...X..." "...X..."
-  "...X..." "...X..." "...X..." "...X..." "...X..."
-  "...X..." "...XXXX" "......."
-  "......." "......." "......." "......." "......."
-  "......." "......." "......." "......." ".......")
+  "...XX..." "...XX..." "...Xx..." "...Xx..." "...Xx..."
+  "...XX..." "...XX..." "...Xx..." "...Xx..." "...Xx..."
+  "...XX..." "...XXXXX" "...XXXXX"
+  "........" "........" "........" "........" "........"
+  "........" "........" "........" "........" "........")
 
 (defun origami-click-fringe (event)
   "EVENT click on fringe."
@@ -112,6 +112,7 @@
   (let* ((pos (line-beginning-position))
          (ov (make-overlay pos (1+ pos))))
     (overlay-put ov 'creator 'origami)
+    (overlay-put ov 'categoary 'indicators)
     ov))
 
 (defun origami-ind--create-overlays (beg end)
@@ -178,7 +179,7 @@
 ;; (@* "Timer" )
 ;;
 
-(defcustom origami-indicators-time 0.8
+(defcustom origami-indicators-time 0.5
   "Indicators refresh rate in time."
   :type 'float
   :group 'origami)
@@ -189,10 +190,14 @@
 (defvar-local origaim-ind--buffer nil
   "Record the current buffer to display indicators.")
 
-(defun origami-ind--refresh ()
+(defun origami-ind--refresh (&rest _)
   "Refresh indicator overlays."
   (when (buffer-live-p origaim-ind--buffer)
-    (origami-reset origaim-ind--buffer)))
+    (let ((ovs (overlays-at (point))))
+      (dolist (ov ovs)
+        (when (eq (overlay-get ov 'creator) 'origami)
+          (overlay-put ov 'ind-ovs (origami-ind--create-overlays
+                                    (overlay-start ov) (overlay-end ov))))))))
 
 (defun origami-ind--start-timer (&rest _)
   "Start refresh timer."
