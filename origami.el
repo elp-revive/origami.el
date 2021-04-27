@@ -1105,27 +1105,37 @@ and `origami-auto--hide-element-next-line'"
       (call-interactively #'origami-toggle-node))))
 
 (defun origami--create-ind-overlay-at-point ()
-  "Create indicator overlay at POS."
+  "Create indicator overlay at current point."
   (let* ((pos (line-beginning-position))
          (ov (make-overlay pos (1+ pos))))
     (overlay-put ov 'creator 'origami)
-    (overlay-put ov 'priority origami-indicators-priority)
     ov))
 
 (defun origami--create-ind-overlays (beg end)
-  "Return a list of indicator overlays."
+  "Return a list of indicator overlays from BEG to END."
   (let ((ov-lst '()))
     (save-excursion
       (goto-char beg)
-      (while (< (point) end)
+      (while (<= (line-beginning-position) end)
         (push (origami--create-ind-overlay-at-point) ov-lst)
         (forward-line 1)))
     (origami--update-ind-overlays (reverse ov-lst) t)))
+
+(defun origami--get-priority (bitmap)
+  "Get priority by BITMAP."
+  (let ((prior origami-indicators-priority))
+    (cl-case bitmap
+      (origami-fr-plus (+ prior 2))
+      (origami-fr-minus (+ prior 2))
+      (origami-fr-minus-tail (+ prior 2))
+      (origami-fr-end (+ prior 1))
+      (t prior))))
 
 (defun origami--active-ind-ov (show ov bitmap)
   "Set active the indicator OV with BITMAP."
   (when origami-indicators
     (overlay-put ov 'origami-indicators-active show)
+    (overlay-put ov 'priority (origami--get-priority bitmap))
     (overlay-put ov 'before-string
                  (propertize
                   "…"
