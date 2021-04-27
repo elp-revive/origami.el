@@ -111,8 +111,7 @@
   "Create indicator overlay at current point."
   (let* ((pos (line-beginning-position))
          (ov (make-overlay pos (1+ pos))))
-    (overlay-put ov 'creator 'origami)
-    (overlay-put ov 'categoary 'indicators)
+    (overlay-put ov 'creator 'origami-indicators)
     ov))
 
 (defun origami-ind--create-overlays (beg end)
@@ -120,7 +119,7 @@
   (let ((ov-lst '()))
     (save-excursion
       (goto-char beg)
-      (while (<= (line-beginning-position) end)
+      (while (and (<= (line-beginning-position) end) (not (eobp)))
         (push (origami-ind--create-overlay-at-point) ov-lst)
         (forward-line 1)))
     (origami-ind--update-overlays (reverse ov-lst) t)))
@@ -151,7 +150,7 @@
 
 (defun origami--active-ind-ov (show ov bitmap)
   "SHOW the indicator OV with BITMAP."
-  (when origami-indicators
+  (when (and origami-indicators (overlayp ov))
     (overlay-put ov 'origami-indicators-active show)
     (overlay-put ov 'priority (origami-ind--get-priority bitmap))
     (overlay-put ov 'before-string (origami-ind--get-string show ov bitmap))))
@@ -184,26 +183,34 @@
   :type 'float
   :group 'origami)
 
-(defvar-local origaim-ind--timer nil
+(defvar-local origami-ind--timer nil
   "Timer for update indicators.k")
 
-(defvar-local origaim-ind--buffer nil
+(defvar-local origami-ind-buffer nil
   "Record the current buffer to display indicators.")
 
 (defun origami-ind--refresh (&rest _)
   "Refresh indicator overlays."
-  (when (buffer-live-p origaim-ind--buffer)
-    (let ((ovs (overlays-at (point))))
-      (dolist (ov ovs)
-        (when (eq (overlay-get ov 'creator) 'origami)
-          (overlay-put ov 'ind-ovs (origami-ind--create-overlays
-                                    (overlay-start ov) (overlay-end ov))))))))
+  (when (buffer-live-p origami-ind-buffer)
+    (with-current-buffer origami-ind-buffer
+      (remove-overlays (point-min) (point-max) 'creator 'origami-indicators)
+      (let ((ovs (overlays-in (point-min) (point-max))) start end tmp-ovs)
+        (dolist (ov ovs)
+          (when (eq 'origami (overlay-get ov 'creator))
+            (setq start (overlay-start ov) end (overlay-end ov)
+                  tmp-ovs (overlay-get ov 'ind-ovs))
+            (when start
+              (if (equal start end) (delete-overlay ov)
+                (when (listp tmp-ovs) (mapc #'delete-overlay tmp-ovs))
+                (overlay-put ov 'ind-ovs (origami-ind--create-overlays start end)))))))
+      ;; Rebuild tree
+      (ignore-errors (origami-get-fold-tree origami-ind-buffer)))))
 
 (defun origami-ind--start-timer (&rest _)
   "Start refresh timer."
-  (when (timerp origaim-ind--timer) (cancel-timer origaim-ind--timer))
-  (setq origaim-ind--buffer (current-buffer)
-        origaim-ind--timer (run-with-idle-timer origami-indicators-time nil
+  (when (timerp origami-ind--timer) (cancel-timer origami-ind--timer))
+  (setq origami-ind-buffer (current-buffer)
+        origami-ind--timer (run-with-idle-timer origami-indicators-time nil
                                                 #'origami-ind--refresh)))
 
 (provide 'origami-indicators)

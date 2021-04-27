@@ -175,10 +175,11 @@ Key bindings:
 (defun origami-header-overlay-range (fold-overlay)
   "Given a FOLD-OVERLAY, return the range that the corresponding \
 header overlay should cover.  Result is a cons cell of (begin . end)."
-  (with-current-buffer (overlay-buffer fold-overlay)
-    (let ((fold-begin (origami--header-overlay-begin fold-overlay))
-          (fold-end (origami--header-overlay-end fold-overlay)))
-      (cons fold-begin fold-end))))
+  (when (buffer-live-p (overlay-buffer fold-overlay))
+    (with-current-buffer (overlay-buffer fold-overlay)
+      (let ((fold-begin (origami--header-overlay-begin fold-overlay))
+            (fold-end (origami--header-overlay-end fold-overlay)))
+        (cons fold-begin fold-end)))))
 
 (defun origami-header-overlay-reset-position (header-overlay)
   (-when-let (fold-ov (overlay-get header-overlay 'fold-overlay))
@@ -207,7 +208,7 @@ Argument BUFFER is the buffer we are concerning."
       (let* ((range (origami-header-overlay-range ov))
              (header-ov (make-overlay (car range) (cdr range) buffer
                                       nil)))  ; no front advance
-        (overlay-put header-ov 'creator 'origami)
+        (overlay-put header-ov 'creator 'origami-headers)
         (overlay-put header-ov 'fold-overlay ov)
         (overlay-put header-ov 'modification-hooks '(origami-header-modify-hook))
         (overlay-put ov 'header-ov header-ov))
@@ -289,7 +290,8 @@ Argument BUFFER is the buffer we are concerning."
 
 (defun origami-remove-all-overlays (buffer)
   (with-current-buffer buffer
-    (remove-overlays (point-min) (point-max) 'creator 'origami)))
+    (remove-overlays (point-min) (point-max) 'creator 'origami)
+    (remove-overlays (point-min) (point-max) 'creator 'origami-headers)))
 
 ;;; fold structure
 
@@ -340,7 +342,9 @@ Optional argument CHILDREN can be add to the created node."
   (when node
     (if (origami-fold-is-root-node? node)
         (aref node 0)
-      (- (overlay-start (origami-fold-data node)) (origami-fold-offset node)))))
+      (let ((start (overlay-start (origami-fold-data node))))
+        (if start (- start (origami-fold-offset node))
+          (line-beginning-position))))))
 
 (defun origami-fold-end (node)
   "Return end point from NODE."
