@@ -34,6 +34,9 @@
 
 ;;; Code:
 
+(require 'fringe-helper)
+
+(require 'origami-util)
 
 (defcustom origami-indicators nil
   "Display indicators on the left/right fringe, if nil don't render.k"

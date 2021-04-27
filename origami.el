@@ -40,7 +40,6 @@
 (require 'dash)
 (require 's)
 (require 'cl-lib)
-(require 'fringe-helper)
 
 (require 'origami-util)
 (require 'origami-parsers)
