@@ -143,8 +143,9 @@ Key bindings:
   :lighter nil
   :keymap origami-mode-map
   :init-value nil
-  (if origami-mode (origami--enable) (origami--disable))
-  (origami-reset (current-buffer)))
+  (when (assoc major-mode origami-parser-alist)
+    (if origami-mode (origami--enable) (origami--disable))
+    (origami-reset (current-buffer))))
 
 ;;;###autoload
 (define-global-minor-mode global-origami-mode origami-mode
