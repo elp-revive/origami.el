@@ -290,7 +290,8 @@ Argument BUFFER is the buffer we are concerning."
 (defun origami-remove-all-overlays (buffer)
   (with-current-buffer buffer
     (remove-overlays (point-min) (point-max) 'creator 'origami)
-    (remove-overlays (point-min) (point-max) 'creator 'origami-headers)))
+    (remove-overlays (point-min) (point-max) 'creator 'origami-headers)
+    (remove-overlays (point-min) (point-max) 'creator 'origami-indicators)))
 
 ;;; fold structure
 
