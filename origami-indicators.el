@@ -41,7 +41,7 @@
 (declare-function origami-toggle-node "origami.el")
 
 (defcustom origami-indicators nil
-  "Display indicators on the left/right fringe, if nil don't render.k"
+  "Display indicators on the left/right fringe, if nil don't render."
   :type '(choice (const :tag "none" nil)
                  (const :tag "On the right fringe" right-fringe)
                  (const :tag "On the left fringe" left-fringe))
@@ -145,14 +145,14 @@
         (t nil)))))
 
 (defun origami--active-ind-ov (show ov bitmap)
-  "Set active the indicator OV with BITMAP."
+  "SHOW the indicator OV with BITMAP."
   (when origami-indicators
     (overlay-put ov 'origami-indicators-active show)
     (overlay-put ov 'priority (origami-ind--get-priority bitmap))
     (overlay-put ov 'before-string (origami-ind--get-string show bitmap))))
 
 (defun origami-ind--update-overlays (ov-lst show)
-  "Update indicators overlays OV-LST."
+  "SHOW indicators overlays OV-LST."
   (let* ((len (length ov-lst))
          (len-1 (1- len))
          (first-ov (nth 0 ov-lst))
