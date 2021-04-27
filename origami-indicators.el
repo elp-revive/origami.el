@@ -168,5 +168,23 @@
       (cl-incf index)))
   ov-lst)
 
+;;
+;; (@* "Timer" )
+;;
+
+(defvar-local origaim-ind--timer nil
+  "Timer for update indicators.k")
+
+(defcustom origami-indicators-time 0.8
+  "Indicators refresh rate in time."
+  :type 'float
+  :group 'origami)
+
+(defun origami-ind--after-change-functions (_beg _end _len)
+  "After change functions."
+  (when (timerp origaim-ind--timer) (cancel-timer origaim-ind--timer))
+  (setq origaim-ind--timer (run-with-idle-timer origami-indicators-time nil
+                                                #'origami-reset (current-buffer))))
+
 (provide 'origami-indicators)
 ;;; origami-indicators.el ends here
