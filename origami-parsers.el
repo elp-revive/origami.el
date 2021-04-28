@@ -205,13 +205,13 @@ the node offset."
                           (let* ((res (build positions)) ; recurse
                                  (new-pos (car res))
                                  (children (cdr res))
-                                 (close-pos (cdar new-pos)))
+                                 (close-pos (cdar new-pos))
+                                 (node (funcall create beg-pos close-pos
+                                                (or (origami-util-function-offset fnc-offset beg-pos beg-match)
+                                                    (length beg-match))
+                                                children)))
                             ;; close with children
-                            (push (funcall create beg-pos close-pos
-                                           (or (origami-util-function-offset fnc-offset beg-pos beg-match)
-                                               (length beg-match))
-                                           children)
-                                  acc)
+                            (when node (push node acc))
                             (setq beg-pos nil
                                   beg-match nil
                                   positions (cdr new-pos))))
@@ -224,11 +224,12 @@ the node offset."
                     (origami-log ">> close: " cur-match)
                     (if beg-pos  ; close with no children
                         (progn
-                          (push (funcall create beg-pos cur-pos
-                                         (or (origami-util-function-offset fnc-offset beg-pos beg-match)
-                                             (length beg-match))
-                                         nil)
-                                acc)
+                          (let ((node (ignore-errors
+                                        (funcall create beg-pos cur-pos
+                                                 (or (origami-util-function-offset fnc-offset beg-pos beg-match)
+                                                     (length beg-match))
+                                                 nil))))
+                            (when node (push node acc)))
                           (setq beg-pos nil
                                 beg-match nil
                                 positions (cdr positions)))
