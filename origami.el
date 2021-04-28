@@ -176,9 +176,9 @@ Key bindings:
   "Given a FOLD-OVERLAY, return the range that the corresponding \
 header overlay should cover.  Result is a cons cell of (begin . end)."
   (origami-util-with-current-buffer (overlay-buffer fold-overlay)
-                                    (let ((fold-begin (origami--header-overlay-begin fold-overlay))
-                                          (fold-end (origami--header-overlay-end fold-overlay)))
-                                      (cons fold-begin fold-end))))
+    (let ((fold-begin (origami--header-overlay-begin fold-overlay))
+          (fold-end (origami--header-overlay-end fold-overlay)))
+      (cons fold-begin fold-end))))
 
 (defun origami-header-overlay-reset-position (header-overlay)
   (-when-let (fold-ov (overlay-get header-overlay 'fold-overlay))
@@ -993,7 +993,8 @@ this buffer. Useful during development or if you uncover any bugs."
   (origami-setup-local-vars buffer)
   (origami-remove-all-overlays buffer)
   (when origami-mode
-    (call-interactively #'origami-show-node)))
+    (call-interactively #'origami-show-node)
+    (origami-ind--refresh (current-buffer))))
 
 ;;; See origami-hide-overlay
 (defun origami--point-in-folded-overlay ()

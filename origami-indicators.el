@@ -189,9 +189,9 @@
 (defvar-local origami-ind-buffer nil
   "Record the current buffer to display indicators.")
 
-(defun origami-ind--refresh (&rest _)
+(defun origami-ind--refresh (&optional buffer &rest _)
   "Refresh indicator overlays."
-  (origami-util-with-current-buffer origami-ind-buffer
+  (origami-util-with-current-buffer (or buffer origami-ind-buffer)
     (ignore-errors (origami-get-fold-tree origami-ind-buffer))  ; first rebuild tree
     (remove-overlays (point-min) (point-max) 'creator 'origami-indicators)
     (let ((ovs (overlays-in (point-min) (point-max))) start end tmp-ovs)
