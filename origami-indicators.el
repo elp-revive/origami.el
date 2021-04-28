@@ -198,7 +198,7 @@
         (when (eq 'origami (overlay-get ov 'creator))
           (setq start (overlay-start ov) end (overlay-end ov)
                 tmp-ovs (overlay-get ov 'ind-ovs))
-          (unless (equal start end) 
+          (unless (equal start end)
             (when (listp tmp-ovs) (mapc #'delete-overlay tmp-ovs))
             (overlay-put ov 'ind-ovs (origami-ind--create-overlays start end))))))
     ;; Rebuild tree
