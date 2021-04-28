@@ -224,11 +224,10 @@ the node offset."
                     (origami-log ">> close: " cur-match)
                     (if beg-pos  ; close with no children
                         (progn
-                          (let ((node (ignore-errors
-                                        (funcall create beg-pos cur-pos
-                                                 (or (origami-util-function-offset fnc-offset beg-pos beg-match)
-                                                     (length beg-match))
-                                                 nil))))
+                          (let ((node (funcall create beg-pos cur-pos
+                                               (or (origami-util-function-offset fnc-offset beg-pos beg-match)
+                                                   (length beg-match))
+                                               nil)))
                             (when node (push node acc)))
                           (setq beg-pos nil
                                 beg-match nil

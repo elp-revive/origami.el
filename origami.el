@@ -478,7 +478,8 @@ be manipulated."
 
 (defun origami-fold-find-path-with-range (tree beg end)
   "Return the path to the most specific (deepest) node that has exactly \
- the range BEG-END, or null."
+the range BEG-END, or null."
+  (jcs-print tree beg end)
   (-when-let (path (origami-fold-find-path-containing-range tree beg end))
     (let ((last (-last-item path)))
       (when (and (= beg (origami-fold-beg last))
