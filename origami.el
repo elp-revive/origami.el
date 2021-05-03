@@ -95,8 +95,8 @@
 
 (defvar origami-mode-map
   (let ((map (make-sparse-keymap)))
-    (define-key map [left-fringe mouse-1] #'origami-click-fringe)
-    (define-key map [right-fringe mouse-1] #'origami-click-fringe)
+    (define-key map [left-fringe mouse-1] #'origami-indicators-click-fringe)
+    (define-key map [right-fringe mouse-1] #'origami-indicators-click-fringe)
     map)
   "Keymap for `origami-mode'.")
 
@@ -119,15 +119,15 @@
                                    (goto-char pos)
                                    (call-interactively 'origami-show-node)))
   (add-hook 'clone-indirect-buffer-hook (lambda () (origami-reset (current-buffer))))
-  (add-hook 'after-change-functions #'origami-ind--start-timer nil t)
-  (add-hook 'after-save-hook #'origami-ind--start-timer nil t))
+  (add-hook 'after-change-functions #'origami-indicators--start-timer nil t)
+  (add-hook 'after-save-hook #'origami-indicators--start-timer nil t))
 
 (defun origami--disable ()
   "Disable `origami' mode."
   (remove-hook 'occur-mode-find-occurrence-hook 'origami-find-occurrence-show-node t)
   (setq next-error-move-function nil)
-  (remove-hook 'after-change-functions #'origami-ind--start-timer t)
-  (remove-hook 'after-save-hook #'origami-ind--start-timer t))
+  (remove-hook 'after-change-functions #'origami-indicators--start-timer t)
+  (remove-hook 'after-save-hook #'origami-indicators--start-timer t))
 
 ;;;###autoload
 (define-minor-mode origami-mode
@@ -183,7 +183,8 @@ header overlay should cover.  Result is a cons cell of (begin . end)."
 (defun origami-header-overlay-reset-position (header-overlay)
   (-when-let (fold-ov (overlay-get header-overlay 'fold-overlay))
     (let ((range (origami-header-overlay-range fold-ov)))
-      (move-overlay header-overlay (car range) (cdr range)))))
+      ;; TODO: Remove `ignore-errors' here
+      (ignore-errors (move-overlay header-overlay (car range) (cdr range))))))
 
 (defun origami-header-modify-hook (header-overlay after-p _b _e &optional _l)
   "For overlay parameter `modification-hooks'."
@@ -212,7 +213,7 @@ Argument BUFFER is the buffer we are concerning."
         (overlay-put header-ov 'modification-hooks '(origami-header-modify-hook))
         (overlay-put ov 'header-ov header-ov))
       ;; We create fringe overlay.
-      (let ((ind-ovs (origami-ind--create-overlays beg end)))
+      (let ((ind-ovs (origami-indicators--create-overlays beg end)))
         (overlay-put ov 'ind-ovs ind-ovs))
       ov)))
 
@@ -266,11 +267,11 @@ Argument BUFFER is the buffer we are concerning."
 
 (defun origami-activate-indicators (ov-lst)
   "Show indicators OV-LST."
-  (origami-ind--update-overlays ov-lst nil))
+  (origami-indicators--update-overlays ov-lst nil))
 
 (defun origami-deactivate-indicators (ov-lst)
   "Hide indicators OV-LST."
-  (origami-ind--update-overlays ov-lst t))
+  (origami-indicators--update-overlays ov-lst t))
 
 (defun origami-isearch-show (_ov)
   "Show overlay."
@@ -388,6 +389,22 @@ Optional argument CHILDREN can be add to the created node."
 (defun origami-fold-data (node)
   "Return data from NODE."
   (when node (aref node 5)))
+
+(defun origami--node-overlays (children lst)
+  "Return overlays from CHILDREN and store it in LST."
+  (when children
+    (dolist (node children)
+      (push (origami-fold-data node) lst)
+      (setq lst (origami--node-overlays (origami-fold-children node) lst))))
+  lst)
+
+(defun origami-tree-overlays (buffer)
+  "Return all overlays from fold node tree in BUFFER."
+  (let (lst)
+    (when-let ((tree (origami-get-cached-tree buffer)))
+      (push (origami-fold-data tree) lst)
+      (setq lst (origami--node-overlays (origami-fold-children tree) lst)))
+    lst))
 
 ;;; fold structure utils
 
@@ -993,8 +1010,8 @@ this buffer. Useful during development or if you uncover any bugs."
   (origami-setup-local-vars buffer)
   (origami-remove-all-overlays buffer)
   (when origami-mode
-    (call-interactively #'origami-show-node)
-    (origami-ind--refresh (current-buffer))))
+    (origami-open-node buffer (point))
+    (origami-indicators--refresh buffer)))
 
 ;;; See origami-hide-overlay
 (defun origami--point-in-folded-overlay ()
