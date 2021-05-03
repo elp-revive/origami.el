@@ -148,7 +148,7 @@
         (origami-fr-end nil)
         (t nil)))))
 
-(defun origami--active-ind-ov (show ov bitmap)
+(defun origami-ind--active-ov (show ov bitmap)
   "SHOW the indicator OV with BITMAP."
   (when (and origami-indicators (overlayp ov))
     (overlay-put ov 'origami-indicators-active show)
@@ -162,15 +162,15 @@
          (first-ov (nth 0 ov-lst))
          (last-ov (nth len-1 ov-lst))
          (index 1))
-    (origami--active-ind-ov show first-ov
+    (origami-ind--active-ov show first-ov
                             (if show
                                 (if (> len 1)
                                     'origami-fr-minus-tail 'origami-fr-minus)
                               'origami-fr-plus))
     (when (> len 1)
-      (origami--active-ind-ov show last-ov 'origami-fr-end))
+      (origami-ind--active-ov show last-ov 'origami-fr-end))
     (while (< index len-1)
-      (origami--active-ind-ov show (nth index ov-lst) 'origami-fr-center)
+      (origami-ind--active-ov show (nth index ov-lst) 'origami-fr-center)
       (cl-incf index)))
   ov-lst)
 
@@ -186,11 +186,25 @@
 (defvar-local origami-ind--timer nil
   "Timer for update indicators.")
 
+(defun origami-ind--duplicate-overlay-p (lst ov)
+  ""
+  (cl-some
+   (lambda (history-ov)
+     (and (= (overlay-start history-ov) (overlay-start ov))
+          (= (overlay-end history-ov) (overlay-end ov))))
+   lst))
+
 (defun origami-ind--refresh (&optional buffer &rest _)
   "Refresh indicator overlays."
   (origami-util-with-current-buffer buffer
-    (ignore-errors (origami-get-fold-tree buffer))  ; first rebuild tree
+    (call-interactively #'origami-open-node)  ; first rebuild tree
+    ;; Remove other invalid obsolete overlays
+    (let ((ovs (origami-tree-overlays buffer)))
+      (dolist (ov (origami-util-overlays-by-creator 'origami))
+        (unless (memq ov ovs) (delete-overlay ov))))
+    ;; Remove all indicator overlays
     (remove-overlays (point-min) (point-max) 'creator 'origami-indicators)
+    ;; Reapply indicator overlays
     (let ((ovs (overlays-in (point-min) (point-max))) start end tmp-ovs)
       (dolist (ov ovs)
         (when (eq 'origami (overlay-get ov 'creator))

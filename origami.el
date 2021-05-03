@@ -183,7 +183,8 @@ header overlay should cover.  Result is a cons cell of (begin . end)."
 (defun origami-header-overlay-reset-position (header-overlay)
   (-when-let (fold-ov (overlay-get header-overlay 'fold-overlay))
     (let ((range (origami-header-overlay-range fold-ov)))
-      (move-overlay header-overlay (car range) (cdr range)))))
+      ;; TODO: Remove `ignore-errors' here
+      (ignore-errors (move-overlay header-overlay (car range) (cdr range))))))
 
 (defun origami-header-modify-hook (header-overlay after-p _b _e &optional _l)
   "For overlay parameter `modification-hooks'."
@@ -388,6 +389,22 @@ Optional argument CHILDREN can be add to the created node."
 (defun origami-fold-data (node)
   "Return data from NODE."
   (when node (aref node 5)))
+
+(defun origami--node-overlays (children lst)
+  "Return overlays from CHILDREN and store it in LST."
+  (when children
+    (dolist (node children)
+      (push (origami-fold-data node) lst)
+      (setq lst (origami--node-overlays (origami-fold-children node) lst))))
+  lst)
+
+(defun origami-tree-overlays (buffer)
+  "Return all overlays from fold node tree in BUFFER."
+  (let (lst)
+    (when-let ((tree (origami-get-cached-tree buffer)))
+      (push (origami-fold-data tree) lst)
+      (setq lst (origami--node-overlays (origami-fold-children tree) lst)))
+    lst))
 
 ;;; fold structure utils
 
