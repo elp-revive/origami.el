@@ -186,13 +186,10 @@
 (defvar-local origami-ind--timer nil
   "Timer for update indicators.")
 
-(defvar-local origami-ind-buffer nil
-  "Record the current buffer to display indicators.")
-
 (defun origami-ind--refresh (&optional buffer &rest _)
   "Refresh indicator overlays."
-  (origami-util-with-current-buffer (or buffer origami-ind-buffer)
-    (ignore-errors (origami-get-fold-tree origami-ind-buffer))  ; first rebuild tree
+  (origami-util-with-current-buffer buffer
+    (ignore-errors (origami-get-fold-tree buffer))  ; first rebuild tree
     (remove-overlays (point-min) (point-max) 'creator 'origami-indicators)
     (let ((ovs (overlays-in (point-min) (point-max))) start end tmp-ovs)
       (dolist (ov ovs)
@@ -207,9 +204,8 @@
   "Start refresh timer."
   (when origami-indicators
     (when (timerp origami-ind--timer) (cancel-timer origami-ind--timer))
-    (setq origami-ind-buffer (current-buffer)
-          origami-ind--timer (run-with-idle-timer origami-indicators-time nil
-                                                  #'origami-ind--refresh))))
+    (setq origami-ind--timer (run-with-idle-timer origami-indicators-time nil
+                                                  #'origami-ind--refresh (current-buffer)))))
 
 (provide 'origami-indicators)
 ;;; origami-indicators.el ends here
