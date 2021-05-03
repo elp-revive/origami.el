@@ -191,7 +191,7 @@
 (defun origami-indicators--refresh (&optional buffer &rest _)
   "Refresh indicator overlays."
   (origami-util-with-current-buffer buffer
-    (call-interactively #'origami-open-node)  ; first rebuild tree
+    (ignore-errors (call-interactively #'origami-open-node))  ; first rebuild tree
     ;; Remove other invalid obsolete overlays
     (let ((ovs (origami-tree-overlays buffer)))
       (dolist (ov (origami-util-overlays-by-creator 'origami))

@@ -267,11 +267,11 @@ Argument BUFFER is the buffer we are concerning."
 
 (defun origami-activate-indicators (ov-lst)
   "Show indicators OV-LST."
-  (origami-ind--update-overlays ov-lst nil))
+  (origami-indicators--update-overlays ov-lst nil))
 
 (defun origami-deactivate-indicators (ov-lst)
   "Hide indicators OV-LST."
-  (origami-ind--update-overlays ov-lst t))
+  (origami-indicators--update-overlays ov-lst t))
 
 (defun origami-isearch-show (_ov)
   "Show overlay."
@@ -1010,8 +1010,8 @@ this buffer. Useful during development or if you uncover any bugs."
   (origami-setup-local-vars buffer)
   (origami-remove-all-overlays buffer)
   (when origami-mode
-    (call-interactively #'origami-show-node)
-    (origami-ind--refresh (current-buffer))))
+    (origami-open-node buffer (point))
+    (origami-indicators--refresh buffer)))
 
 ;;; See origami-hide-overlay
 (defun origami--point-in-folded-overlay ()
