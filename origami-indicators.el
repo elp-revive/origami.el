@@ -34,7 +34,8 @@
 (require 'origami-util)
 
 (declare-function origami-toggle-node "origami.el")
-(declare-function origami-get-fold-tree "origami.el")
+(declare-function origami-open-node "origami.el")
+(declare-function origami-tree-overlays "origami.el")
 
 (defcustom origami-indicators nil
   "Display indicators on the left/right fringe, if nil don't render."
