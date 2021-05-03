@@ -95,8 +95,8 @@
 
 (defvar origami-mode-map
   (let ((map (make-sparse-keymap)))
-    (define-key map [left-fringe mouse-1] #'origami-click-fringe)
-    (define-key map [right-fringe mouse-1] #'origami-click-fringe)
+    (define-key map [left-fringe mouse-1] #'origami-indicators-click-fringe)
+    (define-key map [right-fringe mouse-1] #'origami-indicators-click-fringe)
     map)
   "Keymap for `origami-mode'.")
 
@@ -119,15 +119,15 @@
                                    (goto-char pos)
                                    (call-interactively 'origami-show-node)))
   (add-hook 'clone-indirect-buffer-hook (lambda () (origami-reset (current-buffer))))
-  (add-hook 'after-change-functions #'origami-ind--start-timer nil t)
-  (add-hook 'after-save-hook #'origami-ind--start-timer nil t))
+  (add-hook 'after-change-functions #'origami-indicators--start-timer nil t)
+  (add-hook 'after-save-hook #'origami-indicators--start-timer nil t))
 
 (defun origami--disable ()
   "Disable `origami' mode."
   (remove-hook 'occur-mode-find-occurrence-hook 'origami-find-occurrence-show-node t)
   (setq next-error-move-function nil)
-  (remove-hook 'after-change-functions #'origami-ind--start-timer t)
-  (remove-hook 'after-save-hook #'origami-ind--start-timer t))
+  (remove-hook 'after-change-functions #'origami-indicators--start-timer t)
+  (remove-hook 'after-save-hook #'origami-indicators--start-timer t))
 
 ;;;###autoload
 (define-minor-mode origami-mode
@@ -213,7 +213,7 @@ Argument BUFFER is the buffer we are concerning."
         (overlay-put header-ov 'modification-hooks '(origami-header-modify-hook))
         (overlay-put ov 'header-ov header-ov))
       ;; We create fringe overlay.
-      (let ((ind-ovs (origami-ind--create-overlays beg end)))
+      (let ((ind-ovs (origami-indicators--create-overlays beg end)))
         (overlay-put ov 'ind-ovs ind-ovs))
       ov)))
 
