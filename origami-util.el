@@ -87,6 +87,14 @@
   "Return string from OV."
   (substring (buffer-string) (1- (overlay-start ov)) (1- (overlay-end ov))))
 
+(defun origami-util-overlays-by-creator (creator)
+  "Return list of overlays by CREATOR."
+  (let ((lst '()) (ovs (overlays-in (point-min) (point-max))))
+    (dolist (ov ovs)
+      (when (eq creator (overlay-get ov 'creator))
+        (push ov lst)))
+    lst))
+
 ;;
 ;; (@* "Face" )
 ;;
