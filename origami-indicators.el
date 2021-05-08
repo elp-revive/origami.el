@@ -92,10 +92,17 @@
   "...XX..." "...XX..." "...XX..." "...XX..." "...XX..."
   "...XX...")
 
-(fringe-helper-define 'origami-indicators-fr-end nil
-  "...XX..." "...XX..." "...Xx..." "...Xx..." "...Xx..."
-  "...XX..." "...XX..." "...Xx..." "...Xx..." "...Xx..."
+(fringe-helper-define 'origami-indicators-fr-end-left nil
+  "...XX..." "...XX..." "...XX..." "...XX..." "...XX..."
+  "...XX..." "...XX..." "...XX..." "...XX..." "...XX..."
   "...XX..." "...XXXXX" "...XXXXX"
+  "........" "........" "........" "........" "........"
+  "........" "........" "........" "........" "........")
+
+(fringe-helper-define 'origami-indicators-fr-end-right nil
+  "...XX..." "...XX..." "...XX..." "...XX..." "...XX..."
+  "...XX..." "...XX..." "...XX..." "...XX..." "...XX..."
+  "...XX..." "XXXXX..." "XXXXX..."
   "........" "........" "........" "........" "........"
   "........" "........" "........" "........" "........")
 
@@ -132,7 +139,8 @@
       (origami-indicators-fr-plus (+ prior 2))
       (origami-indicators-fr-minus (+ prior 2))
       (origami-indicators-fr-minus-tail (+ prior 2))
-      (origami-indicators-fr-end (+ prior 1))
+      (origami-indicators-fr-end-left (+ prior 1))
+      (origami-indicators-fr-end-right (+ prior 1))
       (t prior))))
 
 (defun origami-indicators--get-string (show ov bitmap)
@@ -146,7 +154,8 @@
         (origami-indicators-fr-plus str)
         (origami-indicators-fr-minus nil)
         (origami-indicators-fr-minus-tail nil)
-        (origami-indicators-fr-end nil)
+        (origami-indicators-fr-end-left nil)
+        (origami-indicators-fr-end-right nil)
         (t nil)))))
 
 (defun origami-indicators--active-ov (show ov bitmap)
@@ -155,6 +164,13 @@
     (overlay-put ov 'origami-indicators-active show)
     (overlay-put ov 'priority (origami-indicators--get-priority bitmap))
     (overlay-put ov 'before-string (origami-indicators--get-string show ov bitmap))))
+
+(defun origami-indicators--get-end-fringe ()
+  "Return end fringe bitmap according to variable `origami-indicators'."
+  (cl-case origami-indicators
+    (left-fringe 'origami-indicators-fr-end-left)
+    (right-fringe 'origami-indicators-fr-end-right)
+    (t (user-error "Invalid indicators fringe type"))))
 
 (defun origami-indicators--update-overlays (ov-lst show)
   "SHOW indicators overlays OV-LST."
@@ -170,7 +186,7 @@
              'origami-indicators-fr-minus-tail 'origami-indicators-fr-minus)
        'origami-indicators-fr-plus))
     (when (> len 1)
-      (origami-indicators--active-ov show last-ov 'origami-indicators-fr-end))
+      (origami-indicators--active-ov show last-ov (origami-indicators--get-end-fringe)))
     (while (< index len-1)
       (origami-indicators--active-ov show (nth index ov-lst) 'origami-indicators-fr-center)
       (cl-incf index)))
