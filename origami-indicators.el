@@ -167,10 +167,11 @@
 
 (defun origami-indicators--get-end-fringe ()
   "Return end fringe bitmap according to variable `origami-indicators'."
-  (cl-case origami-indicators
-    (left-fringe 'origami-indicators-fr-end-left)
-    (right-fringe 'origami-indicators-fr-end-right)
-    (t (user-error "Invalid indicators fringe type"))))
+  (when origami-indicators  ; accept nil value
+    (cl-case origami-indicators
+      (left-fringe 'origami-indicators-fr-end-left)
+      (right-fringe 'origami-indicators-fr-end-right)
+      (t (user-error "Invalid indicators fringe type: %s" origami-indicators)))))
 
 (defun origami-indicators--update-overlays (ov-lst show)
   "SHOW indicators overlays OV-LST."
