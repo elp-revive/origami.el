@@ -636,9 +636,10 @@ with the current state and the current node at each iteration."
 
 (defun origami-rebuild-tree? (buffer)
   "Determines if the tree needs to be rebuilt for BUFFER since it was last built."
-  (when (local-variable-p 'origami-tree-tick)
-    (not (= (buffer-local-value 'origami-tree-tick buffer)
-            (buffer-modified-tick buffer)))))
+  (if (local-variable-p 'origami-tree-tick buffer)
+      (not (= (buffer-local-value 'origami-tree-tick buffer)
+              (buffer-modified-tick buffer)))
+    (origami-reset buffer)))
 
 (defun origami-build-tree (buffer parser)
   "Build the tree for BUFFER."
@@ -649,10 +650,11 @@ with the current state and the current node at each iteration."
 
 (defun origami--get-parser-from-alist (buffer)
   "Return BUFFER parser from alist."
-  (cdr (assoc (if (local-variable-p 'origami-fold-style)
-                  (buffer-local-value 'origami-fold-style buffer)
-                (buffer-local-value 'major-mode buffer))
-              origami-parser-alist)))
+  (or (cdr (assoc (if (local-variable-p 'origami-fold-style)
+                      (buffer-local-value 'origami-fold-style buffer)
+                    (buffer-local-value 'major-mode buffer))
+                  origami-parser-alist))
+      'origami-indent-parser))
 
 (defun origami--create (parser-gen buffer)
   "Create BUFFER parser function by PARSER-GEN."
@@ -679,9 +681,9 @@ with the current state and the current node at each iteration."
 (defun origami-get-fold-tree (buffer)
   "Build the tree if it hasn't already been built otherwise fetch cached tree."
   (when origami-mode
-    (when-let ((parser (origami-get-parser buffer)))
-      (if (origami-rebuild-tree? buffer) (origami-build-tree buffer parser)
-        (origami-get-cached-tree buffer)))))
+    (if (origami-rebuild-tree? buffer)
+        (origami-build-tree buffer (origami-get-parser buffer))
+      (origami-get-cached-tree buffer))))
 
 (defun origami-apply-new-tree (_buffer old-tree new-tree)
   (when new-tree
