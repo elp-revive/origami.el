@@ -646,6 +646,15 @@ with the current state and the current node at each iteration."
       (let ((contents (buffer-string)))
         (-> parser (funcall contents) origami-fold-root-node)))))
 
+(defun origami--get-parser-from-alist (buffer)
+  "Return BUFFER parser from alist."
+  (or (cdr (assoc (if (local-variable-p 'origami-fold-style)
+                      (buffer-local-value 'origami-fold-style buffer)
+                    (buffer-local-value 'major-mode buffer))
+                  origami-parser-alist))
+      ;; TODO: I guess this is the default parser?
+      'origami-indent-parser))
+
 (defun origami-get-parser (buffer)
   "Get the possible parser for BUFFER."
   (let* ((cached-tree (origami-get-cached-tree buffer))
@@ -660,23 +669,17 @@ with the current state and the current node at each iteration."
                                        -last-item
                                        origami-fold-data)
                                      (origami-create-overlay beg end offset buffer)))))))
-    (-when-let
-        (parser-gen (or (cdr (assoc (if (local-variable-p 'origami-fold-style)
-                                        (buffer-local-value 'origami-fold-style buffer)
-                                      (buffer-local-value 'major-mode buffer))
-                                    origami-parser-alist))
-                        'origami-indent-parser))
+    (-when-let (parser-gen (origami--get-parser-from-alist buffer))
       (origami-log "Selected parser %s" parser-gen)
       (funcall parser-gen create))))
 
 (defun origami-get-fold-tree (buffer)
   "Build the tree if it hasn't already been built otherwise fetch cached tree."
   (when origami-mode
-    (let ((parser (ignore-errors (origami-get-parser buffer))))
-      (if parser
-          (if (origami-rebuild-tree? buffer) (origami-build-tree buffer parser)
-            (origami-get-cached-tree buffer))
-        (user-error "[WARNING] No parser specify in major-mode, `%s`" (with-current-buffer buffer major-mode))))))
+    (if-let ((parser (origami-get-parser buffer)))
+        (if (origami-rebuild-tree? buffer) (origami-build-tree buffer parser)
+          (origami-get-cached-tree buffer))
+      (user-error "[WARNING] No parser specify in major-mode, `%s`" (buffer-local-value 'major-mode buffer)))))
 
 (defun origami-apply-new-tree (_buffer old-tree new-tree)
   (when new-tree
