@@ -635,8 +635,9 @@ with the current state and the current node at each iteration."
 
 (defun origami-rebuild-tree? (buffer)
   "Determines if the tree needs to be rebuilt for BUFFER since it was last built."
-  (not (= (buffer-local-value 'origami-tree-tick buffer)
-          (buffer-modified-tick buffer))))
+  (when (local-variable-p 'origami-tree-tick)
+    (not (= (buffer-local-value 'origami-tree-tick buffer)
+            (buffer-modified-tick buffer)))))
 
 (defun origami-build-tree (buffer parser)
   "Build the tree for BUFFER."
@@ -671,9 +672,11 @@ with the current state and the current node at each iteration."
 (defun origami-get-fold-tree (buffer)
   "Build the tree if it hasn't already been built otherwise fetch cached tree."
   (when origami-mode
-    (if (origami-rebuild-tree? buffer)
-        (origami-build-tree buffer (origami-get-parser buffer))
-      (origami-get-cached-tree buffer))))
+    (let ((parser (ignore-errors (origami-get-parser buffer))))
+      (if parser
+          (if (origami-rebuild-tree? buffer) (origami-build-tree buffer parser)
+            (origami-get-cached-tree buffer))
+        (user-error "[WARNING] No parser specify in major-mode, `%s`" (with-current-buffer buffer major-mode))))))
 
 (defun origami-apply-new-tree (_buffer old-tree new-tree)
   (when new-tree
