@@ -5,13 +5,17 @@ All notable changes to this project will be documented in this file.
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
 
-## 4.1
-> Released Mar 2, 2021
+## 4.2 (Unreleased)
+> Released N/A
 
 * Add new feature, `indicators`.
 * Add support for JSON.
 * Add support for HTML.
 * Add support for XML.
+
+## 4.1
+> Released Mar 2, 2021
+
 * Fixed `issue from c-style` overlap node.
 
 ## 4.0
