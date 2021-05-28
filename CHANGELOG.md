@@ -5,30 +5,38 @@ All notable changes to this project will be documented in this file.
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
 
-### 2021-04-28
+## 4.1
+> Released Mar 2, 2021
 
 * Add new feature, `indicators`.
-
-### 2021-03-18
-
 * Add support for JSON.
-
-### 2021-03-17
-
 * Add support for HTML.
 * Add support for XML.
-
-### 2021-02-05
-
 * Fixed `issue from c-style` overlap node.
 
-### 2021-02-04
+## 4.0
+> Released Feb 4, 2021
 
 * Expand `c-style` parser to the beginning of line.
 * Add support for multiline comment in Lua.
 * Add `else` region folding.
-
-### 2021-02-03
-
 * Fixed filtering error if previous line is comment/string block.
 * Add Ruby support.
+
+## 3.0
+> Released Jan 30, 2021
+
+* Add CI test
+* Fixed all linting issues
+
+## 3.0
+> Released Jan 26, 2021
+
+* Fixed all compile warnings
+* Code clean up and improve document string
+* Resolved error, void variable `origami-mode-map`
+
+## 1.0
+> Released May 14, 2020
+
+* Upstream release
