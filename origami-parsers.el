@@ -588,6 +588,7 @@ See function `origami-python-parser' description for argument CREATE."
   (lambda (content)
     (with-temp-buffer
       (insert content)
+      ;; Prevent infinite recursive
       (let (prog-mode-hook after-change-major-mode-hook) (python-mode))
       (origami-python-subparser create (point-min) (point-max)))))
 
