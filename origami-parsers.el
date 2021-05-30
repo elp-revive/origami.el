@@ -588,7 +588,7 @@ See function `origami-python-parser' description for argument CREATE."
   (lambda (content)
     (with-temp-buffer
       (insert content)
-      (python-mode)
+      (let (prog-mode-hook after-change-major-mode-hook) (python-mode))
       (origami-python-subparser create (point-min) (point-max)))))
 
 (defun origami-python-parser (create)
