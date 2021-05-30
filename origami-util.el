@@ -87,11 +87,21 @@
   "Return string from OV."
   (substring (buffer-string) (1- (overlay-start ov)) (1- (overlay-end ov))))
 
-(defun origami-util-overlays-by-creator (creator)
-  "Return list of overlays by CREATOR."
-  (let ((lst '()) (ovs (overlays-in (point-min) (point-max))))
+(defun origami-util-overlays-at (prop name &optional pos)
+  "Return overlays with PROP of NAME at POS."
+  (unless pos (setq pos (point)))
+  (let ((lst '()) (ovs (overlays-at pos)))
     (dolist (ov ovs)
-      (when (eq creator (overlay-get ov 'creator))
+      (when (eq name (overlay-get ov prop))
+        (push ov lst)))
+    lst))
+
+(defun origami-util-overlays-in (prop name &optional beg end)
+  "Return overlays with PROP of NAME, from region BEG to END."
+  (unless beg (setq beg (point-min))) (unless end (setq end (point-max)))
+  (let ((lst '()) (ovs (overlays-in beg end)))
+    (dolist (ov ovs)
+      (when (eq name (overlay-get ov prop))
         (push ov lst)))
     lst))
 
