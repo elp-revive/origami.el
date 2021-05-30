@@ -645,21 +645,34 @@ See function `origami-python-parser' description for argument CREATE."
            (end-regex (origami-util-keywords-regex end))
            (else-regex (origami-util-keywords-regex else))
            (all-regex (origami-util-keywords-regex (append beg end else)))
+           (last-beg-pt -1) (current-beg-pt -1)
+           overlaps-pts
            (positions
             (origami-get-positions
              content all-regex
              (lambda (pos &rest _) (origami-filter-code-face pos))
              (lambda (match &rest _)
+               (setq current-beg-pt (line-beginning-position))
                (if (origami-util-contain-list-type-str end match 'strict)
-                   ;; keep end pos on separate line on folding
-                   (1- (line-beginning-position))
-                 (line-beginning-position))))))
+                   (if (= last-beg-pt current-beg-pt)
+                       (progn
+                         (push current-beg-pt overlaps-pts)
+                         (- (point) (length match)))
+                     ;; keep end pos on separate line on folding
+                     (1- current-beg-pt))
+                 (setq last-beg-pt current-beg-pt)
+                 current-beg-pt)))))
       (origami-build-pair-tree create beg-regex end-regex else-regex
                                positions
                                (lambda (match &rest _)
-                                 (if (string= "function" match)
-                                     (origami-search-forward ")" #'origami-filter-code-face)
-                                   (line-end-position)))))))
+                                 (if (memq (point) overlaps-pts)
+                                     (progn
+                                       ;; default to after point match
+                                       (search-forward match nil t)
+                                       (point))
+                                   (if (string= "function" match)
+                                       (origami-search-forward ")" #'origami-filter-code-face)
+                                     (line-end-position))))))))
 
 (defun origami-lua-parser (create)
   "Parser for Lua."
@@ -704,6 +717,7 @@ See function `origami-python-parser' description for argument CREATE."
                                (lambda (match &rest _)
                                  (if (memq (point) overlaps-pts)
                                      (progn
+                                       ;; default to after point match
                                        (search-forward match nil t)
                                        (point))
                                    (line-end-position)))))))
