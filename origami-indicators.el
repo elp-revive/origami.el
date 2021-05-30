@@ -109,11 +109,21 @@
 (defun origami-indicators-click-fringe (event)
   "EVENT click on fringe."
   (interactive "e")
-  (let ((current-fringe (nth 1 (car (cdr event)))))
+  (let ((current-fringe (nth 1 (car (cdr event)))) ovs ov cur-ln)
     (when (eq current-fringe origami-indicators)
       (mouse-set-point event)
-      (end-of-line)
-      (call-interactively #'origami-toggle-node))))
+      (beginning-of-line)
+      (setq cur-ln (line-number-at-pos (point)))
+      (setq ovs (append (origami-util-overlays-in 'type 'origami-indicators-fr-plus)
+                        (origami-util-overlays-in 'type 'origami-indicators-fr-minus)
+                        (origami-util-overlays-in 'type 'origami-indicators-fr-minus-tail)))
+      (when ovs
+        (setq ov (cl-some
+                  (lambda (ov) (= cur-ln (line-number-at-pos (overlay-start ov))))
+                  ovs))
+        (when ov
+          (end-of-line)
+          (call-interactively #'origami-toggle-node))))))
 
 (defun origami-indicators--create-overlay-at-point ()
   "Create indicator overlay at current point."
@@ -162,6 +172,7 @@
   "SHOW the indicator OV with BITMAP."
   (when (and origami-indicators (overlayp ov))
     (overlay-put ov 'origami-indicators-active show)
+    (overlay-put ov 'type bitmap)
     (overlay-put ov 'priority (origami-indicators--get-priority bitmap))
     (overlay-put ov 'before-string (origami-indicators--get-string show ov bitmap))))
 
@@ -211,7 +222,7 @@
     (ignore-errors (call-interactively #'origami-open-node))  ; first rebuild tree
     ;; Remove other invalid obsolete overlays
     (let ((ovs (origami-tree-overlays buffer)))
-      (dolist (ov (origami-util-overlays-by-creator 'origami))
+      (dolist (ov (origami-util-overlays-in 'creator 'origami))
         (unless (memq ov ovs) (delete-overlay ov))))
     ;; Remove all indicator overlays
     (remove-overlays (point-min) (point-max) 'creator 'origami-indicators)
