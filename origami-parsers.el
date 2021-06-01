@@ -205,7 +205,8 @@ the node offset."
                           (let* ((res (build positions)) ; recurse
                                  (new-pos (car res))
                                  (children (cdr res))
-                                 (close-pos (cdar new-pos))
+                                 ;; auto-close unclosed folds at point-max
+                                 (close-pos (or (cdar new-pos) (point-max)))
                                  (node (funcall create beg-pos close-pos
                                                 (or (origami-util-function-offset fnc-offset beg-pos beg-match)
                                                     (length beg-match))
