@@ -221,7 +221,7 @@ Argument MATCH is for callback."
   (let ((result (ignore-errors
                   (save-excursion (goto-char beg) (- (funcall fnc match) beg)))))
     (unless result
-      (error "Something went wrong while offsetting region: `%s` at `%s`" match beg))
+      (user-error "Something went wrong while offsetting region: `%s` at `%s`" match beg))
     result))
 
 (provide 'origami-util)
