@@ -682,7 +682,7 @@ with the current state and the current node at each iteration."
   "Build the tree if it hasn't already been built otherwise fetch cached tree."
   (when origami-mode
     (if (origami-rebuild-tree? buffer)
-        (origami-build-tree buffer (origami-get-parser buffer))
+        (ignore-errors (origami-build-tree buffer (origami-get-parser buffer)))
       (origami-get-cached-tree buffer))))
 
 (defun origami-apply-new-tree (_buffer old-tree new-tree)
