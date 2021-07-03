@@ -14,6 +14,8 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 * Add support for XML.
 * Fix folding for single-line opening declaration, [#36](https://github.com/emacs-origami/origami.el/issues/36).
 * Limit the click to only plus/minus indicators.
+* Simplify c marco parser.
+* Add c# marco parser.
 
 ## 4.1
 > Released Mar 2, 2021
