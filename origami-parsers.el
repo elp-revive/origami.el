@@ -502,12 +502,40 @@ is the ending point to stop the scanning processs."
        (lambda (&rest _)
          (origami-search-forward "{" #'origami-filter-code-face))))))
 
+(defun origami--macro-regex (direc)
+  "Return a regular expression to search for DIREC."
+  (format "[ \t]*#[ \t]*%s" direc))
+
 (defun origami-c-macro-parser (create)
   "Parser for C style macro."
   (lambda (content)
-    (let* ((beg '("#[ \t]*if[n]*[d]*[e]*[f]*"))
-           (end '("#[ \t]*endif"))
-           (else '("#[ \t]*else" "#[ \t]*elif"))
+    (let* ((beg `(,(origami--macro-regex "if[n]*[d]*[e]*[f]*")))
+           (end `(,(origami--macro-regex "endif")))
+           (else `(,(origami--macro-regex "else") ,(origami--macro-regex "elif")))
+           (beg-regex (origami-util-keywords-regex beg))
+           (end-regex (origami-util-keywords-regex end))
+           (else-regex (origami-util-keywords-regex else))
+           (all-regex (origami-util-keywords-regex (append beg end else)))
+           (positions
+            (origami-get-positions
+             content all-regex
+             (lambda (pos &rest _) (origami-filter-code-face pos))
+             (lambda (match &rest _)
+               (if (origami-util-contain-list-type-str end match 'regex)
+                   ;; keep end pos on separate line on folding
+                   (1- (line-beginning-position))
+                 (line-beginning-position))))))
+      (origami-build-pair-tree create beg-regex end-regex else-regex
+                               positions
+                               (lambda (&rest _) (line-end-position))))))
+
+(defun origami-csharp-macro-parser (create)
+  "Parser for C# style macro."
+  (lambda (content)
+    (let* ((beg `(,(origami--macro-regex "if[n]*[d]*[e]*[f]*")
+                  ,(origami--macro-regex "region")))
+           (end `(,(origami--macro-regex "endif") ,(origami--macro-regex "endregion")))
+           (else `(,(origami--macro-regex "else") ,(origami--macro-regex "elif")))
            (beg-regex (origami-util-keywords-regex beg))
            (end-regex (origami-util-keywords-regex end))
            (else-regex (origami-util-keywords-regex else))
@@ -560,11 +588,13 @@ is the ending point to stop the scanning processs."
 (defun origami-csharp-parser (create)
   "Parser for C#."
   (let ((c-style (origami-c-style-parser create))
+        (macros (origami-csharp-macro-parser create))
         (javadoc (origami-javadoc-parser create))
         (p-ts (origami-parser-triple-slash create)))
     (lambda (content)
       (origami-fold-children
        (origami-fold-shallow-merge (origami-fold-root-node (funcall c-style content))
+                                   (origami-fold-root-node (funcall macros content))
                                    (origami-fold-root-node (funcall javadoc content))
                                    (origami-fold-root-node (funcall p-ts content)))))))
 
