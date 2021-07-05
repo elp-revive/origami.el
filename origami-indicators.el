@@ -216,7 +216,7 @@
 (defvar-local origami-indicators--timer nil
   "Timer for update indicators.")
 
-(defun origami-indicators--refresh (&optional buffer &rest _)
+(defun origami-indicators--refresh (buffer &rest _)
   "Refresh indicator overlays."
   (origami-util-with-current-buffer buffer
     (ignore-errors (call-interactively #'origami-open-node))  ; first rebuild tree
