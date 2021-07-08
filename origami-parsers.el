@@ -96,31 +96,31 @@ non-whitespace character of the match."
        (offset (line) (aref line 3))
        (collapse-same-level (lines)
                             (->>
-                                (cdr lines)
-                              (-reduce-from (lambda (acc line)
-                                              (cond ((and (eq line 'newline) (eq (car acc) 'newline)) acc)
-                                                    ((= (indent line) (indent (car acc)))
-                                                     (cons (vector (indent (car acc))
-                                                                   (beg (car acc))
-                                                                   (end line)
-                                                                   (offset (car acc)))
-                                                           (cdr acc)))
-                                                    (t (cons line acc))))
-                                            (list (car lines)))
-                              (remove 'newline)
-                              reverse))
+                             (cdr lines)
+                             (-reduce-from (lambda (acc line)
+                                             (cond ((and (eq line 'newline) (eq (car acc) 'newline)) acc)
+                                                   ((= (indent line) (indent (car acc)))
+                                                    (cons (vector (indent (car acc))
+                                                                  (beg (car acc))
+                                                                  (end line)
+                                                                  (offset (car acc)))
+                                                          (cdr acc)))
+                                                   (t (cons line acc))))
+                                           (list (car lines)))
+                             (remove 'newline)
+                             reverse))
        (create-tree (levels)
                     (if (null levels)
                         levels
                       (let ((curr-indent (indent (car levels))))
                         (->> levels
-                          (-partition-by (lambda (l) (= (indent l) curr-indent)))
-                          (-partition-all 2)
-                          (-mapcat (lambda (x)
+                             (-partition-by (lambda (l) (= (indent l) curr-indent)))
+                             (-partition-all 2)
+                             (-mapcat (lambda (x)
                                         ;takes care of multiple identical levels, introduced when there are newlines
-                                     (-concat
-                                      (-map 'list (butlast (car x)))
-                                      (list (cons (-last-item (car x)) (create-tree (cadr x)))))))))))
+                                        (-concat
+                                         (-map 'list (butlast (car x)))
+                                         (list (cons (-last-item (car x)) (create-tree (cadr x)))))))))))
        (build-nodes (tree)
                     (if (null tree) (cons 0 nil)
                       ;; complexity here is due to having to find the end of the children so that the
@@ -140,12 +140,12 @@ non-whitespace character of the match."
                        tree))))
     (lambda (content)
       (-> content
-        lines
-        annotate-levels
-        collapse-same-level
-        create-tree
-        build-nodes
-        cdr))))
+          lines
+          annotate-levels
+          collapse-same-level
+          create-tree
+          build-nodes
+          cdr))))
 
 (defun origami-build-pair-tree (create open close else positions &optional fnc-offset)
   "Build the node tree from POSITIONS.
@@ -590,13 +590,15 @@ is the ending point to stop the scanning processs."
   (let ((c-style (origami-c-style-parser create))
         (macros (origami-csharp-macro-parser create))
         (javadoc (origami-javadoc-parser create))
-        (p-ts (origami-parser-triple-slash create)))
+        (p-ts (origami-parser-triple-slash create))
+        (p-ds (origami-parser-double-slash create)))
     (lambda (content)
       (origami-fold-children
        (origami-fold-shallow-merge (origami-fold-root-node (funcall c-style content))
                                    (origami-fold-root-node (funcall macros content))
                                    (origami-fold-root-node (funcall javadoc content))
-                                   (origami-fold-root-node (funcall p-ts content)))))))
+                                   (origami-fold-root-node (funcall p-ts content))
+                                   (origami-fold-root-node (funcall p-ds content)))))))
 
 (defun origami-python-subparser (create beg end)
   "Find all fold block between BEG and END.
@@ -1040,8 +1042,9 @@ type of content by checking the word boundary's existence."
 
 (defun origami-csharp-vsdoc-summary (doc-str)
   "Extract C# vsdoc summary from DOC-STR."
-  (setq doc-str (s-replace-regexp "<[/]*[^>]+." "" doc-str))
-  (origami--generic-summary doc-str "///"))
+  (let ((type-triple (string-match-p "///" doc-str)))
+    (setq doc-str (s-replace-regexp "<[/]*[^>]+." "" doc-str))
+    (origami--generic-summary doc-str (if type-triple "///" "//"))))
 
 (defun origami-javadoc-summary (doc-str)
   "Extract javadoc summary from DOC-STR."
