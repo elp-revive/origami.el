@@ -561,14 +561,14 @@ with the current state and the current node at each iteration."
 
 (defun origami-fold-prev-sibling (siblings node)
   (->> siblings
-    (-partition-in-steps 2 1)
-    (-drop-while (lambda (pair) (not (equal (cadr pair) node))))
-    caar))
+       (-partition-in-steps 2 1)
+       (-drop-while (lambda (pair) (not (equal (cadr pair) node))))
+       caar))
 
 (defun origami-fold-next-sibling (siblings node)
   (->> siblings
-    (-drop-while (lambda (n) (not (equal n node))))
-    cadr))
+       (-drop-while (lambda (n) (not (equal n node))))
+       cadr))
 
 ;;; linear history structure
 
@@ -667,8 +667,8 @@ with the current state and the current node at each iteration."
                                  children
                                  (or (-> (origami-fold-find-path-with-range
                                           (origami-get-cached-tree buffer) beg end)
-                                       -last-item
-                                       origami-fold-data)
+                                         -last-item
+                                         origami-fold-data)
                                      (origami-create-overlay beg end offset buffer)))))))
     (funcall parser-gen create)))
 
@@ -779,10 +779,10 @@ interactively, use a negative prefix arg."
                                                 (open-node node)))
                                             base-level-path)))))
       (-> old-tree
-        close-all
-        open-point-till-depth
-        (-some->> (origami-store-cached-tree buffer)
-          (origami-apply-new-tree buffer old-tree))))))
+          close-all
+          open-point-till-depth
+          (-some->> (origami-store-cached-tree buffer)
+            (origami-apply-new-tree buffer old-tree))))))
 
 ;;;###autoload
 (defun origami-show-node (buffer point)
@@ -931,11 +931,11 @@ If POINT is in a fold, move to the beginning of the fold that POINT is in."
   (-when-let (tree (origami-get-fold-tree buffer))
     (push-mark)
     (-> tree
-      (origami-fold-preorder-reduce (lambda (state n)
-                                      (cons (origami-fold-beg n) state)) nil)
-      (->> (-reduce (lambda (state pos)
-                      (if (< state point) state pos))))
-      goto-char)))
+        (origami-fold-preorder-reduce (lambda (state n)
+                                        (cons (origami-fold-beg n) state)) nil)
+        (->> (-reduce (lambda (state pos)
+                        (if (< state point) state pos))))
+        goto-char)))
 
 ;;;###autoload
 (defun origami-next-fold (buffer point)
@@ -945,10 +945,10 @@ If POINT is in a fold, move to the end of the fold that POINT is in."
   (-when-let (tree (origami-get-fold-tree buffer))
     (push-mark)
     (-> tree
-      (origami-fold-postorder-reduce (lambda (state n)
-                                       (cons (origami-fold-end n) state)) nil)
-      (->> (-last (lambda (pos) (> pos point))))
-      goto-char)))
+        (origami-fold-postorder-reduce (lambda (state n)
+                                         (cons (origami-fold-end n) state)) nil)
+        (->> (-last (lambda (pos) (> pos point))))
+        goto-char)))
 
 ;;;###autoload
 (defun origami-forward-fold (buffer point)
@@ -957,10 +957,10 @@ If POINT is in a fold, move to the end of the fold that POINT is in."
   (-when-let (tree (origami-get-fold-tree buffer))
     (push-mark)
     (-> tree
-      (origami-fold-preorder-reduce (lambda (state n)
-                                      (cons (origami-fold-beg n) state)) nil)
-      (->> (-last (lambda (pos) (> pos point))))
-      goto-char)))
+        (origami-fold-preorder-reduce (lambda (state n)
+                                        (cons (origami-fold-beg n) state)) nil)
+        (->> (-last (lambda (pos) (> pos point))))
+        goto-char)))
 
 ;;;###autoload
 (defun origami-forward-fold-same-level (buffer point)
@@ -973,7 +973,7 @@ of the fold the point is currently in."
       (-when-let (c (-> (origami-fold-next-sibling (origami-fold-children
                                                     (origami-fold-parent path))
                                                    (-last-item path))
-                      origami-fold-beg))
+                        origami-fold-beg))
         (goto-char c)))))
 
 ;;;###autoload
@@ -987,7 +987,7 @@ sibling of the fold the point is currently in."
       (-when-let (c (-> (origami-fold-prev-sibling (origami-fold-children
                                                     (origami-fold-parent path))
                                                    (-last-item path))
-                      origami-fold-beg))
+                        origami-fold-beg))
         (goto-char c)))))
 
 ;;;###autoload
