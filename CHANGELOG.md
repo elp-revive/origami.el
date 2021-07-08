@@ -16,6 +16,7 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 * Limit the click to only plus/minus indicators.
 * Simplify c marco parser.
 * Add c# marco parser.
+* Add double slashes parser to c#.
 
 ## 4.1
 > Released Mar 2, 2021
