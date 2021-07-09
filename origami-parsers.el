@@ -363,9 +363,10 @@ Optional argument TRIM, see function `origami-util-get-face'."
 (defun origami-filter-doc-face (position)
   "Filter POSITION for document face.
 
-Argument POSITION can either be cons (match . position); or a string value."
+Argument POSITION can either be cons (match . position); or a integer value."
   (if (consp position)
-      (origami-doc-faces-p (car position) t)
+      (or (origami-doc-faces-p (car position) t)
+          (origami-util-comment-block-p (cdr position)))
     (not (origami-filter-code-face position))))
 
 (defun origami-filter-code-face (position)
