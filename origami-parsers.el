@@ -170,10 +170,10 @@ the node offset."
                     ;; a closing match, and we need to ascend back to upper
                     ;; level from recursion
                     (tree-level-unfinished t)
-                    acc  ; accumulates created nodes
-                    beg-pos  ; beginning pos of started, but unfinished (not created) node
+                    acc        ; accumulates created nodes
+                    beg-pos    ; beginning pos of started, but unfinished (not created) node
                     beg-match  ; beginning match of started, but unfinished node
-                    cur-pos  ; pos of current position
+                    cur-pos    ; pos of current position
                     cur-match)
                 (while (and tree-level-unfinished positions)
                   (setq cur-match (caar positions)
@@ -361,7 +361,7 @@ Optional argument TRIM, see function `origami-util-get-face'."
   (origami-util-is-face obj origami-doc-faces trim))
 
 (defun origami-filter-doc-face (position)
-  "Filter POSITION for document face.
+  "Predicate we use to filter out for non-comment.
 
 Argument POSITION can either be cons (match . position); or a integer value."
   (if (consp position)
@@ -370,7 +370,7 @@ Argument POSITION can either be cons (match . position); or a integer value."
     (not (origami-filter-code-face position))))
 
 (defun origami-filter-code-face (position)
-  "Filter POSITION for code face.
+  "Predicate we use to filter out non-code.
 
 Argument POSITION can either be cons (match . position); or a integer value."
   (when (consp position) (setq position (cdr position)))
