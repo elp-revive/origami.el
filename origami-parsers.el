@@ -361,7 +361,7 @@ Optional argument TRIM, see function `origami-util-get-face'."
   (origami-util-is-face obj origami-doc-faces trim))
 
 (defun origami-filter-doc-face (position)
-  "Filter POSITION for document face.
+  "Predicate we use to filter out for non-comment.
 
 Argument POSITION can either be cons (match . position); or a integer value."
   (if (consp position)
@@ -370,7 +370,7 @@ Argument POSITION can either be cons (match . position); or a integer value."
     (not (origami-filter-code-face position))))
 
 (defun origami-filter-code-face (position)
-  "Filter POSITION for code face.
+  "Predicate we use to filter out non-code.
 
 Argument POSITION can either be cons (match . position); or a integer value."
   (when (consp position) (setq position (cdr position)))
