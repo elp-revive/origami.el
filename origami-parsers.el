@@ -170,10 +170,10 @@ the node offset."
                     ;; a closing match, and we need to ascend back to upper
                     ;; level from recursion
                     (tree-level-unfinished t)
-                    acc  ; accumulates created nodes
-                    beg-pos  ; beginning pos of started, but unfinished (not created) node
+                    acc        ; accumulates created nodes
+                    beg-pos    ; beginning pos of started, but unfinished (not created) node
                     beg-match  ; beginning match of started, but unfinished node
-                    cur-pos  ; pos of current position
+                    cur-pos    ; pos of current position
                     cur-match)
                 (while (and tree-level-unfinished positions)
                   (setq cur-match (caar positions)
