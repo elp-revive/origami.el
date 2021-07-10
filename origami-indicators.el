@@ -34,7 +34,7 @@
 (require 'origami-util)
 
 (defgroup origami-indicators nil
-  "Indicators support to `origami'."
+  "Display indicators for origami."
   :prefix "origami-indicators-"
   :group 'convenience)
 
