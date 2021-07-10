@@ -106,6 +106,49 @@
   "........" "........" "........" "........" "........"
   "........" "........" "........" "........" "........")
 
+;;
+;; (@* "Entry" )
+;;
+
+(defvar origami-indicators-mode-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map [left-fringe mouse-1] #'origami-indicators-click-fringe)
+    (define-key map [right-fringe mouse-1] #'origami-indicators-click-fringe)
+    map)
+  "Keymap for `origami-indicators-mode'.")
+
+(defun origami-indicators--enable ()
+  "Enable `origami-indicators-fringe' mode."
+  (if (origami-mode 1)  ; Enable `origami-mode' automatically
+      (progn
+        (add-hook 'after-change-functions #'origami-indicators--start-timer nil t)
+        (add-hook 'after-save-hook #'origami-indicators--start-timer nil t))
+    (origami-indicators-mode -1)))
+
+(defun origami-indicators--disable ()
+  "Disable `origami-indicators-fringe' mode."
+  (remove-hook 'after-change-functions #'origami-indicators--start-timer t)
+  (remove-hook 'after-save-hook #'origami-indicators--start-timer t)
+  (origami-indicators--remove-overlays (current-buffer)))
+
+;;;###autoload
+(define-minor-mode origami-indicators-mode
+  "Minor mode for indicators mode."
+  :group 'origami
+  :lighter nil
+  :keymap origami-indicators-mode-map
+  :init-value nil
+  (if origami-indicators-mode (origami-indicators--enable)
+    (origami-indicators--disable)))
+
+;;;###autoload
+(define-global-minor-mode global-origami-indicators-mode origami-indicators-mode
+  (lambda () (origami-indicators-mode 1)))
+
+;;
+;; (@* "Events" )
+;;
+
 (defun origami-indicators-click-fringe (event)
   "EVENT click on fringe."
   (interactive "e")
@@ -124,6 +167,10 @@
         (when ov
           (end-of-line)
           (call-interactively #'origami-toggle-node))))))
+
+;;
+;; (@* "Core" )
+;;
 
 (defun origami-indicators--create-overlay-at-point ()
   "Create indicator overlay at current point."
@@ -247,45 +294,6 @@
   "Remove all indicators overlays from BUFFER."
   (with-current-buffer buffer
     (remove-overlays (point-min) (point-max) 'creator 'origami-indicators)))
-
-;;
-;; (@* "Entry" )
-;;
-
-(defvar origami-indicators-mode-map
-  (let ((map (make-sparse-keymap)))
-    (define-key map [left-fringe mouse-1] #'origami-indicators-click-fringe)
-    (define-key map [right-fringe mouse-1] #'origami-indicators-click-fringe)
-    map)
-  "Keymap for `origami-indicators-mode'.")
-
-(defun origami-indicators--enable ()
-  "Enable `origami-indicators-fringe' mode."
-  (if (origami-mode 1)  ; Enable `origami-mode' automatically
-      (progn
-        (add-hook 'after-change-functions #'origami-indicators--start-timer nil t)
-        (add-hook 'after-save-hook #'origami-indicators--start-timer nil t))
-    (origami-indicators-mode -1)))
-
-(defun origami-indicators--disable ()
-  "Disable `origami-indicators-fringe' mode."
-  (remove-hook 'after-change-functions #'origami-indicators--start-timer t)
-  (remove-hook 'after-save-hook #'origami-indicators--start-timer t)
-  (origami-indicators--remove-overlays (current-buffer)))
-
-;;;###autoload
-(define-minor-mode origami-indicators-mode
-  "Minor mode for indicators mode."
-  :group 'origami
-  :lighter nil
-  :keymap origami-indicators-mode-map
-  :init-value nil
-  (if origami-indicators-mode (origami-indicators--enable)
-    (origami-indicators--disable)))
-
-;;;###autoload
-(define-global-minor-mode global-origami-indicators-mode origami-indicators-mode
-  (lambda () (origami-indicators-mode 1)))
 
 (provide 'origami-indicators-fringe)
 ;;; origami-indicators.el ends here
