@@ -304,5 +304,5 @@
   (with-current-buffer buffer
     (remove-overlays (point-min) (point-max) 'creator 'origami-indicators)))
 
-(provide 'origami-indicators-fringe)
+(provide 'origami-indicators)
 ;;; origami-indicators.el ends here
