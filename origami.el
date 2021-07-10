@@ -96,8 +96,6 @@
 
 (defvar origami-mode-map
   (let ((map (make-sparse-keymap)))
-    (define-key map [left-fringe mouse-1] #'origami-indicators-click-fringe)
-    (define-key map [right-fringe mouse-1] #'origami-indicators-click-fringe)
     map)
   "Keymap for `origami-mode'.")
 
@@ -119,16 +117,13 @@
   (setq next-error-move-function (lambda (ignored pos)
                                    (goto-char pos)
                                    (call-interactively 'origami-show-node)))
-  (add-hook 'clone-indirect-buffer-hook (lambda () (origami-reset (current-buffer))))
-  (add-hook 'after-change-functions #'origami-indicators--start-timer nil t)
-  (add-hook 'after-save-hook #'origami-indicators--start-timer nil t))
+  (add-hook 'clone-indirect-buffer-hook (lambda () (origami-reset (current-buffer)))))
 
 (defun origami--disable ()
   "Disable `origami' mode."
   (remove-hook 'occur-mode-find-occurrence-hook 'origami-find-occurrence-show-node t)
   (setq next-error-move-function nil)
-  (remove-hook 'after-change-functions #'origami-indicators--start-timer t)
-  (remove-hook 'after-save-hook #'origami-indicators--start-timer t))
+  (origami-indicators-mode -1))
 
 ;;;###autoload
 (define-minor-mode origami-mode
@@ -213,9 +208,10 @@ Argument BUFFER is the buffer we are concerning."
         (overlay-put header-ov 'fold-overlay ov)
         (overlay-put header-ov 'modification-hooks '(origami-header-modify-hook))
         (overlay-put ov 'header-ov header-ov))
-      ;; We create fringe overlay.
-      (let ((ind-ovs (origami-indicators--create-overlays beg end)))
-        (overlay-put ov 'ind-ovs ind-ovs))
+      (when origami-indicators-mode
+        ;; We create fringe overlay.
+        (let ((ind-ovs (origami-indicators--create-overlays beg end)))
+          (overlay-put ov 'ind-ovs ind-ovs)))
       ov)))
 
 (defun origami-hide-overlay (ov)
@@ -227,7 +223,7 @@ Argument BUFFER is the buffer we are concerning."
   (overlay-put ov 'face 'origami-fold-replacement-face)
   (when origami-show-fold-header
     (origami-activate-header (overlay-get ov 'header-ov)))
-  (when origami-indicators
+  (when origami-indicators-mode
     (origami-activate-indicators (overlay-get ov 'ind-ovs))))
 
 (defun origami-show-overlay (ov)
@@ -236,7 +232,8 @@ Argument BUFFER is the buffer we are concerning."
   (overlay-put ov 'display nil)
   (overlay-put ov 'face nil)
   (origami-deactivate-header (overlay-get ov 'header-ov))
-  (origami-deactivate-indicators (overlay-get ov 'ind-ovs)))
+  (when origami-indicators-mode
+    (origami-deactivate-indicators (overlay-get ov 'ind-ovs))))
 
 (defun origami-hide-node-overlay (node)
   (-when-let (ov (origami-fold-data node))
@@ -290,10 +287,12 @@ Argument BUFFER is the buffer we are concerning."
     (origami-hide-node-overlay new)))
 
 (defun origami-remove-all-overlays (buffer)
+  "Remove all overlays."
   (with-current-buffer buffer
     (remove-overlays (point-min) (point-max) 'creator 'origami)
-    (remove-overlays (point-min) (point-max) 'creator 'origami-headers)
-    (remove-overlays (point-min) (point-max) 'creator 'origami-indicators)))
+    (remove-overlays (point-min) (point-max) 'creator 'origami-headers))
+  (when origami-indicators-mode
+    (origami-indicators--remove-overlays buffer)))
 
 ;;; fold structure
 
