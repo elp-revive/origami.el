@@ -287,7 +287,7 @@ Argument BUFFER is the buffer we are concerning."
     (origami-hide-node-overlay new)))
 
 (defun origami-remove-all-overlays (buffer)
-  "Remove all overlays."
+  "Remove all overlays from BUFFER."
   (with-current-buffer buffer
     (remove-overlays (point-min) (point-max) 'creator 'origami)
     (remove-overlays (point-min) (point-max) 'creator 'origami-headers))

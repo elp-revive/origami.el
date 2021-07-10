@@ -244,7 +244,7 @@
                              #'origami-indicators--refresh (current-buffer))))
 
 (defun origami-indicators--remove-overlays (buffer)
-  "Remove all indicators overlays."
+  "Remove all indicators overlays from BUFFER."
   (with-current-buffer buffer
     (remove-overlays (point-min) (point-max) 'creator 'origami-indicators)))
 
