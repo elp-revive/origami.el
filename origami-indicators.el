@@ -33,10 +33,10 @@
 
 (require 'origami-util)
 
-(declare-function origami-mode "origami.el")
-(declare-function origami-toggle-node "origami.el")
-(declare-function origami-open-node "origami.el")
-(declare-function origami-tree-overlays "origami.el")
+(defgroup origami-indicators nil
+  "Indicators support to `origami'."
+  :prefix "origami-indicators-"
+  :group 'convenience)
 
 (defcustom origami-indicators-fringe 'left-fringe
   "Display indicators on the left/right fringe."
@@ -107,6 +107,15 @@
   "........" "........" "........" "........" "........")
 
 ;;
+;; (@* "Exterals" )
+;;
+
+(declare-function origami-mode "origami.el")
+(declare-function origami-toggle-node "origami.el")
+(declare-function origami-open-node "origami.el")
+(declare-function origami-tree-overlays "origami.el")
+
+;;
 ;; (@* "Entry" )
 ;;
 
@@ -115,7 +124,7 @@
     (define-key map [left-fringe mouse-1] #'origami-indicators-click-fringe)
     (define-key map [right-fringe mouse-1] #'origami-indicators-click-fringe)
     map)
-  "Keymap for `origami-indicators-mode'.")
+  "Keymap for function `origami-indicators-mode'.")
 
 (defun origami-indicators--enable ()
   "Enable `origami-indicators-fringe' mode."
@@ -134,7 +143,7 @@
 ;;;###autoload
 (define-minor-mode origami-indicators-mode
   "Minor mode for indicators mode."
-  :group 'origami
+  :group 'origami-indicators
   :lighter nil
   :keymap origami-indicators-mode-map
   :init-value nil
@@ -263,7 +272,7 @@
   "Timer for update indicators.")
 
 (defun origami-indicators--refresh (buffer &rest _)
-  "Refresh indicator overlays."
+  "Refresh indicator overlays to BUFFER."
   (when origami-indicators-mode
     (origami-util-with-current-buffer buffer
       (ignore-errors (call-interactively #'origami-open-node))  ; first rebuild tree
