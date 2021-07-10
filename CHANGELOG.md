@@ -17,6 +17,7 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 * Simplify c marco parser.
 * Add c# marco parser.
 * Add double slashes parser to c#.
+* Split `indciators` to it's minor mode, `origami-indicators-mode`.
 
 ## 4.1
 > Released Mar 2, 2021

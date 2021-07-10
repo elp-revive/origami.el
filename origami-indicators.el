@@ -33,14 +33,14 @@
 
 (require 'origami-util)
 
-(declare-function origami-toggle-node "origami.el")
-(declare-function origami-open-node "origami.el")
-(declare-function origami-tree-overlays "origami.el")
+(defgroup origami-indicators nil
+  "Indicators support to `origami'."
+  :prefix "origami-indicators-"
+  :group 'convenience)
 
-(defcustom origami-indicators nil
-  "Display indicators on the left/right fringe, if nil don't render."
-  :type '(choice (const :tag "none" nil)
-                 (const :tag "On the right fringe" right-fringe)
+(defcustom origami-indicators-fringe 'left-fringe
+  "Display indicators on the left/right fringe."
+  :type '(choice (const :tag "On the right fringe" right-fringe)
                  (const :tag "On the left fringe" left-fringe))
   :group 'origami)
 
@@ -106,11 +106,63 @@
   "........" "........" "........" "........" "........"
   "........" "........" "........" "........" "........")
 
+;;
+;; (@* "Exterals" )
+;;
+
+(declare-function origami-mode "origami.el")
+(declare-function origami-toggle-node "origami.el")
+(declare-function origami-open-node "origami.el")
+(declare-function origami-tree-overlays "origami.el")
+
+;;
+;; (@* "Entry" )
+;;
+
+(defvar origami-indicators-mode-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map [left-fringe mouse-1] #'origami-indicators-click-fringe)
+    (define-key map [right-fringe mouse-1] #'origami-indicators-click-fringe)
+    map)
+  "Keymap for function `origami-indicators-mode'.")
+
+(defun origami-indicators--enable ()
+  "Enable `origami-indicators-fringe' mode."
+  (if (origami-mode 1)  ; Enable `origami-mode' automatically
+      (progn
+        (add-hook 'after-change-functions #'origami-indicators--start-timer nil t)
+        (add-hook 'after-save-hook #'origami-indicators--start-timer nil t))
+    (origami-indicators-mode -1)))
+
+(defun origami-indicators--disable ()
+  "Disable `origami-indicators-fringe' mode."
+  (remove-hook 'after-change-functions #'origami-indicators--start-timer t)
+  (remove-hook 'after-save-hook #'origami-indicators--start-timer t)
+  (origami-indicators--remove-overlays (current-buffer)))
+
+;;;###autoload
+(define-minor-mode origami-indicators-mode
+  "Minor mode for indicators mode."
+  :group 'origami-indicators
+  :lighter nil
+  :keymap origami-indicators-mode-map
+  :init-value nil
+  (if origami-indicators-mode (origami-indicators--enable)
+    (origami-indicators--disable)))
+
+;;;###autoload
+(define-global-minor-mode global-origami-indicators-mode origami-indicators-mode
+  (lambda () (origami-indicators-mode 1)))
+
+;;
+;; (@* "Events" )
+;;
+
 (defun origami-indicators-click-fringe (event)
   "EVENT click on fringe."
   (interactive "e")
   (let ((current-fringe (nth 1 (car (cdr event)))) ovs ov cur-ln)
-    (when (eq current-fringe origami-indicators)
+    (when (eq current-fringe origami-indicators-fringe)
       (mouse-set-point event)
       (beginning-of-line)
       (setq cur-ln (line-number-at-pos (point)))
@@ -124,6 +176,10 @@
         (when ov
           (end-of-line)
           (call-interactively #'origami-toggle-node))))))
+
+;;
+;; (@* "Core" )
+;;
 
 (defun origami-indicators--create-overlay-at-point ()
   "Create indicator overlay at current point."
@@ -158,7 +214,7 @@
   (let* ((face (or (and (functionp origami-indicators-face-function)
                         (funcall origami-indicators-face-function (overlay-start ov)))
                    'origami-fold-fringe-face))
-         (str (propertize "…" 'display `(,origami-indicators ,bitmap ,face))))
+         (str (propertize "…" 'display `(,origami-indicators-fringe ,bitmap ,face))))
     (if show str
       (cl-case bitmap
         (origami-indicators-fr-plus str)
@@ -170,19 +226,18 @@
 
 (defun origami-indicators--active-ov (show ov bitmap)
   "SHOW the indicator OV with BITMAP."
-  (when (and origami-indicators (overlayp ov))
+  (when (overlayp ov)
     (overlay-put ov 'origami-indicators-active show)
     (overlay-put ov 'type bitmap)
     (overlay-put ov 'priority (origami-indicators--get-priority bitmap))
     (overlay-put ov 'before-string (origami-indicators--get-string show ov bitmap))))
 
 (defun origami-indicators--get-end-fringe ()
-  "Return end fringe bitmap according to variable `origami-indicators'."
-  (when origami-indicators  ; accept nil value
-    (cl-case origami-indicators
-      (left-fringe 'origami-indicators-fr-end-left)
-      (right-fringe 'origami-indicators-fr-end-right)
-      (t (user-error "Invalid indicators fringe type: %s" origami-indicators)))))
+  "Return end fringe bitmap according to variable `origami-indicators-fringe'."
+  (cl-case origami-indicators-fringe
+    (left-fringe 'origami-indicators-fr-end-left)
+    (right-fringe 'origami-indicators-fr-end-right)
+    (t (user-error "Invalid indicators fringe type: %s" origami-indicators-fringe))))
 
 (defun origami-indicators--update-overlays (ov-lst show)
   "SHOW indicators overlays OV-LST."
@@ -217,32 +272,37 @@
   "Timer for update indicators.")
 
 (defun origami-indicators--refresh (buffer &rest _)
-  "Refresh indicator overlays."
-  (origami-util-with-current-buffer buffer
-    (ignore-errors (call-interactively #'origami-open-node))  ; first rebuild tree
-    ;; Remove other invalid obsolete overlays
-    (let ((ovs (origami-tree-overlays buffer)))
-      (dolist (ov (origami-util-overlays-in 'creator 'origami))
-        (unless (memq ov ovs) (delete-overlay ov))))
-    ;; Remove all indicator overlays
-    (remove-overlays (point-min) (point-max) 'creator 'origami-indicators)
-    ;; Reapply indicator overlays
-    (let ((ovs (overlays-in (point-min) (point-max))) start end tmp-ovs)
-      (dolist (ov ovs)
-        (when (eq 'origami (overlay-get ov 'creator))
-          (setq start (overlay-start ov) end (overlay-end ov)
-                tmp-ovs (overlay-get ov 'ind-ovs))
-          (unless (equal start end)
-            (when (listp tmp-ovs) (mapc #'delete-overlay tmp-ovs))
-            (overlay-put ov 'ind-ovs (origami-indicators--create-overlays start end))))))))
+  "Refresh indicator overlays to BUFFER."
+  (when origami-indicators-mode
+    (origami-util-with-current-buffer buffer
+      (ignore-errors (call-interactively #'origami-open-node))  ; first rebuild tree
+      ;; Remove other invalid obsolete overlays
+      (let ((ovs (origami-tree-overlays buffer)))
+        (dolist (ov (origami-util-overlays-in 'creator 'origami))
+          (unless (memq ov ovs) (delete-overlay ov))))
+      ;; Remove all indicator overlays
+      (remove-overlays (point-min) (point-max) 'creator 'origami-indicators)
+      ;; Reapply indicator overlays
+      (let ((ovs (overlays-in (point-min) (point-max))) start end tmp-ovs)
+        (dolist (ov ovs)
+          (when (eq 'origami (overlay-get ov 'creator))
+            (setq start (overlay-start ov) end (overlay-end ov)
+                  tmp-ovs (overlay-get ov 'ind-ovs))
+            (unless (equal start end)
+              (when (listp tmp-ovs) (mapc #'delete-overlay tmp-ovs))
+              (overlay-put ov 'ind-ovs (origami-indicators--create-overlays start end)))))))))
 
 (defun origami-indicators--start-timer (&rest _)
   "Start refresh timer."
-  (when origami-indicators
-    (when (timerp origami-indicators--timer) (cancel-timer origami-indicators--timer))
-    (setq origami-indicators--timer
-          (run-with-idle-timer origami-indicators-time nil
-                               #'origami-indicators--refresh (current-buffer)))))
+  (when (timerp origami-indicators--timer) (cancel-timer origami-indicators--timer))
+  (setq origami-indicators--timer
+        (run-with-idle-timer origami-indicators-time nil
+                             #'origami-indicators--refresh (current-buffer))))
 
-(provide 'origami-indicators)
+(defun origami-indicators--remove-overlays (buffer)
+  "Remove all indicators overlays from BUFFER."
+  (with-current-buffer buffer
+    (remove-overlays (point-min) (point-max) 'creator 'origami-indicators)))
+
+(provide 'origami-indicators-fringe)
 ;;; origami-indicators.el ends here
