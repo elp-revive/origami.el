@@ -38,12 +38,15 @@
 
 (require 'origami-util)
 
-(defvar origami-parser-summary-alist)
+;;
+;; (@* "Exterals" )
+;;
 
-(declare-function origami-fold-root-node "ext:origami.el")
-(declare-function origami-fold-children "ext:origami.el")
-(declare-function origami-fold-children-set "ext:origami.el")
-(declare-function origami-fold-shallow-merge "ext:origami.el")
+(defvar origami-parser-summary-alist)
+(declare-function origami-fold-root-node "origami.el")
+(declare-function origami-fold-children "origami.el")
+(declare-function origami-fold-children-set "origami.el")
+(declare-function origami-fold-shallow-merge "origami.el")
 
 ;;
 ;; (@* "Utility" )
