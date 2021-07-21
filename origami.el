@@ -4,7 +4,7 @@
 ;; Maintainer: Shen, Jen-Chieh <jcs090218@gmail.com>
 ;; Version: 4.1
 ;; Keywords: folding
-;; URL: https://github.com/emacs-origami/origami.el
+;; URL: https://github.com/elp-revive/origami.el
 ;; Package-Requires: ((emacs "27.1") (s "1.9.0") (dash "2.5.0") (fringe-helper "1.0.1"))
 
 ;; The MIT License (MIT)
