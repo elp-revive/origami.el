@@ -216,10 +216,9 @@ Argument TYPE see function `origami-util-string-compare-p' for more information.
 
 (defun origami-util-function-offset (fnc beg match)
   "Call FNC starting from BEG.
-
 Argument MATCH is for callback."
-  (let ((result (ignore-errors
-                  (save-excursion (goto-char beg) (- (funcall fnc match) beg)))))
+  (let ((result (save-excursion
+                  (goto-char beg) (- (or (and fnc (funcall fnc match)) 0) beg))))
     (unless result
       (user-error "Something went wrong while offsetting region: `%s` at `%s`" match beg))
     result))

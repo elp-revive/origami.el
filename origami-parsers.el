@@ -155,16 +155,17 @@ non-whitespace character of the match."
 
 Argument CREATE is the parser function to create the nodes.
 
-Arguments OPEN, CLOSE and ELSE are regular expressions used to
-determine the type of a position.  An OPEN match will start a new
-pending node, a CLOSE match will finish a started pending node,
-an ELSE match works like CLOSE + OPEN - it will finish a started
-pending node, then immediately start a new one.
+Arguments OPEN, CLOSE and ELSE are regular expressions used to determine the
+type of a position.  An OPEN match will start a new pending node, a CLOSE match
+will finish a started pending node, an ELSE match works like CLOSE + OPEN - it
+will finish a started pending node, then immediately start a new one.
 
 Argument POSITIONS is a list of cons cell form by (match . point).
 
-Optional argument FNC-OFFSET is a function that return's the position of
-the node offset."
+Optional argument FNC-OFFSET is a function that return's the position of the
+node offset.  This point is the actual position that folds (hide) the code
+in region; the beginning position will be the header that could triggers the
+fold/unfold action."
   (cl-labels
       ((build (positions)
               ;; recursive function to build nodes from positions, returns cons cell with
@@ -931,7 +932,10 @@ foldable, not if they contain text only."
            (positions
             (origami-get-positions content rx-all
                                    (lambda (pos &rest _) (origami-filter-code-face pos)))))
-      (origami-build-pair-tree create rx-beg rx-end nil positions))))
+      (origami-build-pair-tree
+       create rx-beg rx-end nil positions
+       (lambda (&rest _)
+         (origami-search-forward rx-beg #'origami-filter-code-face))))))
 
 (defcustom origami-parser-alist
   `((actionscript-mode     . origami-java-parser)
