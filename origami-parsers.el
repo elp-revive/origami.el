@@ -32,6 +32,7 @@
 
 (require 'cl-lib)
 (require 'dash)
+(require 'imenu)
 (require 'rx)
 (require 's)
 (require 'subr-x)
@@ -641,6 +642,43 @@ See function `origami-python-parser' description for argument CREATE."
                                    (origami-fold-root-node (funcall python-doc content))
                                    (origami-fold-root-node (funcall p-ss content)))))))
 
+(defun origami-parser-imenu-flat (create)
+  "Origami parser producing folds for each imenu entry, without nesting."
+  (lambda (content)
+    (let ((orig-major-mode major-mode))
+      (with-temp-buffer
+        (insert content)
+        (funcall orig-major-mode)
+        (let* ((items
+                (-as-> (imenu--make-index-alist t) items
+                       (-flatten items)
+                       (-filter 'listp items)))
+               (positions
+                (-as-> (-map #'cdr items) positions
+                       (-filter 'identity positions)
+                       (-map-when 'markerp 'marker-position positions)
+                       (-filter 'natnump positions)
+                       (cons (point-min) positions)
+                       (-snoc positions (point-max))
+                       (-sort '< positions)
+                       (-uniq positions)))
+               (ranges
+                (-zip-pair positions (-map '1- (cdr positions))))
+               (fold-nodes
+                (--map
+                 (-let*
+                     (((range-beg . range-end) it)
+                      (line-beg
+                       (progn (goto-char range-beg)
+                              (line-beginning-position)))
+                      (offset
+                       (- (min (line-end-position) range-end) line-beg))
+                      (fold-node
+                       (funcall create line-beg range-end offset nil)))
+                   fold-node)
+                 ranges)))
+          fold-nodes)))))
+
 (defun origami-lisp-parser (create regex)
   "Parser for Lisp."
   (lambda (content)
@@ -965,8 +1003,9 @@ foldable, not if they contain text only."
     (org-mode              . origami-org-parser)
     (perl-mode             . origami-c-style-parser)
     (php-mode              . origami-java-parser)
-    (python-mode           . origami-python-parser)
+    (python-mode           . origami-parser-imenu-flat)
     (rjsx-mode             . origami-js-parser)
+    (rst-mode              . origami-parser-imenu-flat)
     (ruby-mode             . origami-ruby-parser)
     (rust-mode             . origami-rust-parser)
     (scala-mode            . origami-scala-parser)
