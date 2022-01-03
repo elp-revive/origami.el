@@ -3,7 +3,7 @@
 ;; The MIT License (MIT)
 
 ;; Copyright (c) 2014 Greg Sexton
-;; Copyright (c) 2019-2021 Jen-Chieh Shen
+;; Copyright (c) 2019-2022 Jen-Chieh Shen
 
 ;; Permission is hereby granted, free of charge, to any person obtaining a copy
 ;; of this software and associated documentation files (the "Software"), to deal
