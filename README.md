@@ -4,6 +4,7 @@ If you are using [melpa](https://melpa.org/#/), please use that version instead 
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 [![Release](https://img.shields.io/github/release/elp-revive/origami.el.svg?logo=github)](https://github.com/elp-revive/origami.el/releases/latest)
 [![CELPA](https://celpa.conao3.com/packages/origami-badge.svg)](https://celpa.conao3.com/#/origami)
+[![JCS-ELPA](https://raw.githubusercontent.com/jcs-emacs/jcs-elpa/master/badges/origami.svg)](https://jcs-emacs.github.io/jcs-elpa/#/origami)
 
 # What is Origami?
 > A text folding minor mode for Emacs.
