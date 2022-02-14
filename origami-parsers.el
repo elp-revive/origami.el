@@ -31,10 +31,12 @@
 ;;; Code:
 
 (require 'cl-lib)
-(require 'dash)
 (require 'rx)
-(require 's)
+(require 'seq)
 (require 'subr-x)
+
+(require 'dash)
+(require 's)
 
 (require 'origami-util)
 
