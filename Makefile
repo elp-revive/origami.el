@@ -3,9 +3,9 @@ SHELL := /usr/bin/env bash
 EMACS ?= emacs
 CASK ?= cask
 
-PKG-FILES := company-box.el
+PKG-FILES := origami.el
 
-TEST-FILES := $(shell ls test/company-box-*.el)
+TEST-FILES := $(shell ls test/origami-*.el)
 
 .PHONY: clean checkdoc lint build compile unix-test
 
