@@ -13,11 +13,11 @@ ci: clean compile install
 
 install:
 	@echo "Installing..."
-	@$(EASK) install
+	$(EASK) install
 
 compile:
 	@echo "Compiling..."
-	@$(EASK) compile
+	$(EASK) compile
 
 unix-test:
 	@echo "Testing..."
