@@ -8,6 +8,7 @@
  "origami-util.el")
 
 (depends-on "dash")
+(depends-on "fringe-helper")
 (depends-on "ht")
 (depends-on "f")
 (depends-on "s")
