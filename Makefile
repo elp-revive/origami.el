@@ -3,8 +3,6 @@ SHELL := /usr/bin/env bash
 EMACS ?= emacs
 EASK ?= eask
 
-PKG-FILES := origami.el
-
 TEST-FILES := $(shell ls test/origami.el-*.el)
 
 .PHONY: clean checkdoc lint install compile unix-test
