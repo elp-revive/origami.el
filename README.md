@@ -6,6 +6,7 @@ If you are using [melpa](https://melpa.org/#/), please use that version instead 
 [![CELPA](https://celpa.conao3.com/packages/origami-badge.svg)](https://celpa.conao3.com/#/origami)
 [![JCS-ELPA](https://raw.githubusercontent.com/jcs-emacs/jcs-elpa/master/badges/v/origami.svg)](https://jcs-emacs.github.io/jcs-elpa/#/origami)
 
+<a href="https://github.com/elp-revive/origami.el"><img align="right" src="./etc/logo.png" width="20%"></a>
 # What is Origami?
 > A text folding minor mode for Emacs.
 
