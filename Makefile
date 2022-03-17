@@ -3,7 +3,7 @@ SHELL := /usr/bin/env bash
 EMACS ?= emacs
 EASK ?= eask
 
-PKG-FILES := origami.el.el
+PKG-FILES := origami.el
 
 TEST-FILES := $(shell ls test/origami.el-*.el)
 
