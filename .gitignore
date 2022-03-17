@@ -8,3 +8,5 @@ dist/
 
 # ignore generated files.
 *.elc
+
+/psd
