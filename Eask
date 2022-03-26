@@ -1,12 +1,11 @@
 (source "melpa")
 
+(package "origami" "4.1" "Flexible text folding")
+
 (package-file "origami.el")
+(files "*.el")
 
-(files
- "origami-indicators.el"
- "origami-parsers.el"
- "origami-util.el")
-
+(depends-on "emacs" "27.1")
 (depends-on "dash")
 (depends-on "fringe-helper")
 (depends-on "ht")

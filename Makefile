@@ -7,7 +7,13 @@ TEST-FILES := $(shell ls test/origami.el-*.el)
 
 .PHONY: clean checkdoc lint install compile unix-test
 
-ci: clean compile install
+ci: clean package compile install
+
+package:
+	@echo "Packaging..."
+	$(EASK) autoloads
+	$(EASK) pkg-file
+	$(EASK) package
 
 install:
 	@echo "Installing..."
