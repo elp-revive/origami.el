@@ -3,11 +3,11 @@ SHELL := /usr/bin/env bash
 EMACS ?= emacs
 EASK ?= eask
 
-TEST-FILES := $(shell ls test/origami.el-*.el)
+TEST-FILES := $(shell ls test/origami-*.el)
 
-.PHONY: clean checkdoc lint package install compile unix-test
+.PHONY: clean checkdoc lint package install compile test
 
-ci: clean package compile install
+ci: clean package install compile
 
 package:
 	@echo "Packaging..."
@@ -21,7 +21,7 @@ compile:
 	@echo "Compiling..."
 	$(EASK) compile
 
-unix-test:
+test:
 	@echo "Testing..."
 	$(EASK) exec ert-runner -L . $(LOAD-TEST-FILES) -t '!no-win' -t '!org'
 
