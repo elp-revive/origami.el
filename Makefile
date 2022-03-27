@@ -5,14 +5,12 @@ EASK ?= eask
 
 TEST-FILES := $(shell ls test/origami.el-*.el)
 
-.PHONY: clean checkdoc lint install compile unix-test
+.PHONY: clean checkdoc lint package install compile unix-test
 
 ci: clean package compile install
 
 package:
 	@echo "Packaging..."
-	$(EASK) autoloads
-	$(EASK) pkg-file
 	$(EASK) package
 
 install:
