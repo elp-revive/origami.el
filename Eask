@@ -2,6 +2,9 @@
          "4.1"
          "Flexible text folding")
 
+(website-url "https://github.com/elp-revive/origami.el")
+(keywords "folding")
+
 (package-file "origami.el")
 (files "*.el")
 
