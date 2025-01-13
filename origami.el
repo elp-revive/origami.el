@@ -10,7 +10,7 @@
 ;; The MIT License (MIT)
 
 ;; Copyright (c) 2014 Greg Sexton
-;; Copyright (c) 2019-2023 Jen-Chieh Shen
+;; Copyright (c) 2019-2025 Jen-Chieh Shen
 
 ;; Permission is hereby granted, free of charge, to any person obtaining a copy
 ;; of this software and associated documentation files (the "Software"), to deal
@@ -52,12 +52,6 @@
   "Flexible text folding"
   :prefix "origami-"
   :group 'convenience)
-
-(defcustom origami-fold-replacement "..."
-  ;; TODO: this should also be specifiable as a function: folded text -> string
-  "Show this string instead of the folded text."
-  :type 'string
-  :group 'origami)
 
 (defcustom origami-show-fold-header nil
   "Highlight the line the fold start on."
@@ -106,6 +100,21 @@
 
 (defun origami-find-occurrence-show-node ()
   (call-interactively #'origami-show-node))
+
+;;
+;; (@* "Ellipsis" )
+;;
+
+(declare-function truncate-string-ellipsis "ext:mule-util.el")
+
+(defun origami--truncate-string-ellipsis ()
+  "Return the ellipsis string."
+  ;; XXX: Function is defined in later version of Emacs, otherwise just
+  ;; fallback to the variable.
+  (if (fboundp 'truncate-string-ellipsis)
+      (truncate-string-ellipsis)
+    (or truncate-string-ellipsis  ; fallback
+        "...")))
 
 ;;
 ;; (@* "Entry" )
@@ -172,9 +181,9 @@ Key bindings:
   "Given a FOLD-OVERLAY, return the range that the corresponding \
 header overlay should cover.  Result is a cons cell of (begin . end)."
   (origami-util-with-current-buffer (overlay-buffer fold-overlay)
-    (let ((fold-begin (origami--header-overlay-begin fold-overlay))
-          (fold-end (origami--header-overlay-end fold-overlay)))
-      (cons fold-begin fold-end))))
+                                    (let ((fold-begin (origami--header-overlay-begin fold-overlay))
+                                          (fold-end (origami--header-overlay-end fold-overlay)))
+                                      (cons fold-begin fold-end))))
 
 (defun origami-header-overlay-reset-position (header-overlay)
   (-when-let (fold-ov (overlay-get header-overlay 'fold-overlay))
@@ -219,7 +228,7 @@ Argument BUFFER is the buffer we are concerning."
   (overlay-put ov 'invisible 'origami)
   (overlay-put ov 'display (or (and origami-show-summary
                                     (origami-get-summary (origami-util-ov-string ov)))
-                               origami-fold-replacement))
+                               (origami--truncate-string-ellipsis)))
   (overlay-put ov 'face 'origami-fold-replacement-face)
   (when origami-show-fold-header
     (origami-activate-header (overlay-get ov 'header-ov)))
@@ -437,19 +446,19 @@ Optional argument CHILDREN can be add to the created node."
   "Not documented."
   ;; TODO: Here will reach `max-lisp-eval-depth' error...
   (cl-labels ((diff-children (old-children new-children)
-                             (let ((old (car old-children))
-                                   (new (car new-children)))
-                               (cond ((null old) (-each new-children on-add))
-                                     ((null new) (-each old-children on-remove))
-                                     ((and (null old) (null new)) nil)
-                                     ((origami-fold-range-equal old new)
-                                      (origami-fold-diff old new on-add on-remove on-change)
-                                      (diff-children (cdr old-children) (cdr new-children)))
-                                     ((<= (origami-fold-beg old) (origami-fold-beg new))
-                                      (funcall on-remove old)
-                                      (diff-children (cdr old-children) new-children))
-                                     (t (funcall on-add new)
-                                        (diff-children old-children (cdr new-children)))))))
+                (let ((old (car old-children))
+                      (new (car new-children)))
+                  (cond ((null old) (-each new-children on-add))
+                        ((null new) (-each old-children on-remove))
+                        ((and (null old) (null new)) nil)
+                        ((origami-fold-range-equal old new)
+                         (origami-fold-diff old new on-add on-remove on-change)
+                         (diff-children (cdr old-children) (cdr new-children)))
+                        ((<= (origami-fold-beg old) (origami-fold-beg new))
+                         (funcall on-remove old)
+                         (diff-children (cdr old-children) new-children))
+                        (t (funcall on-add new)
+                           (diff-children old-children (cdr new-children)))))))
     (unless (origami-fold-range-equal old new)
       (error "Precondition invalid: old must have the same range as new."))
     (unless (origami-fold-state-equal old new)
@@ -757,26 +766,26 @@ interactively, use a negative prefix arg."
     (cl-labels ((open-node (node) (origami-fold-open-set node t))
                 (close-node (node) (origami-fold-open-set node nil))
                 (open-recursively-till-depth (current-node current-depth)
-                                             (if (< current-depth depth)
-                                                 (origami-fold-children-set
-                                                  (open-node current-node)
-                                                  (-map (lambda (child-node)
-                                                          (open-recursively-till-depth child-node (1+ current-depth)))
-                                                        (origami-fold-children current-node)))
-                                               (open-node current-node)))
+                  (if (< current-depth depth)
+                      (origami-fold-children-set
+                       (open-node current-node)
+                       (-map (lambda (child-node)
+                               (open-recursively-till-depth child-node (1+ current-depth)))
+                             (origami-fold-children current-node)))
+                    (open-node current-node)))
                 (close-all (tree) (origami-fold-map #'close-node tree))
                 (open-point-till-depth (tree)
-                                       (-when-let (base-level-path (origami-fold-find-path-containing tree point))
-                                         ;; start one level further up
-                                         (when include-siblings (setq base-level-path (-butlast base-level-path)))
-                                         (let ((base-level-node (-last-item base-level-path)))
-                                           (origami-fold-path-map
-                                            (lambda (node)
-                                              (if (eq node base-level-node)
-                                                  (open-recursively-till-depth node 1)
-                                                ;; open parent nodes, as we closed everything before
-                                                (open-node node)))
-                                            base-level-path)))))
+                  (-when-let (base-level-path (origami-fold-find-path-containing tree point))
+                    ;; start one level further up
+                    (when include-siblings (setq base-level-path (-butlast base-level-path)))
+                    (let ((base-level-node (-last-item base-level-path)))
+                      (origami-fold-path-map
+                       (lambda (node)
+                         (if (eq node base-level-node)
+                             (open-recursively-till-depth node 1)
+                           ;; open parent nodes, as we closed everything before
+                           (open-node node)))
+                       base-level-path)))))
       (-> old-tree
           close-all
           open-point-till-depth
