@@ -102,21 +102,6 @@
   (call-interactively #'origami-show-node))
 
 ;;
-;; (@* "Ellipsis" )
-;;
-
-(declare-function truncate-string-ellipsis "ext:mule-util.el")
-
-(defun origami--truncate-string-ellipsis ()
-  "Return the ellipsis string."
-  ;; XXX: Function is defined in later version of Emacs, otherwise just
-  ;; fallback to the variable.
-  (if (fboundp 'truncate-string-ellipsis)
-      (truncate-string-ellipsis)
-    (or truncate-string-ellipsis  ; fallback
-        "...")))
-
-;;
 ;; (@* "Entry" )
 ;;
 
