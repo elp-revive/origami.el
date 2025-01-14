@@ -10,7 +10,7 @@
 ;; The MIT License (MIT)
 
 ;; Copyright (c) 2014 Greg Sexton
-;; Copyright (c) 2019-2023 Jen-Chieh Shen
+;; Copyright (c) 2019-2025 Jen-Chieh Shen
 
 ;; Permission is hereby granted, free of charge, to any person obtaining a copy
 ;; of this software and associated documentation files (the "Software"), to deal
@@ -53,12 +53,6 @@
   :prefix "origami-"
   :group 'convenience)
 
-(defcustom origami-fold-replacement "..."
-  ;; TODO: this should also be specifiable as a function: folded text -> string
-  "Show this string instead of the folded text."
-  :type 'string
-  :group 'origami)
-
 (defcustom origami-show-fold-header nil
   "Highlight the line the fold start on."
   :type 'boolean
@@ -76,7 +70,7 @@
   :group 'origami)
 
 (defface origami-fold-replacement-face
-  '((t :inherit 'font-lock-comment-face))
+  '((t :inherit font-lock-comment-face))
   "Face used to display the fold replacement text."
   :group 'origami)
 
@@ -114,7 +108,7 @@
 (defun origami--enable ()
   "Enable `origami' mode."
   (add-hook 'occur-mode-find-occurrence-hook 'origami-find-occurrence-show-node nil t)
-  (setq next-error-move-function (lambda (ignored pos)
+  (setq next-error-move-function (lambda (_ignored pos)
                                    (goto-char pos)
                                    (call-interactively 'origami-show-node)))
   (add-hook 'clone-indirect-buffer-hook (lambda () (origami-reset (current-buffer)))))
@@ -169,12 +163,12 @@ Key bindings:
       (point))))
 
 (defun origami-header-overlay-range (fold-overlay)
-  "Given a FOLD-OVERLAY, return the range that the corresponding \
+  "Given a FOLD-OVERLAY, return the range that the corresponding
 header overlay should cover.  Result is a cons cell of (begin . end)."
   (origami-util-with-current-buffer (overlay-buffer fold-overlay)
-    (let ((fold-begin (origami--header-overlay-begin fold-overlay))
-          (fold-end (origami--header-overlay-end fold-overlay)))
-      (cons fold-begin fold-end))))
+                                    (let ((fold-begin (origami--header-overlay-begin fold-overlay))
+                                          (fold-end (origami--header-overlay-end fold-overlay)))
+                                      (cons fold-begin fold-end))))
 
 (defun origami-header-overlay-reset-position (header-overlay)
   (-when-let (fold-ov (overlay-get header-overlay 'fold-overlay))
@@ -219,7 +213,7 @@ Argument BUFFER is the buffer we are concerning."
   (overlay-put ov 'invisible 'origami)
   (overlay-put ov 'display (or (and origami-show-summary
                                     (origami-get-summary (origami-util-ov-string ov)))
-                               origami-fold-replacement))
+                               (origami--truncate-string-ellipsis)))
   (overlay-put ov 'face 'origami-fold-replacement-face)
   (when origami-show-fold-header
     (origami-activate-header (overlay-get ov 'header-ov)))
@@ -401,7 +395,7 @@ Optional argument CHILDREN can be add to the created node."
 (defun origami-tree-overlays (buffer)
   "Return all overlays from fold node tree in BUFFER."
   (let (lst)
-    (when-let ((tree (origami-get-cached-tree buffer)))
+    (when-let* ((tree (origami-get-cached-tree buffer)))
       (push (origami-fold-data tree) lst)
       (setq lst (origami--node-overlays (origami-fold-children tree) lst)))
     lst))
@@ -424,8 +418,8 @@ Optional argument CHILDREN can be add to the created node."
                              (cons new (remove old (origami-fold-children node)))))
 
 (defun origami-fold-assoc (path f)
-  "Rewrite the tree, replacing the node referenced by PATH with F applied to \
- the leaf."
+  "Rewrite the tree, replacing the node referenced by PATH with F applied
+to the leaf."
   (cdr
    (-reduce-r-from (lambda (node acc)
                      (cl-destructuring-bind (old-node . new-node) acc
@@ -437,19 +431,19 @@ Optional argument CHILDREN can be add to the created node."
   "Not documented."
   ;; TODO: Here will reach `max-lisp-eval-depth' error...
   (cl-labels ((diff-children (old-children new-children)
-                             (let ((old (car old-children))
-                                   (new (car new-children)))
-                               (cond ((null old) (-each new-children on-add))
-                                     ((null new) (-each old-children on-remove))
-                                     ((and (null old) (null new)) nil)
-                                     ((origami-fold-range-equal old new)
-                                      (origami-fold-diff old new on-add on-remove on-change)
-                                      (diff-children (cdr old-children) (cdr new-children)))
-                                     ((<= (origami-fold-beg old) (origami-fold-beg new))
-                                      (funcall on-remove old)
-                                      (diff-children (cdr old-children) new-children))
-                                     (t (funcall on-add new)
-                                        (diff-children old-children (cdr new-children)))))))
+                (let ((old (car old-children))
+                      (new (car new-children)))
+                  (cond ((null old) (-each new-children on-add))
+                        ((null new) (-each old-children on-remove))
+                        ((and (null old) (null new)) nil)
+                        ((origami-fold-range-equal old new)
+                         (origami-fold-diff old new on-add on-remove on-change)
+                         (diff-children (cdr old-children) (cdr new-children)))
+                        ((<= (origami-fold-beg old) (origami-fold-beg new))
+                         (funcall on-remove old)
+                         (diff-children (cdr old-children) new-children))
+                        (t (funcall on-add new)
+                           (diff-children old-children (cdr new-children)))))))
     (unless (origami-fold-range-equal old new)
       (error "Precondition invalid: old must have the same range as new."))
     (unless (origami-fold-state-equal old new)
@@ -465,14 +459,14 @@ Optional argument CHILDREN can be add to the created node."
   "Map F over the tree.
 Replacing each node with the result of (fnode).  The children cannot be
 manipulated using f as the map will replace them.  This cannot change the
- structure of the tree, just the state of each node."
+structure of the tree, just the state of each node."
   (origami-fold-children-set
    (funcall f tree)
    (-map (lambda (node) (origami-fold-map f node))
          (origami-fold-children tree))))
 
 (defun origami-fold-path-map (f path)
-  "Map F over the nodes in path. As with `origami-fold-map', children cannot \
+  "Map F over the nodes in path. As with `origami-fold-map', children cannot
 be manipulated."
   (cond ((null path) nil)
         ((cdr path) (funcall f (origami-fold-replace-child (car path)
@@ -494,7 +488,7 @@ be manipulated."
                                     (<= end (origami-fold-end node))))))
 
 (defun origami-fold-find-path-with-range (tree beg end)
-  "Return the path to the most specific (deepest) node that has exactly \
+  "Return the path to the most specific (deepest) node that has exactly
 the range BEG-END, or null."
   (-when-let (path (origami-fold-find-path-containing-range tree beg end))
     (let ((last (-last-item path)))
@@ -503,7 +497,8 @@ the range BEG-END, or null."
         path))))
 
 (defun origami-fold-find-path-containing (tree point)
-  "Return the path to the most specific (deepest) node that contains point, or null."
+  "Return the path to the most specific (deepest) node that contains
+point, or null."
   (origami-fold-find-deepest tree
                              (lambda (node)
                                (and (<= (origami-fold-beg node) point)
@@ -517,8 +512,8 @@ F is applied with the current state and the current node at each iteration."
                 (origami-fold-children tree)))
 
 (defun origami-fold-postorder-reduce (tree f initial-state)
-  "Reduce the tree by doing a postorder traversal. F is applied
-with the current state and the current node at each iteration."
+  "Reduce the tree by doing a postorder traversal.
+F is applied with the current state and the current node at each iteration."
   (funcall f (-reduce-from (lambda (state node) (origami-fold-postorder-reduce node f state))
                            initial-state
                            (origami-fold-children tree))
@@ -673,7 +668,7 @@ with the current state and the current node at each iteration."
 
 (defun origami-get-parser (buffer)
   "Get the possible parser for BUFFER."
-  (if-let ((parser-gen (origami--get-parser-from-alist buffer)))
+  (if-let* ((parser-gen (origami--get-parser-from-alist buffer)))
       (origami--create parser-gen buffer)
     (user-error "[WARNING] No parser specify in major-mode, `%s`" (buffer-local-value 'major-mode buffer))))
 
@@ -737,7 +732,8 @@ The fold node opened will be the deepest nested at POINT."
 
 ;;;###autoload
 (defun origami-open-node-recursively-till-depth (buffer point depth &optional include-siblings)
-  "Opens childs from the node at POINT up to the given DEPTH, and collapses all other.
+  "Opens childs from the node at POINT up to the given DEPTH, and
+collapses all other.
 
 DEPTH is relative to the node at point. It can be passed
 interactively as a numeric prefix argument.
@@ -757,26 +753,26 @@ interactively, use a negative prefix arg."
     (cl-labels ((open-node (node) (origami-fold-open-set node t))
                 (close-node (node) (origami-fold-open-set node nil))
                 (open-recursively-till-depth (current-node current-depth)
-                                             (if (< current-depth depth)
-                                                 (origami-fold-children-set
-                                                  (open-node current-node)
-                                                  (-map (lambda (child-node)
-                                                          (open-recursively-till-depth child-node (1+ current-depth)))
-                                                        (origami-fold-children current-node)))
-                                               (open-node current-node)))
+                  (if (< current-depth depth)
+                      (origami-fold-children-set
+                       (open-node current-node)
+                       (-map (lambda (child-node)
+                               (open-recursively-till-depth child-node (1+ current-depth)))
+                             (origami-fold-children current-node)))
+                    (open-node current-node)))
                 (close-all (tree) (origami-fold-map #'close-node tree))
                 (open-point-till-depth (tree)
-                                       (-when-let (base-level-path (origami-fold-find-path-containing tree point))
-                                         ;; start one level further up
-                                         (when include-siblings (setq base-level-path (-butlast base-level-path)))
-                                         (let ((base-level-node (-last-item base-level-path)))
-                                           (origami-fold-path-map
-                                            (lambda (node)
-                                              (if (eq node base-level-node)
-                                                  (open-recursively-till-depth node 1)
-                                                ;; open parent nodes, as we closed everything before
-                                                (open-node node)))
-                                            base-level-path)))))
+                  (-when-let (base-level-path (origami-fold-find-path-containing tree point))
+                    ;; start one level further up
+                    (when include-siblings (setq base-level-path (-butlast base-level-path)))
+                    (let ((base-level-node (-last-item base-level-path)))
+                      (origami-fold-path-map
+                       (lambda (node)
+                         (if (eq node base-level-node)
+                             (open-recursively-till-depth node 1)
+                           ;; open parent nodes, as we closed everything before
+                           (open-node node)))
+                       base-level-path)))))
       (-> old-tree
           close-all
           open-point-till-depth
@@ -785,7 +781,7 @@ interactively, use a negative prefix arg."
 
 ;;;###autoload
 (defun origami-show-node (buffer point)
-  "Like `origami-open-node' but also opens parent fold nodes recursively \
+  "Like `origami-open-node' but also opens parent fold nodes recursively
 so as to ensure the position where POINT is is visible."
   (interactive (list (current-buffer) (point)))
   (-when-let (tree (origami-get-fold-tree buffer))
@@ -828,8 +824,8 @@ The fold node closed will be the deepest nested at POINT."
 
 ;;;###autoload
 (defun origami-toggle-node (buffer point)
-  "Toggle the fold node at POINT in BUFFER open or closed. The
-fold node opened or closed will be the deepest nested at POINT."
+  "Toggle the fold node at POINT in BUFFER open or closed.
+The fold node opened or closed will be the deepest nested at POINT."
   (interactive (list (current-buffer) (point)))
   (-when-let (tree (origami-get-fold-tree buffer))
     (-when-let (path (origami-fold-find-path-containing tree point))
@@ -915,7 +911,7 @@ easiest to grasp this just by giving it a go."
 
 ;;;###autoload
 (defun origami-show-only-node (buffer point)
-  "Close all fold nodes in BUFFER except for those necessary to make POINT \
+  "Close all fold nodes in BUFFER except for those necessary to make POINT
 visible.  Very useful for quickly collapsing everything in the buffer other
 than what you are looking at."
   (interactive (list (current-buffer) (point)))
@@ -963,7 +959,7 @@ If POINT is in a fold, move to the end of the fold that POINT is in."
 
 ;;;###autoload
 (defun origami-forward-fold-same-level (buffer point)
-  "Move point to the beginning of the next fold in the buffer that is a sibling \
+  "Move point to the beginning of the next fold in the buffer that is a sibling
 of the fold the point is currently in."
   (interactive (list (current-buffer) (point)))
   (-when-let (tree (origami-get-fold-tree buffer))
@@ -977,7 +973,7 @@ of the fold the point is currently in."
 
 ;;;###autoload
 (defun origami-backward-fold-same-level (buffer point)
-  "Move point to the beginning of the previous fold in the buffer that is a \
+  "Move point to the beginning of the previous fold in the buffer that is a
 sibling of the fold the point is currently in."
   (interactive (list (current-buffer) (point)))
   (-when-let (tree (origami-get-fold-tree buffer))

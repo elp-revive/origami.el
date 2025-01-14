@@ -2,7 +2,7 @@
 
 ;; The MIT License (MIT)
 
-;; Copyright (c) 2020-2023 Jen-Chieh Shen
+;; Copyright (c) 2020-2025 Jen-Chieh Shen
 
 ;; Permission is hereby granted, free of charge, to any person obtaining a copy
 ;; of this software and associated documentation files (the "Software"), to deal
@@ -30,6 +30,13 @@
 ;;; Code:
 
 (require 'cl-lib)
+(require 'mule-util)
+
+;;
+;; (@* "Externals" )
+;;
+
+(declare-function truncate-string-ellipsis "ext:mule-util.el")
 
 ;;
 ;; (@* "Log" )
@@ -197,6 +204,19 @@ Argument TYPE see function `origami-util-string-compare-p' for more information.
             key-str (concat key-str keyword (if (= index (1- len)) "" "\\|")))
       (cl-incf index))
     (format "\\(s*%s\\)" key-str)))
+
+;;
+;; (@* "Ellipsis" )
+;;
+
+(defun origami--truncate-string-ellipsis ()
+  "Return the ellipsis string."
+  ;; XXX: Function is defined in later version of Emacs, otherwise just
+  ;; fallback to the variable.
+  (if (fboundp 'truncate-string-ellipsis)
+      (truncate-string-ellipsis)
+    (or truncate-string-ellipsis  ; fallback
+        "...")))
 
 ;;
 ;; (@* "Math" )
