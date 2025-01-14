@@ -70,7 +70,7 @@
   :group 'origami)
 
 (defface origami-fold-replacement-face
-  '((t :inherit 'font-lock-comment-face))
+  '((t :inherit font-lock-comment-face))
   "Face used to display the fold replacement text."
   :group 'origami)
 
@@ -395,7 +395,7 @@ Optional argument CHILDREN can be add to the created node."
 (defun origami-tree-overlays (buffer)
   "Return all overlays from fold node tree in BUFFER."
   (let (lst)
-    (when-let ((tree (origami-get-cached-tree buffer)))
+    (when-let* ((tree (origami-get-cached-tree buffer)))
       (push (origami-fold-data tree) lst)
       (setq lst (origami--node-overlays (origami-fold-children tree) lst)))
     lst))
@@ -668,7 +668,7 @@ F is applied with the current state and the current node at each iteration."
 
 (defun origami-get-parser (buffer)
   "Get the possible parser for BUFFER."
-  (if-let ((parser-gen (origami--get-parser-from-alist buffer)))
+  (if-let* ((parser-gen (origami--get-parser-from-alist buffer)))
       (origami--create parser-gen buffer)
     (user-error "[WARNING] No parser specify in major-mode, `%s`" (buffer-local-value 'major-mode buffer))))
 
