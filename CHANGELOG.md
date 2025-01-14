@@ -18,6 +18,7 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 * Add c# marco parser.
 * Add double slashes parser to c#.
 * Split `indciators` to it's minor mode, `origami-indicators-mode`.
+* refactor: Use buil-in ellipsis (#54)
 
 ## 4.1
 > Released Mar 2, 2021
