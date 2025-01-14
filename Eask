@@ -16,7 +16,6 @@
 (depends-on "emacs" "27.1")
 (depends-on "dash")
 (depends-on "fringe-helper")
-(depends-on "ht")
 (depends-on "f")
 (depends-on "s")
 
