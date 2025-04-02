@@ -59,7 +59,7 @@
   :group 'origami)
 
 (defface origami-fold-header-face
-  `((t (:box (:line-width 1 :color ,(face-attribute 'highlight :background))
+  `((t (:box (:line-width 1)
              :background ,(face-attribute 'highlight :background))))
   "Face used to display fold headers."
   :group 'origami)
