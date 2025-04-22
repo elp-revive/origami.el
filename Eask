@@ -1,3 +1,5 @@
+;; -*- mode: eask; lexical-binding: t -*-
+
 (package "origami"
          "4.1"
          "Flexible text folding")
