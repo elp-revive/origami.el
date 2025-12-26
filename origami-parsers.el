@@ -36,6 +36,7 @@
 (require 'subr-x)
 
 (require 'dash)
+(require 'rx)
 (require 's)
 
 (require 'origami-util)
